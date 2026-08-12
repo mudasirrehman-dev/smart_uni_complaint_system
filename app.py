@@ -111,9 +111,14 @@ def student_dashboard():
 @role_required("admin")
 def admin_dashboard():
 
+    complaints = Complaint.query.order_by(
+        Complaint.date_submitted.desc()
+    ).all()
+
     return render_template(
         "admin_dashboard.html",
-        username=session.get("username")
+        username=session.get("username"),
+        complaints=complaints
     )
 
 @app.route("/complaint/new", methods=["GET", "POST"])
