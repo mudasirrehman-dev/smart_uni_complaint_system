@@ -91,11 +91,19 @@ def student_dashboard():
 
     remaining = 5 - monthly_count
 
+    # Student ki complaints
+    complaints = Complaint.query.filter_by(
+        student_id=student_id
+    ).order_by(
+        Complaint.date_submitted.desc()
+    ).all()
+
     return render_template(
         "student_dashboard.html",
         username=session.get("username"),
         monthly_count=monthly_count,
-        remaining=remaining
+        remaining=remaining,
+        complaints=complaints
     )
 
 

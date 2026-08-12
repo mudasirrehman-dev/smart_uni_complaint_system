@@ -20,6 +20,9 @@
 
     <hr>
 
+
+    <!-- Monthly Quota -->
+
     <h3>Monthly Complaint Quota</h3>
 
     <p>
@@ -31,6 +34,7 @@
         Complaints Remaining:
         <strong>{{ remaining }}</strong>
     </p>
+
 
     {% if remaining > 0 %}
 
@@ -46,7 +50,80 @@
 
     {% endif %}
 
-    <br><br>
+
+    <hr>
+
+
+    <!-- Complaint History -->
+
+    <h3>My Complaints</h3>
+
+    {% if complaints %}
+
+        <table border="1" cellpadding="8">
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Category</th>
+                    <th>Directed Against</th>
+                    <th>Urgency</th>
+                    <th>Status</th>
+                    <th>Date Submitted</th>
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for complaint in complaints %}
+
+                    <tr>
+
+                        <td>
+                            {{ complaint.id }}
+                        </td>
+
+                        <td>
+                            {{ complaint.category }}
+                        </td>
+
+                        <td>
+                            {{ complaint.directed_against }}
+                        </td>
+
+                        <td>
+                            {{ complaint.urgency_level }}
+                        </td>
+
+                        <td>
+                            {{ complaint.status }}
+                        </td>
+
+                        <td>
+                            {{ complaint.date_submitted.strftime('%Y-%m-%d %H:%M') }}
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    {% else %}
+
+        <p>
+            You have not submitted any complaints yet.
+        </p>
+
+    {% endif %}
+
+
+    <br>
 
     <a href="{{ url_for('logout') }}">
         Logout
