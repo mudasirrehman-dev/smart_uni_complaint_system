@@ -1,8 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>Student Dashboard</title>
+
 </head>
 
 <body>
@@ -11,9 +18,40 @@
 
     <h2>Welcome, {{ username }}</h2>
 
-    <p>You are logged in as a Student.</p>
+    <hr>
 
-    <a href="{{ url_for('logout') }}">Logout</a>
+    <h3>Monthly Complaint Quota</h3>
+
+    <p>
+        Complaints Used:
+        <strong>{{ monthly_count }}/5</strong>
+    </p>
+
+    <p>
+        Complaints Remaining:
+        <strong>{{ remaining }}</strong>
+    </p>
+
+    {% if remaining > 0 %}
+
+        <a href="{{ url_for('submit_complaint') }}">
+            Submit Complaint
+        </a>
+
+    {% else %}
+
+        <p>
+            Monthly complaint limit reached.
+        </p>
+
+    {% endif %}
+
+    <br><br>
+
+    <a href="{{ url_for('logout') }}">
+        Logout
+    </a>
 
 </body>
+
 </html>

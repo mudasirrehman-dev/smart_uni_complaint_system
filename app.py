@@ -3,6 +3,7 @@ from extensions import db
 from models import User, Complaint
 from werkzeug.security import check_password_hash
 from functools import wraps
+from datetime import datetime
 
 
 app = Flask(__name__)
@@ -77,9 +78,24 @@ def login():
 @role_required("student")
 def student_dashboard():
 
+    student_id = session["user_id"]
+
+    now = datetime.now()
+
+    month_start = datetime(now.year, now.month, 1)
+
+    monthly_count = Complaint.query.filter(
+        Complaint.student_id == student_id,
+        Complaint.date_submitted >= month_start
+    ).count()
+
+    remaining = 5 - monthly_count
+
     return render_template(
         "student_dashboard.html",
-        username=session.get("username")
+        username=session.get("username"),
+        monthly_count=monthly_count,
+        remaining=remaining
     )
 
 
@@ -103,12 +119,45 @@ def submit_complaint():
         description = request.form.get("description")
         is_emergency = request.form.get("is_emergency")
 
-        print("Category:", category)
-        print("Directed Against:", directed_against)
-        print("Description:", description)
-        print("Emergency:", is_emergency)
+        # Current logged-in student
+        student_id = session["user_id"]
 
-        return "Complaint form submitted successfully!"
+        # Current date
+        now = datetime.now()
+
+        # Start of current month
+        month_start = datetime(now.year, now.month, 1)
+
+        # Count student's complaints this month
+        monthly_count = Complaint.query.filter(
+            Complaint.student_id == student_id,
+            Complaint.date_submitted >= month_start
+        ).count()
+
+        # Monthly quota check
+        if monthly_count >= 5:
+            return "Monthly complaint limit reached (5/5)."
+
+        # Emergency or standard complaint
+        if is_emergency == "1":
+            urgency_level = "Emergency"
+        else:
+            urgency_level = "Medium"
+
+        # Create complaint
+        complaint = Complaint(
+            student_id=student_id,
+            category=category,
+            directed_against=directed_against,
+            urgency_level=urgency_level,
+            status="Pending"
+        )
+
+        # Save complaint
+        db.session.add(complaint)
+        db.session.commit()
+
+        return "Complaint submitted successfully!"
 
     return render_template("submit_complaint.html")
 
