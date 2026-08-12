@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Submit Complaint</title>
+</head>
+
+<body>
+
+    <h1>Submit Complaint</h1>
+
+    <form method="POST" action="{{ url_for('submit_complaint') }}">
+
+        <!-- Category -->
+        <div>
+            <label for="category">Category *</label>
+
+            <select id="category" name="category" required>
+
+                <option value="">-- Select Category --</option>
+
+                <option value="IT">IT</option>
+                <option value="Hostel">Hostel</option>
+                <option value="Library">Library</option>
+                <option value="Transport">Transport</option>
+                <option value="Classroom">Classroom</option>
+                <option value="Finance">Finance</option>
+                <option value="Other">Other</option>
+
+            </select>
+        </div>
+
+        <br>
+
+        <!-- Directed Against -->
+        <div>
+            <label for="directed_against">
+                Directed Against *
+            </label>
+
+            <select
+                id="directed_against"
+                name="directed_against"
+                required
+            >
+
+                <option value="">
+                    -- Select Department / Person --
+                </option>
+
+                <option value="IT Department">
+                    IT Department
+                </option>
+
+                <option value="Hostel Department">
+                    Hostel Department
+                </option>
+
+                <option value="Library Department">
+                    Library Department
+                </option>
+
+                <option value="Teacher">
+                    Teacher
+                </option>
+
+                <option value="Admin">
+                    Admin
+                </option>
+
+                <option value="HOD">
+                    HOD
+                </option>
+
+                <option value="Other">
+                    Other
+                </option>
+
+            </select>
+        </div>
+
+        <br>
+
+        <!-- Description -->
+        <div>
+
+            <label for="description">
+                Complaint Description *
+            </label>
+
+            <br>
+
+            <textarea
+                id="description"
+                name="description"
+                rows="6"
+                cols="50"
+                required
+            ></textarea>
+
+        </div>
+
+        <br>
+
+        <!-- Emergency -->
+        <div>
+
+            <button
+                type="button"
+                id="emergencyButton"
+                onclick="toggleEmergency()"
+            >
+                🚨 Emergency
+            </button>
+
+            <input
+                type="hidden"
+                id="is_emergency"
+                name="is_emergency"
+                value="0"
+            >
+
+            <p id="emergencyStatus">
+                Standard Complaint
+            </p>
+
+        </div>
+
+        <br>
+
+        <button type="submit">
+            Submit Complaint
+        </button>
+
+    </form>
+
+    <br>
+
+    <a href="{{ url_for('student_dashboard') }}">
+        Back to Dashboard
+    </a>
+
+
+    <script>
+
+        function toggleEmergency() {
+
+            const emergencyInput =
+                document.getElementById("is_emergency");
+
+            const status =
+                document.getElementById("emergencyStatus");
+
+            if (emergencyInput.value === "0") {
+
+                emergencyInput.value = "1";
+
+                status.innerText =
+                    "🚨 Emergency Complaint Selected";
+
+            } else {
+
+                emergencyInput.value = "0";
+
+                status.innerText =
+                    "Standard Complaint";
+
+            }
+        }
+
+    </script>
+
+</body>
+</html>
