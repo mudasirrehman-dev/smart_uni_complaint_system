@@ -4,6 +4,7 @@ from models import User, Complaint
 from werkzeug.security import check_password_hash
 from functools import wraps
 from datetime import datetime
+from sqlalchemy import case
 
 
 app = Flask(__name__)
@@ -111,8 +112,20 @@ def student_dashboard():
 @role_required("admin")
 def admin_dashboard():
 
-    complaints = Complaint.query.order_by(
+    complaints = Complaint.query.filter(
+        Complaint.directed_against != "Admin"
+    ).order_by(
+
+        case(
+            (Complaint.urgency_level == "Emergency", 1),
+            (Complaint.urgency_level == "High", 2),
+            (Complaint.urgency_level == "Medium", 3),
+            (Complaint.urgency_level == "Low", 4),
+            else_=5
+        ),
+
         Complaint.date_submitted.desc()
+
     ).all()
 
     return render_template(
@@ -178,9 +191,16 @@ def submit_complaint():
 @role_required("hod")
 def hod_dashboard():
 
+    complaints = Complaint.query.filter(
+        Complaint.directed_against == "Admin"
+    ).order_by(
+        Complaint.date_submitted.desc()
+    ).all()
+
     return render_template(
         "hod_dashboard.html",
-        username=session.get("username")
+        username=session.get("username"),
+        complaints=complaints
     )
 
 

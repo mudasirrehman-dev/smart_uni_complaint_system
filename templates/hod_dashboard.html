@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>HOD Dashboard</title>
 </head>
 
@@ -11,9 +15,59 @@
 
     <h2>Welcome, {{ username }}</h2>
 
-    <p>You are logged in as Head of Department.</p>
+    <hr>
 
-    <a href="{{ url_for('logout') }}">Logout</a>
+    <h3>Sensitive Complaints Against Admin</h3>
+
+    {% if complaints %}
+
+        <table border="1" cellpadding="8">
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Student ID</th>
+                    <th>Category</th>
+                    <th>Directed Against</th>
+                    <th>Urgency</th>
+                    <th>Status</th>
+                    <th>Date Submitted</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for complaint in complaints %}
+
+                    <tr>
+                        <td>{{ complaint.id }}</td>
+                        <td>{{ complaint.student_id }}</td>
+                        <td>{{ complaint.category }}</td>
+                        <td>{{ complaint.directed_against }}</td>
+                        <td>{{ complaint.urgency_level }}</td>
+                        <td>{{ complaint.status }}</td>
+                        <td>
+                            {{ complaint.date_submitted.strftime('%Y-%m-%d %H:%M') }}
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    {% else %}
+
+        <p>No sensitive complaints available.</p>
+
+    {% endif %}
+
+    <br>
+
+    <a href="{{ url_for('logout') }}">
+        Logout
+    </a>
 
 </body>
 </html>
