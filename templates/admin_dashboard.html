@@ -29,6 +29,7 @@
           <th>Urgency</th>
           <th>Status</th>
           <th>Date Submitted</th>
+          <th>Action</th>
         </tr>
       </thead>
 
@@ -52,6 +53,18 @@
           </td>
           <td>{{ complaint.status }}</td>
           <td>{{ complaint.date_submitted.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td>
+            {% if complaint.status == "Pending" %}
+
+            <form
+              method="POST"
+              action="{{ url_for('solve_complaint', complaint_id=complaint.id) }}"
+            >
+              <button type="submit">Mark as Solved</button>
+            </form>
+
+            {% else %} {{ complaint.status }} {% endif %}
+          </td>
         </tr>
 
         {% endfor %}

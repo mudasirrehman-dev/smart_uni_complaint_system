@@ -134,6 +134,23 @@ def admin_dashboard():
         complaints=complaints
     )
 
+@app.route("/complaint/<int:complaint_id>/solve", methods=["POST"])
+@role_required("admin")
+def solve_complaint(complaint_id):
+
+    complaint = Complaint.query.get_or_404(complaint_id)
+
+    # Extra security:
+    # Admin cannot solve a complaint against Admin
+    if complaint.directed_against == "Admin":
+        return "Access Denied", 403
+
+    complaint.status = "Solved"
+
+    db.session.commit()
+
+    return redirect(url_for("admin_dashboard"))
+
 @app.route("/complaint/new", methods=["GET", "POST"])
 @role_required("student")
 def submit_complaint():
