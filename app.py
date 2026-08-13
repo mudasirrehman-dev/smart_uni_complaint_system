@@ -140,12 +140,26 @@ def solve_complaint(complaint_id):
 
     complaint = Complaint.query.get_or_404(complaint_id)
 
-    # Extra security:
+    # Security:
     # Admin cannot solve a complaint against Admin
     if complaint.directed_against == "Admin":
         return "Access Denied", 403
 
-    complaint.status = "Solved"
+    # If complaint belongs to a group
+    if complaint.group_id is not None:
+
+        grouped_complaints = Complaint.query.filter_by(
+            group_id=complaint.group_id
+        ).all()
+
+        # Solve every complaint in this group
+        for grouped_complaint in grouped_complaints:
+            grouped_complaint.status = "Solved"
+
+    else:
+
+        # Normal single complaint
+        complaint.status = "Solved"
 
     db.session.commit()
 
@@ -167,6 +181,52 @@ def forward_to_hod(complaint_id):
     db.session.commit()
 
     return redirect(url_for("admin_dashboard"))
+
+@app.route("/complaints/group", methods=["POST"])
+@role_required("admin")
+def group_complaints():
+
+    complaint_ids = request.form.getlist("complaint_ids")
+
+    print("Selected Complaint IDs:", complaint_ids)
+
+    if len(complaint_ids) < 2:
+        return "Please select at least 2 complaints to create a group."
+
+    complaint_ids = [
+        int(complaint_id)
+        for complaint_id in complaint_ids
+    ]
+
+    complaints = Complaint.query.filter(
+        Complaint.id.in_(complaint_ids),
+        Complaint.status == "Pending",
+        Complaint.directed_against != "Admin"
+    ).all()
+
+    print("Found Complaints:", [complaint.id for complaint in complaints])
+
+    if len(complaints) < 2:
+        return "Invalid complaints selected."
+
+    group_id = complaints[0].id
+
+    for complaint in complaints:
+        complaint.group_id = group_id
+
+    db.session.commit()
+
+    return f"""
+        <h2>Complaints Grouped Successfully!</h2>
+
+        <p>Selected Complaints: {complaint_ids}</p>
+
+        <p>Group ID: {group_id}</p>
+
+        <a href="/admin/dashboard">
+            Back to Admin Dashboard
+        </a>
+    """
 
 @app.route("/complaint/new", methods=["GET", "POST"])
 @role_required("student")
