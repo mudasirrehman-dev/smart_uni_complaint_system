@@ -4,7 +4,7 @@ from models import User, Complaint
 from werkzeug.security import check_password_hash
 from functools import wraps
 from datetime import datetime
-from sqlalchemy import case
+from sqlalchemy import case, or_
 
 
 app = Flask(__name__)
@@ -151,6 +151,23 @@ def solve_complaint(complaint_id):
 
     return redirect(url_for("admin_dashboard"))
 
+@app.route("/complaint/<int:complaint_id>/forward", methods=["POST"])
+@role_required("admin")
+def forward_to_hod(complaint_id):
+
+    complaint = Complaint.query.get_or_404(complaint_id)
+
+    # Admin cannot forward a complaint against Admin
+    # because it already belongs to HOD
+    if complaint.directed_against == "Admin":
+        return "Access Denied", 403
+
+    complaint.status = "Forwarded"
+
+    db.session.commit()
+
+    return redirect(url_for("admin_dashboard"))
+
 @app.route("/complaint/new", methods=["GET", "POST"])
 @role_required("student")
 def submit_complaint():
@@ -209,7 +226,10 @@ def submit_complaint():
 def hod_dashboard():
 
     complaints = Complaint.query.filter(
-        Complaint.directed_against == "Admin"
+        or_(
+            Complaint.directed_against == "Admin",
+            Complaint.status == "Forwarded"
+        )
     ).order_by(
         Complaint.date_submitted.desc()
     ).all()
@@ -219,7 +239,6 @@ def hod_dashboard():
         username=session.get("username"),
         complaints=complaints
     )
-
 
 @app.route("/logout")
 def logout():

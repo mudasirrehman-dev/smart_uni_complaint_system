@@ -56,11 +56,24 @@
           <td>
             {% if complaint.status == "Pending" %}
 
+            <!-- Solve Complaint -->
+
             <form
               method="POST"
               action="{{ url_for('solve_complaint', complaint_id=complaint.id) }}"
             >
               <button type="submit">Mark as Solved</button>
+            </form>
+
+            <br />
+
+            <!-- Forward to HOD -->
+
+            <form
+              method="POST"
+              action="{{ url_for('forward_to_hod', complaint_id=complaint.id) }}"
+            >
+              <button type="submit">Forward to HOD</button>
             </form>
 
             {% else %} {{ complaint.status }} {% endif %}
