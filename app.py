@@ -107,33 +107,68 @@ def student_dashboard():
         complaints=complaints
     )
 
-
 @app.route("/admin/dashboard")
 @role_required("admin")
 def admin_dashboard():
 
-    complaints = Complaint.query.filter(
-        Complaint.directed_against != "Admin"
-    ).order_by(
+    # ==============================
+    # NORMAL COMPLAINT QUEUE
+    # ==============================
 
-        case(
-            (Complaint.urgency_level == "Emergency", 1),
-            (Complaint.urgency_level == "High", 2),
-            (Complaint.urgency_level == "Medium", 3),
-            (Complaint.urgency_level == "Low", 4),
-            else_=5
+    complaints = Complaint.query.filter(
+    Complaint.group_id == None,
+    Complaint.directed_against != "Admin"
+).order_by(
+    case(
+        # Emergency only when Pending
+        (
+            (Complaint.urgency_level == "Emergency") &
+            (Complaint.status == "Pending"),
+            1
         ),
 
-        Complaint.date_submitted.desc()
+        # Normal Pending complaints
+        (Complaint.status == "Pending", 2),
 
+        # Forwarded complaints
+        (Complaint.status == "Forwarded", 3),
+
+        # Solved complaints
+        (Complaint.status == "Solved", 4),
+
+        else_=5
+    ),
+    Complaint.date_submitted.desc()
     ).all()
+    
+
+    # ==============================
+    # GROUPED COMPLAINTS
+    # ==============================
+
+    grouped_complaints = Complaint.query.filter(
+        Complaint.group_id != None
+    ).all()
+
+    groups = {}
+
+    for complaint in grouped_complaints:
+
+        if complaint.group_id not in groups:
+            groups[complaint.group_id] = []
+
+        groups[complaint.group_id].append(complaint)
+
+    # ==============================
+    # SEND DATA TO HTML
+    # ==============================
 
     return render_template(
         "admin_dashboard.html",
         username=session.get("username"),
-        complaints=complaints
+        complaints=complaints,
+        groups=groups
     )
-
 @app.route("/complaint/<int:complaint_id>/solve", methods=["POST"])
 @role_required("admin")
 def solve_complaint(complaint_id):
@@ -186,31 +221,84 @@ def forward_to_hod(complaint_id):
 @role_required("admin")
 def group_complaints():
 
+    # Get selected complaint IDs
     complaint_ids = request.form.getlist("complaint_ids")
 
     print("Selected Complaint IDs:", complaint_ids)
 
+    # Minimum 2 complaints required
     if len(complaint_ids) < 2:
         return "Please select at least 2 complaints to create a group."
 
+    # Convert IDs from string to integer
     complaint_ids = [
         int(complaint_id)
         for complaint_id in complaint_ids
     ]
 
+    # Get valid complaints
     complaints = Complaint.query.filter(
         Complaint.id.in_(complaint_ids),
         Complaint.status == "Pending",
-        Complaint.directed_against != "Admin"
+        Complaint.directed_against != "Admin",
+        Complaint.group_id == None
     ).all()
 
-    print("Found Complaints:", [complaint.id for complaint in complaints])
+    print(
+        "Found Complaints:",
+        [
+            (
+                complaint.id,
+                complaint.category,
+                complaint.directed_against
+            )
+            for complaint in complaints
+        ]
+    )
 
+    # Make sure all selected complaints are valid
+    if len(complaints) != len(complaint_ids):
+        return (
+            "Some selected complaints are invalid, already grouped, "
+            "not pending, or cannot be grouped."
+        )
+
+    # Minimum 2 valid complaints
     if len(complaints) < 2:
-        return "Invalid complaints selected."
+        return "Please select at least 2 valid complaints."
 
-    group_id = complaints[0].id
+    # First complaint for comparison
+    first_complaint = complaints[0]
 
+    # Check ONLY Directed Against
+    for complaint in complaints:
+
+        if (
+            complaint.directed_against
+            != first_complaint.directed_against
+        ):
+            return f"""
+                <h3>Complaints cannot be grouped!</h3>
+
+                <p>
+                    All selected complaints must have the same
+                    Directed Against value.
+                </p>
+
+                <p>
+                    Selected first value:
+                    {first_complaint.directed_against}
+                </p>
+
+                <a href="/admin/dashboard">
+                    Back to Admin Dashboard
+                </a>
+            """
+
+    # Use first complaint ID as Group ID
+    group_id = first_complaint.id
+
+    # Assign same Group ID to all selected complaints
     for complaint in complaints:
         complaint.group_id = group_id
 
@@ -223,10 +311,97 @@ def group_complaints():
 
         <p>Group ID: {group_id}</p>
 
+        <p>
+            Directed Against:
+            {first_complaint.directed_against}
+        </p>
+
+        <p>
+            Total Complaints in Group:
+            {len(complaints)}
+        </p>
+
         <a href="/admin/dashboard">
             Back to Admin Dashboard
         </a>
     """
+
+@app.route("/group/<int:group_id>/solve", methods=["POST"])
+@role_required("admin")
+def solve_group(group_id):
+
+    complaints = Complaint.query.filter_by(
+        group_id=group_id
+    ).all()
+
+    if not complaints:
+        return "Group not found", 404
+
+    # Solve all complaints in the group
+    for complaint in complaints:
+        complaint.status = "Solved"
+
+        # Remove from group
+        complaint.group_id = None
+
+    db.session.commit()
+
+    return redirect(url_for("admin_dashboard"))
+
+@app.route("/group/<int:group_id>/forward", methods=["POST"])
+@role_required("admin")
+def forward_group_to_hod(group_id):
+
+    complaints = Complaint.query.filter_by(
+        group_id=group_id
+    ).all()
+
+    if not complaints:
+        return "Group not found", 404
+
+    # Forward all complaints in the group
+    for complaint in complaints:
+        complaint.status = "Forwarded"
+
+        # Remove from group
+        complaint.group_id = None
+
+    db.session.commit()
+
+    return redirect(url_for("admin_dashboard"))
+
+@app.route("/group/<int:group_id>/undo", methods=["POST"])
+@role_required("admin")
+def undo_group(group_id):
+
+    print("Undo requested for Group ID:", group_id)
+
+    complaints = Complaint.query.filter(
+        Complaint.group_id == group_id
+    ).all()
+
+    print("Complaints found:", [
+        (complaint.id, complaint.group_id)
+        for complaint in complaints
+    ])
+
+    if len(complaints) == 0:
+        return f"Group {group_id} not found", 404
+
+    # Only Pending groups can be undone
+    for complaint in complaints:
+        if complaint.status != "Pending":
+            return "Only Pending groups can be undone."
+
+    # Remove group_id from all complaints
+    for complaint in complaints:
+        complaint.group_id = None
+
+    db.session.commit()
+
+    print("Group undone successfully:", group_id)
+
+    return redirect(url_for("admin_dashboard"))
 
 @app.route("/complaint/new", methods=["GET", "POST"])
 @role_required("student")
@@ -299,6 +474,7 @@ def hod_dashboard():
         username=session.get("username"),
         complaints=complaints
     )
+
 
 @app.route("/logout")
 def logout():

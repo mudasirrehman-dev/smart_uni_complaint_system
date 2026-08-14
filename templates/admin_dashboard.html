@@ -1,210 +1,258 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
 
-<head>
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>Admin Dashboard</title>
-</head>
+  </head>
 
-<body>
-
+  <body>
     <h1>Admin Dashboard</h1>
 
     <h2>Welcome, {{ username }}</h2>
 
-    <hr>
+    <hr />
+
+    <!-- ============================= -->
+    <!-- NORMAL COMPLAINT QUEUE -->
+    <!-- ============================= -->
 
     <h3>Complaint Queue</h3>
 
-
     {% if complaints %}
 
-    <!-- One form for grouping and actions -->
     <form method="POST">
+      <table border="1" cellpadding="8">
+        <thead>
+          <tr>
+            <th>Select</th>
+            <th>ID</th>
+            <th>Student ID</th>
+            <th>Category</th>
+            <th>Directed Against</th>
+            <th>Urgency</th>
+            <th>Status</th>
+            <th>Date Submitted</th>
+            <th>Action</th>
+          </tr>
+        </thead>
 
-        <table border="1" cellpadding="8">
+        <tbody>
+          {% for complaint in complaints %}
 
-            <thead>
+          <!-- One correct row -->
+          <tr
+            {% if complaint.urgency_level == "Emergency" and complaint.status == "Pending" %}
+                <tr style="background-color: red; color: white">
+            {% else %}
+            <tr>
+            {% endif %}
+          >
+            <!-- Checkbox -->
+            <td>
+              {% if complaint.status == "Pending" %}
 
-                <tr>
-                    <th>Select</th>
-                    <th>ID</th>
-                    <th>Student ID</th>
-                    <th>Category</th>
-                    <th>Directed Against</th>
-                    <th>Urgency</th>
-                    <th>Status</th>
-                    <th>Date Submitted</th>
-                    <th>Action</th>
-                </tr>
+              <input
+                type="checkbox"
+                name="complaint_ids"
+                value="{{ complaint.id }}"
+              />
 
-            </thead>
+              {% endif %}
+            </td>
 
+            <!-- Complaint ID -->
+            <td>{{ complaint.id }}</td>
 
-            <tbody>
+            <!-- Student ID -->
+            <td>{{ complaint.student_id }}</td>
 
-                {% for complaint in complaints %}
+            <!-- Category -->
+            <td>{{ complaint.category }}</td>
 
+            <!-- Directed Against -->
+            <td>{{ complaint.directed_against }}</td>
 
-                    <!-- Emergency complaint row -->
-                    {% if complaint.urgency_level == "Emergency" %}
+            <!-- Urgency -->
+            <td>
+              {% if complaint.urgency_level == "Emergency" %}
+                🚨 EMERGENCY
+              {% else %}
+                {{ complaint.urgency_level }}
+              {% endif %}
+            </td>
 
-                        <tr style="background-color: red; color: white;">
+            <!-- Status -->
+            <td>{{ complaint.status }}</td>
 
-                    {% else %}
+            <!-- Date Submitted -->
+            <td>
+              {{ complaint.date_submitted.strftime('%Y-%m-%d %H:%M') }}
+            </td>
 
-                        <tr>
+            <!-- Actions -->
+            <td>
+              {% if complaint.status == "Pending" %}
 
-                    {% endif %}
+              <button
+                type="submit"
+                formaction="{{ url_for('solve_complaint', complaint_id=complaint.id) }}"
+              >
+                Mark as Solved
+              </button>
 
+              <br />
+              <br />
 
-                        <!-- Checkbox -->
-                        <td>
+              <button
+                type="submit"
+                formaction="{{ url_for('forward_to_hod', complaint_id=complaint.id) }}"
+              >
+                Forward to HOD
+              </button>
 
-                            {% if complaint.status == "Pending" %}
+              {% else %}
 
-                                <input
-                                    type="checkbox"
-                                    name="complaint_ids"
-                                    value="{{ complaint.id }}"
-                                >
+              {{ complaint.status }}
 
-                            {% endif %}
+              {% endif %}
+            </td>
+          </tr>
 
-                        </td>
+          {% endfor %}
+        </tbody>
+      </table>
 
+      <br />
 
-                        <!-- ID -->
-                        <td>
-                            {{ complaint.id }}
-                        </td>
-
-
-                        <!-- Student ID -->
-                        <td>
-                            {{ complaint.student_id }}
-                        </td>
-
-
-                        <!-- Category -->
-                        <td>
-                            {{ complaint.category }}
-                        </td>
-
-
-                        <!-- Directed Against -->
-                        <td>
-                            {{ complaint.directed_against }}
-                        </td>
-
-
-                        <!-- Urgency -->
-                        <td>
-
-                            {% if complaint.urgency_level == "Emergency" %}
-
-                                🚨 EMERGENCY
-
-                            {% else %}
-
-                                {{ complaint.urgency_level }}
-
-                            {% endif %}
-
-                        </td>
-
-
-                        <!-- Status -->
-                        <td>
-                            {{ complaint.status }}
-                        </td>
-
-
-                        <!-- Date -->
-                        <td>
-                            {{ complaint.date_submitted.strftime('%Y-%m-%d %H:%M') }}
-                        </td>
-
-
-                        <!-- Actions -->
-                        <td>
-
-                            {% if complaint.status == "Pending" %}
-
-                                <button
-                                    type="submit"
-                                    formaction="{{ url_for('solve_complaint', complaint_id=complaint.id) }}"
-                                >
-                                    Mark as Solved
-                                </button>
-
-
-                                <br>
-                                <br>
-
-
-                                <button
-                                    type="submit"
-                                    formaction="{{ url_for('forward_to_hod', complaint_id=complaint.id) }}"
-                                >
-                                    Forward to HOD
-                                </button>
-
-
-                            {% else %}
-
-                                {{ complaint.status }}
-
-                            {% endif %}
-
-                        </td>
-
-
-                    </tr>
-
-                {% endfor %}
-
-            </tbody>
-
-        </table>
-
-
-        <br>
-
-
-        <!-- Group selected complaints -->
-        <button
-            type="submit"
-            formaction="{{ url_for('group_complaints') }}"
-        >
-            Group Selected Complaints
-        </button>
-
+      <!-- Group Selected Complaints -->
+      <button
+        type="submit"
+        formaction="{{ url_for('group_complaints') }}"
+      >
+        Group Selected Complaints
+      </button>
     </form>
-
 
     {% else %}
 
-        <p>No complaints available.</p>
+    <p>No complaints available.</p>
 
     {% endif %}
 
+    <!-- ============================= -->
+    <!-- GROUPED COMPLAINTS -->
+    <!-- ============================= -->
 
-    <br>
-    <br>
+    <br />
+    <hr />
+    <br />
 
+    <h3>Grouped Complaints</h3>
+
+    {% if groups %}
+
+      {% for group_id, complaints_in_group in groups.items() %}
+
+      <div
+        style="
+          border: 1px solid black;
+          padding: 15px;
+          margin-bottom: 20px;
+        "
+      >
+        <h4>Group #{{ group_id }}</h4>
+
+        <table border="1" cellpadding="8">
+          <thead>
+            <tr>
+              <th>Complaint ID</th>
+              <th>Category</th>
+              <th>Directed Against</th>
+              <th>Urgency</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {% for complaint in complaints_in_group %}
+
+            <tr>
+              <td>{{ complaint.id }}</td>
+              <td>{{ complaint.category }}</td>
+              <td>{{ complaint.directed_against }}</td>
+              <td>{{ complaint.urgency_level }}</td>
+              <td>{{ complaint.status }}</td>
+            </tr>
+
+            {% endfor %}
+
+          </tbody>
+        </table>
+
+        <br />
+
+        <!-- GROUP ACTIONS -->
+
+        {% if complaints_in_group[0].status == "Pending" %}
+
+        <!-- Solve Group -->
+        <form
+          method="POST"
+          action="{{ url_for('solve_group', group_id=group_id) }}"
+          style="display: inline"
+        >
+          <button type="submit">
+            Solve Group
+          </button>
+        </form>
+
+        <!-- Forward Group -->
+        <form
+          method="POST"
+          action="{{ url_for('forward_group_to_hod', group_id=group_id) }}"
+          style="display: inline"
+        >
+          <button type="submit">
+            Forward Group to HOD
+          </button>
+        </form>
+
+        <!-- Undo Group -->
+        <form
+          method="POST"
+          action="{{ url_for('undo_group', group_id=group_id) }}"
+          style="display: inline"
+        >
+          <button type="submit">
+            Undo Group
+          </button>
+        </form>
+
+        {% else %}
+
+        <p>Group already processed.</p>
+
+        {% endif %}
+
+      </div>
+
+      {% endfor %}
+
+    {% else %}
+
+    <p>No grouped complaints available.</p>
+
+    {% endif %}
+
+    <br />
 
     <a href="{{ url_for('logout') }}">
-        Logout
+      Logout
     </a>
 
-
-</body>
-
+  </body>
 </html>
