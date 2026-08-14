@@ -1,47 +1,122 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends "base.html" %}
 
-    <title>Login - Smart University Complaint System</title>
-</head>
+{% block title %}
+Login | Smart University Complaint System
+{% endblock %}
 
-<body>
 
-    <h1>Smart University Complaint System</h1>
+{% block content %}
 
-    <h2>Login</h2>
+<div class="row justify-content-center align-items-center login-page">
 
-    <form method="POST" action="/login">
+    <div class="col-lg-5 col-md-7 col-sm-10">
 
-        <div>
-            <label for="username">Username</label>
-            <input
-                type="text"
-                id="username"
-                name="username"
-                required
-            >
+        <div class="card login-card border-0 shadow-lg">
+
+            <!-- Card Header -->
+            <div class="card-header login-card-header text-center border-0 py-4">
+
+                <div class="login-icon mb-3">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+
+                <h3 class="mb-1">
+                    Welcome Back
+                </h3>
+
+                <p class="mb-0">
+                    Login to access your complaint portal
+                </p>
+
+            </div>
+
+
+            <!-- Card Body -->
+            <div class="card-body p-4 p-md-5">
+
+                <form method="POST">
+
+                    <!-- Username -->
+                    <div class="mb-4">
+
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-person-fill me-1"></i>
+                            Username
+                        </label>
+
+                        <input
+                            type="text"
+                            name="username"
+                            class="form-control form-control-lg"
+                            placeholder="Enter your username"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- Password -->
+                    <div class="mb-4">
+
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-lock-fill me-1"></i>
+                            Password
+                        </label>
+
+                        <div class="input-group">
+
+                            <input
+                                type="password"
+                                name="password"
+                                id="password"
+                                class="form-control form-control-lg"
+                                placeholder="Enter your password"
+                                required
+                            >
+
+                            <button
+                                class="btn btn-outline-secondary"
+                                type="button"
+                                id="togglePassword"
+                            >
+                                <i
+                                    class="bi bi-eye"
+                                    id="togglePasswordIcon"
+                                ></i>
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Login Button -->
+                    <button
+                        type="submit"
+                        class="btn btn-primary btn-lg w-100 login-btn"
+                    >
+                        <i class="bi bi-box-arrow-in-right me-2"></i>
+                        Login
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <!-- Card Footer -->
+            <div class="card-footer text-center border-0 py-3">
+
+                <small class="text-muted">
+                    Secure Role-Based Complaint Management System
+                </small>
+
+            </div>
+
         </div>
 
-        <br>
+    </div>
 
-        <div>
-            <label for="password">Password</label>
-            <input
-                type="password"
-                id="password"
-                name="password"
-                required
-            >
-        </div>
+</div>
 
-        <br>
-
-        <button type="submit">Login</button>
-
-    </form>
-
-</body>
-</html>
+{% endblock %}

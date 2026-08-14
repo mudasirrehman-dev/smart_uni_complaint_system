@@ -1,0 +1,132 @@
+/* ================================
+   GLOBAL
+================================ */
+
+body {
+    background-color: #f5f7fb;
+    color: #212529;
+}
+
+
+/* ================================
+   NAVBAR
+================================ */
+
+.university-navbar {
+    background: linear-gradient(135deg, #0d6efd, #0b3d91);
+    padding: 12px 0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+}
+
+.brand-icon {
+    width: 45px;
+    height: 45px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: rgba(255, 255, 255, 0.15);
+
+    border-radius: 10px;
+
+    font-size: 22px;
+}
+
+.brand-title {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.brand-subtitle {
+    opacity: 0.8;
+}
+
+.user-welcome {
+    color: white !important;
+}
+
+.logout-btn {
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+
+/* ================================
+   MAIN CONTENT
+================================ */
+
+main {
+    min-height: 500px;
+}
+
+
+/* ================================
+   FOOTER
+================================ */
+
+.footer {
+    background-color: #1f2937;
+    color: #d1d5db;
+}
+
+.footer h6 {
+    color: white;
+}
+
+/* ================================
+   LOGIN PAGE
+================================ */
+
+.login-page {
+    min-height: 70vh;
+}
+
+.login-card {
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.login-card-header {
+    background: linear-gradient(135deg, #0d6efd, #0b3d91);
+    color: white;
+}
+
+.login-card-header p {
+    opacity: 0.85;
+}
+
+.login-icon {
+    width: 65px;
+    height: 65px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: auto;
+
+    background-color: rgba(255, 255, 255, 0.15);
+
+    border-radius: 50%;
+
+    font-size: 30px;
+}
+
+.login-card .form-control {
+    border-radius: 10px;
+}
+
+.login-card .input-group .form-control {
+    border-radius: 10px 0 0 10px;
+}
+
+.login-card .input-group .btn {
+    border-radius: 0 10px 10px 0;
+}
+
+.login-btn {
+    border-radius: 10px;
+    font-weight: 600;
+}
