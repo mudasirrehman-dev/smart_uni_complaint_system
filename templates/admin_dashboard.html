@@ -42,24 +42,21 @@
         <tbody>
           {% for complaint in complaints %}
 
-          <!-- One correct row -->
-          <tr
-            {% if complaint.urgency_level == "Emergency" and complaint.status == "Pending" %}
-                <tr style="background-color: red; color: white">
-            {% else %}
-            <tr>
-            {% endif %}
-          >
+          <!-- Emergency + Pending = Red -->
+          {% if complaint.urgency_level == "Emergency" and complaint.status == "Pending" %}
+          <tr style="background-color: red; color: white">
+          {% else %}
+          <tr>
+          {% endif %}
+
             <!-- Checkbox -->
             <td>
               {% if complaint.status == "Pending" %}
-
               <input
                 type="checkbox"
                 name="complaint_ids"
                 value="{{ complaint.id }}"
               />
-
               {% endif %}
             </td>
 
@@ -78,9 +75,9 @@
             <!-- Urgency -->
             <td>
               {% if complaint.urgency_level == "Emergency" %}
-                🚨 EMERGENCY
+              🚨 EMERGENCY
               {% else %}
-                {{ complaint.urgency_level }}
+              {{ complaint.urgency_level }}
               {% endif %}
             </td>
 
@@ -103,8 +100,7 @@
                 Mark as Solved
               </button>
 
-              <br />
-              <br />
+              <br /><br />
 
               <button
                 type="submit"
@@ -119,6 +115,7 @@
 
               {% endif %}
             </td>
+
           </tr>
 
           {% endfor %}
@@ -177,7 +174,6 @@
           </thead>
 
           <tbody>
-
             {% for complaint in complaints_in_group %}
 
             <tr>
@@ -189,13 +185,10 @@
             </tr>
 
             {% endfor %}
-
           </tbody>
         </table>
 
         <br />
-
-        <!-- GROUP ACTIONS -->
 
         {% if complaints_in_group[0].status == "Pending" %}
 
@@ -205,9 +198,7 @@
           action="{{ url_for('solve_group', group_id=group_id) }}"
           style="display: inline"
         >
-          <button type="submit">
-            Solve Group
-          </button>
+          <button type="submit">Solve Group</button>
         </form>
 
         <!-- Forward Group -->
@@ -216,9 +207,7 @@
           action="{{ url_for('forward_group_to_hod', group_id=group_id) }}"
           style="display: inline"
         >
-          <button type="submit">
-            Forward Group to HOD
-          </button>
+          <button type="submit">Forward Group to HOD</button>
         </form>
 
         <!-- Undo Group -->
@@ -227,9 +216,7 @@
           action="{{ url_for('undo_group', group_id=group_id) }}"
           style="display: inline"
         >
-          <button type="submit">
-            Undo Group
-          </button>
+          <button type="submit">Undo Group</button>
         </form>
 
         {% else %}
