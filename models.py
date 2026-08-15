@@ -1,9 +1,12 @@
 from extensions import db
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
 
     username = db.Column(
         db.String(100),
@@ -22,8 +25,16 @@ class User(db.Model):
     )
 
 
+# Pakistan / Lahore Time = UTC + 5
+def pakistan_time():
+    return datetime.utcnow() + timedelta(hours=5)
+
+
 class Complaint(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
 
     student_id = db.Column(
         db.Integer,
@@ -41,7 +52,6 @@ class Complaint(db.Model):
         nullable=False
     )
 
-    # NEW: Complaint Description
     description = db.Column(
         db.Text,
         nullable=False
@@ -59,9 +69,10 @@ class Complaint(db.Model):
         default="Pending"
     )
 
+    # Pakistan / Lahore Date and Time
     date_submitted = db.Column(
         db.DateTime,
-        default=datetime.utcnow
+        default=pakistan_time
     )
 
     group_id = db.Column(

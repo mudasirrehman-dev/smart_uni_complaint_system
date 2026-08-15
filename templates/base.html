@@ -28,6 +28,44 @@
         rel="stylesheet"
         href="{{ url_for('static', filename='css/style.css') }}"
     >
+    <style>
+
+    .description-details {
+        cursor: pointer;
+    }
+
+    .description-details summary {
+        list-style: none;
+        cursor: pointer;
+    }
+
+    .description-details summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .description-details summary::marker {
+        display: none;
+    }
+
+
+    /* Initially show short description */
+
+    .full-description {
+        display: none;
+    }
+
+
+    /* When expanded show full description */
+
+    .description-details[open] .short-description {
+        display: none;
+    }
+
+    .description-details[open] .full-description {
+        display: inline;
+    }
+
+    </style>
 
     {% block extra_css %}{% endblock %}
 </head>
