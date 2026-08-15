@@ -454,6 +454,7 @@ def submit_complaint():
             student_id=student_id,
             category=category,
             directed_against=directed_against,
+            description=description,
             urgency_level=urgency_level,
             status="Pending"
         )
@@ -462,10 +463,7 @@ def submit_complaint():
         db.session.add(complaint)
         db.session.commit()
 
-        # Redirect to student dashboard
-        return redirect(
-            url_for("student_dashboard")
-        )
+        return redirect(url_for("student_dashboard"))
 
     return render_template("submit_complaint.html")
 

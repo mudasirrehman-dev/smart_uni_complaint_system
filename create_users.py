@@ -6,23 +6,23 @@ from werkzeug.security import generate_password_hash
 
 with app.app_context():
 
-    # Check if student3 already exists
+    # Check if student2 already exists
     existing_user = User.query.filter_by(
-        username="student3"
+        username="student2"
     ).first()
 
     if existing_user:
-        print("student3 already exists")
+        print("student2 already exists")
 
     else:
 
-        student3 = User(
-            username="student3",
+        student2 = User(
+            username="student2",
             password_hash=generate_password_hash("student123"),
             role="student"
         )
 
-        db.session.add(student3)
+        db.session.add(student2)
         db.session.commit()
 
-        print("student3 created successfully!")
+        print("student2 created successfully!")

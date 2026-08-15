@@ -210,217 +210,193 @@ Student Dashboard | Smart University Complaint System
     <!-- MY COMPLAINTS - LEFT SIDE -->
     <!-- ============================= -->
 
-    <div class="col-lg-8">
+    <div class="card shadow-sm border-0 h-100">
 
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card-body p-4">
 
+            <div class="d-flex justify-content-between align-items-center mb-4">
 
-            <!-- Card Header -->
+                <div>
+                    <h4 class="fw-bold mb-1">
+                        My Complaints
+                    </h4>
 
-            <div class="card-header bg-white border-0 pt-4 px-4">
+                    <p class="text-muted mb-0">
+                        Track the status of your submitted complaints.
+                    </p>
+                </div>
 
-                <h5 class="fw-bold mb-1">
-                    My Complaints
-                </h5>
-
-                <p class="text-muted small mb-0">
-                    Track the status of your submitted complaints.
-                </p>
+                {% if complaints_remaining > 0 %}
+                <a
+                    href="{{ url_for('submit_complaint') }}"
+                    class="btn btn-primary"
+                >
+                    + Submit Complaint
+                </a>
+                {% endif %}
 
             </div>
 
 
-            <!-- Card Body -->
+            {% if complaints %}
 
-            <div class="card-body p-4">
+            <div class="table-responsive">
 
+                <table class="table table-hover align-middle">
 
-                {% if complaints %}
+                    <thead class="table-light">
 
-                <div class="table-responsive">
+                        <tr>
+                            <th>ID</th>
+                            <th>Category</th>
+                            <th>Directed Against</th>
+                            <th>Description</th>
+                            <th>Urgency</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
 
-                    <table class="table align-middle">
-
-                        <thead class="table-light">
-
-                            <tr>
-
-                                <th>ID</th>
-
-                                <th>Category</th>
-
-                                <th>Directed Against</th>
-
-                                <th>Urgency</th>
-
-                                <th>Status</th>
-
-                                <th>Date</th>
-
-                            </tr>
-
-                        </thead>
+                    </thead>
 
 
-                        <tbody>
+                    <tbody>
 
-                            {% for complaint in complaints %}
+                        {% for complaint in complaints %}
 
-                            <tr>
+                        <tr>
 
-
-                                <!-- Complaint ID -->
-
-                                <td class="fw-semibold">
-
+                            <td>
+                                <span class="fw-bold">
                                     #{{ complaint.id }}
+                                </span>
+                            </td>
 
-                                </td>
 
-
-                                <!-- Category -->
-
-                                <td>
-
+                            <td>
+                                <span class="fw-semibold">
                                     {{ complaint.category }}
-
-                                </td>
-
-
-                                <!-- Directed Against -->
-
-                                <td>
-
-                                    {{ complaint.directed_against }}
-
-                                </td>
+                                </span>
+                            </td>
 
 
-                                <!-- Urgency -->
-
-                                <td>
-
-                                    {% if complaint.urgency_level == "Emergency" %}
-
-                                    <span class="badge bg-danger">
-
-                                        <i class="bi bi-exclamation-triangle-fill"></i>
-
-                                        Emergency
-
-                                    </span>
-
-                                    {% else %}
-
-                                    <span class="badge bg-secondary">
-
-                                        {{ complaint.urgency_level }}
-
-                                    </span>
-
-                                    {% endif %}
-
-                                </td>
+                            <td>
+                                {{ complaint.directed_against }}
+                            </td>
 
 
-                                <!-- Status -->
-
-                                <td>
-
-                                    {% if complaint.status == "Pending" %}
-
-                                    <span class="badge bg-warning text-dark">
-
-                                        <i class="bi bi-clock"></i>
-
-                                        Pending
-
-                                    </span>
+                            <td style="max-width: 250px;">
+                                <span class="text-muted">
+                                    {{ complaint.description }}
+                                </span>
+                            </td>
 
 
-                                    {% elif complaint.status == "Forwarded" %}
+                            <!-- Urgency -->
+                            <td>
 
-                                    <span class="badge bg-info text-dark">
+                                {% if complaint.urgency_level == "Emergency" %}
 
-                                        <i class="bi bi-send"></i>
+                                <span class="badge text-bg-danger">
+                                    🚨 Emergency
+                                </span>
 
-                                        Forwarded
+                                {% else %}
 
-                                    </span>
+                                <span class="badge text-bg-secondary">
+                                    {{ complaint.urgency_level }}
+                                </span>
 
+                                {% endif %}
 
-                                    {% elif complaint.status == "Solved" %}
-
-                                    <span class="badge bg-success">
-
-                                        <i class="bi bi-check-circle"></i>
-
-                                        Solved
-
-                                    </span>
+                            </td>
 
 
-                                    {% else %}
+                            <!-- Status -->
+                            <td>
 
-                                    <span class="badge bg-secondary">
+                                {% if complaint.status == "Pending" %}
 
-                                        {{ complaint.status }}
+                                <span class="badge text-bg-warning">
+                                    Pending
+                                </span>
 
-                                    </span>
+                                {% elif complaint.status == "Forwarded" %}
 
-                                    {% endif %}
+                                <span class="badge text-bg-info">
+                                    Forwarded
+                                </span>
 
-                                </td>
+                                {% elif complaint.status == "Solved" %}
+
+                                <span class="badge text-bg-success">
+                                    Solved
+                                </span>
+
+                                {% else %}
+
+                                <span class="badge text-bg-secondary">
+                                    {{ complaint.status }}
+                                </span>
+
+                                {% endif %}
+
+                            </td>
 
 
-                                <!-- Date -->
+                            <!-- Date -->
+                            <td class="text-muted small">
 
-                                <td class="text-muted small">
+                                {{ complaint.date_submitted.strftime('%d %b %Y') }}
 
-                                    {{ complaint.date_submitted.strftime('%d %b %Y') }}
+                                <br>
 
-                                    <br>
+                                {{ complaint.date_submitted.strftime('%I:%M %p') }}
 
-                                    {{ complaint.date_submitted.strftime('%I:%M %p') }}
+                            </td>
 
-                                </td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
 
 
-                            </tr>
+            {% else %}
 
-                            {% endfor %}
+            <!-- Empty State -->
 
-                        </tbody>
+            <div class="text-center py-5">
 
-                    </table>
-
+                <div class="fs-1">
+                    📭
                 </div>
 
+                <h5 class="mt-3">
+                    No Complaints Yet
+                </h5>
 
-                {% else %}
+                <p class="text-muted">
+                    You have not submitted any complaints yet.
+                </p>
 
+                {% if complaints_remaining > 0 %}
 
-                <!-- No Complaints -->
-
-                <div class="text-center py-5">
-
-                    <i class="bi bi-inbox fs-1 text-muted"></i>
-
-                    <h5 class="mt-3">
-                        No Complaints Yet
-                    </h5>
-
-                    <p class="text-muted mb-0">
-                        You have not submitted any complaints yet.
-                    </p>
-
-                </div>
-
+                <a
+                    href="{{ url_for('submit_complaint') }}"
+                    class="btn btn-primary"
+                >
+                    Submit Your First Complaint
+                </a>
 
                 {% endif %}
 
-
             </div>
+
+            {% endif %}
 
         </div>
 

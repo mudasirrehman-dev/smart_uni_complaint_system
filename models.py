@@ -1,4 +1,5 @@
 from extensions import db
+from datetime import datetime
 
 
 class User(db.Model):
@@ -20,7 +21,6 @@ class User(db.Model):
         nullable=False
     )
 
-from datetime import datetime
 
 class Complaint(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -38,6 +38,12 @@ class Complaint(db.Model):
 
     directed_against = db.Column(
         db.String(100),
+        nullable=False
+    )
+
+    # NEW: Complaint Description
+    description = db.Column(
+        db.Text,
         nullable=False
     )
 

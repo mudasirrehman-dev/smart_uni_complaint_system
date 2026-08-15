@@ -1,176 +1,280 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends "base.html" %}
 
-    <title>Submit Complaint</title>
-</head>
+{% block title %}
+Submit Complaint | Smart University Complaint System
+{% endblock %}
 
-<body>
 
-    <h1>Submit Complaint</h1>
+{% block content %}
 
-    <form method="POST" action="{{ url_for('submit_complaint') }}">
+<div class="container py-5">
 
-        <!-- Category -->
-        <div>
-            <label for="category">Category *</label>
+    <!-- Page Heading -->
+    <div class="row mb-4">
 
-            <select id="category" name="category" required>
+        <div class="col-md-8">
 
-                <option value="">-- Select Category --</option>
+            <h2 class="fw-bold">
+                Submit a Complaint
+            </h2>
 
-                <option value="IT">IT</option>
-                <option value="Hostel">Hostel</option>
-                <option value="Library">Library</option>
-                <option value="Transport">Transport</option>
-                <option value="Classroom">Classroom</option>
-                <option value="Finance">Finance</option>
-                <option value="Other">Other</option>
-
-            </select>
-        </div>
-
-        <br>
-
-        <!-- Directed Against -->
-        <div>
-            <label for="directed_against">
-                Directed Against *
-            </label>
-
-            <select
-                id="directed_against"
-                name="directed_against"
-                required
-            >
-
-                <option value="">
-                    -- Select Department / Person --
-                </option>
-
-                <option value="IT Department">
-                    IT Department
-                </option>
-
-                <option value="Hostel Department">
-                    Hostel Department
-                </option>
-
-                <option value="Library Department">
-                    Library Department
-                </option>
-
-                <option value="Teacher">
-                    Teacher
-                </option>
-
-                <option value="Admin">
-                    Admin
-                </option>
-
-                <option value="HOD">
-                    HOD
-                </option>
-
-                <option value="Other">
-                    Other
-                </option>
-
-            </select>
-        </div>
-
-        <br>
-
-        <!-- Description -->
-        <div>
-
-            <label for="description">
-                Complaint Description *
-            </label>
-
-            <br>
-
-            <textarea
-                id="description"
-                name="description"
-                rows="6"
-                cols="50"
-                required
-            ></textarea>
-
-        </div>
-
-        <br>
-
-        <!-- Emergency -->
-        <div>
-
-            <button
-                type="button"
-                id="emergencyButton"
-                onclick="toggleEmergency()"
-            >
-                🚨 Emergency
-            </button>
-
-            <input
-                type="hidden"
-                id="is_emergency"
-                name="is_emergency"
-                value="0"
-            >
-
-            <p id="emergencyStatus">
-                Standard Complaint
+            <p class="text-muted">
+                Submit your issue and track its status from your dashboard.
             </p>
 
         </div>
 
-        <br>
+        <div class="col-md-4 text-md-end">
 
-        <button type="submit">
-            Submit Complaint
-        </button>
+            <a
+                href="{{ url_for('student_dashboard') }}"
+                class="btn btn-outline-primary"
+            >
+                ← Back to Dashboard
+            </a>
 
-    </form>
+        </div>
 
-    <br>
-
-    <a href="{{ url_for('student_dashboard') }}">
-        Back to Dashboard
-    </a>
+    </div>
 
 
-    <script>
+    <div class="row justify-content-center">
 
-        function toggleEmergency() {
+        <div class="col-lg-8">
 
-            const emergencyInput =
-                document.getElementById("is_emergency");
+            <div class="card shadow-sm border-0">
 
-            const status =
-                document.getElementById("emergencyStatus");
+                <!-- Card Header -->
+                <div class="card-header bg-primary text-white py-3">
 
-            if (emergencyInput.value === "0") {
+                    <h5 class="mb-0">
+                        Complaint Information
+                    </h5>
 
-                emergencyInput.value = "1";
+                </div>
 
-                status.innerText =
-                    "🚨 Emergency Complaint Selected";
 
-            } else {
+                <!-- Card Body -->
+                <div class="card-body p-4">
 
-                emergencyInput.value = "0";
+                    <!-- IMPORTANT: Added ID -->
+                    <form
+                        method="POST"
+                        id="complaintForm"
+                    >
 
-                status.innerText =
-                    "Standard Complaint";
+                        <!-- Category -->
+                        <div class="mb-3">
 
-            }
-        }
+                            <label
+                                for="category"
+                                class="form-label fw-semibold"
+                            >
+                                Complaint Category
+                            </label>
 
-    </script>
+                            <select
+                                name="category"
+                                id="category"
+                                class="form-select"
+                                required
+                            >
+                                <option value="">
+                                    Select Category
+                                </option>
 
-</body>
-</html>
+                                <option value="Academic">Academic</option>
+                                <option value="IT">IT</option>
+                                <option value="Hostel">Hostel</option>
+                                <option value="Transport">Transport</option>
+                                <option value="Classroom">Classroom</option>
+                                <option value="Library">Library</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Other">Other</option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- Directed Against -->
+                        <div class="mb-3">
+
+                            <label
+                                for="directed_against"
+                                class="form-label fw-semibold"
+                            >
+                                Directed Against
+                            </label>
+
+                            <select
+                                name="directed_against"
+                                id="directed_against"
+                                class="form-select"
+                                required
+                            >
+                                <option value="">
+                                    Select Department / Person
+                                </option>
+
+                                <option value="IT Department">
+                                    IT Department
+                                </option>
+
+                                <option value="Hostel Department">
+                                    Hostel Department
+                                </option>
+
+                                <option value="Library Department">
+                                    Library Department
+                                </option>
+
+                                <option value="Transport Department">
+                                    Transport Department
+                                </option>
+
+                                <option value="Finance Department">
+                                    Finance Department
+                                </option>
+
+                                <option value="Teacher">
+                                    Teacher
+                                </option>
+
+                                <option value="Admin">
+                                    Admin
+                                </option>
+
+                                <option value="HOD">
+                                    HOD
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- Description -->
+                        <div class="mb-4">
+
+                            <label
+                                for="description"
+                                class="form-label fw-semibold"
+                            >
+                                Complaint Description
+                            </label>
+
+                            <textarea
+                                name="description"
+                                id="description"
+                                rows="5"
+                                class="form-control"
+                                placeholder="Please describe your issue clearly..."
+                                required
+                            ></textarea>
+
+                            <div class="form-text">
+                                Provide enough details so your complaint can be handled properly.
+                            </div>
+
+                        </div>
+
+
+                        <!-- Emergency -->
+                        <div class="card bg-light border mb-4">
+
+                            <div class="card-body">
+
+                                <div class="form-check">
+
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        name="is_emergency"
+                                        value="1"
+                                        id="is_emergency"
+                                    >
+
+                                    <label
+                                        class="form-check-label fw-semibold"
+                                        for="is_emergency"
+                                    >
+                                        🚨 Mark as Emergency Complaint
+                                    </label>
+
+                                </div>
+
+                                <small class="text-muted">
+                                    Only select this option for urgent issues requiring immediate attention.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Buttons -->
+                        <div class="d-flex gap-2">
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary px-4"
+                                id="submitBtn"
+                            >
+                                <i class="bi bi-send me-1"></i>
+                                Submit Complaint
+                            </button>
+
+
+                            <a
+                                href="{{ url_for('student_dashboard') }}"
+                                class="btn btn-outline-secondary"
+                            >
+                                Cancel
+                            </a>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ============================= -->
+<!-- PREVENT DOUBLE SUBMISSION -->
+<!-- ============================= -->
+
+<script>
+
+document.getElementById("complaintForm").addEventListener(
+    "submit",
+    function () {
+
+        const submitBtn = document.getElementById("submitBtn");
+
+        // Disable button immediately
+        submitBtn.disabled = true;
+
+        // Show loading state
+        submitBtn.innerHTML = `
+            <span
+                class="spinner-border spinner-border-sm me-2"
+                role="status"
+            ></span>
+            Submitting...
+        `;
+
+    }
+);
+
+</script>
+
+{% endblock %}
