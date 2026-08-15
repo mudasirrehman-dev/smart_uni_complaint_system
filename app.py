@@ -79,32 +79,42 @@ def login():
 @role_required("student")
 def student_dashboard():
 
-    student_id = session["user_id"]
+    student_id = session.get("user_id")
 
-    now = datetime.now()
-
-    month_start = datetime(now.year, now.month, 1)
-
-    monthly_count = Complaint.query.filter(
-        Complaint.student_id == student_id,
-        Complaint.date_submitted >= month_start
-    ).count()
-
-    remaining = 5 - monthly_count
-
-    # Student ki complaints
     complaints = Complaint.query.filter_by(
         student_id=student_id
     ).order_by(
         Complaint.date_submitted.desc()
     ).all()
 
+    complaints_used = len(complaints)
+
+    complaints_remaining = 5 - complaints_used
+
+    pending_count = sum(
+        1 for complaint in complaints
+        if complaint.status == "Pending"
+    )
+
+    forwarded_count = sum(
+        1 for complaint in complaints
+        if complaint.status == "Forwarded"
+    )
+
+    solved_count = sum(
+        1 for complaint in complaints
+        if complaint.status == "Solved"
+    )
+
     return render_template(
         "student_dashboard.html",
         username=session.get("username"),
-        monthly_count=monthly_count,
-        remaining=remaining,
-        complaints=complaints
+        complaints=complaints,
+        complaints_used=complaints_used,
+        complaints_remaining=complaints_remaining,
+        pending_count=pending_count,
+        forwarded_count=forwarded_count,
+        solved_count=solved_count
     )
 
 @app.route("/admin/dashboard")
@@ -452,7 +462,10 @@ def submit_complaint():
         db.session.add(complaint)
         db.session.commit()
 
-        return "Complaint submitted successfully!"
+        # Redirect to student dashboard
+        return redirect(
+            url_for("student_dashboard")
+        )
 
     return render_template("submit_complaint.html")
 
