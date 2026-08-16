@@ -1,73 +1,613 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
 
-    <title>HOD Dashboard</title>
-</head>
+{% block title %}
+HOD Dashboard | Smart University Complaint System
+{% endblock %}
 
-<body>
 
-    <h1>HOD Dashboard</h1>
+{% block content %}
 
-    <h2>Welcome, {{ username }}</h2>
+<div class="container py-4">
 
-    <hr>
 
-    <h3>Sensitive Complaints Against Admin</h3>
+    <!-- ============================= -->
+    <!-- PAGE HEADER -->
+    <!-- ============================= -->
 
-    {% if complaints %}
+    <div
+        class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4"
+    >
 
-        <table border="1" cellpadding="8">
+        <div>
 
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Student ID</th>
-                    <th>Category</th>
-                    <th>Directed Against</th>
-                    <th>Urgency</th>
-                    <th>Status</th>
-                    <th>Date Submitted</th>
-                </tr>
-            </thead>
+            <h2 class="fw-bold mb-1">
+                HOD Dashboard
+            </h2>
 
-            <tbody>
+            <p class="text-muted mb-0">
+                Welcome back, {{ username }}. Review and manage sensitive complaints.
+            </p>
 
-                {% for complaint in complaints %}
+        </div>
 
-                    <tr>
-                        <td>{{ complaint.id }}</td>
-                        <td>{{ complaint.student_id }}</td>
-                        <td>{{ complaint.category }}</td>
-                        <td>{{ complaint.directed_against }}</td>
-                        <td>{{ complaint.urgency_level }}</td>
-                        <td>{{ complaint.status }}</td>
-                        <td>
-                            {{ complaint.date_submitted.strftime('%Y-%m-%d %H:%M') }}
-                        </td>
-                    </tr>
 
-                {% endfor %}
+        <div class="mt-3 mt-md-0">
 
-            </tbody>
+            <span class="badge text-bg-primary px-3 py-2">
 
-        </table>
+                <i class="bi bi-person-badge me-1"></i>
 
-    {% else %}
+                Head of Department
 
-        <p>No sensitive complaints available.</p>
+            </span>
 
-    {% endif %}
+        </div>
 
-    <br>
+    </div>
 
-    <a href="{{ url_for('logout') }}">
-        Logout
-    </a>
 
-</body>
-</html>
+    <!-- ============================= -->
+    <!-- STATISTICS CARDS -->
+    <!-- ============================= -->
+
+    <div class="row g-4 mb-4">
+
+
+        <!-- Total Sensitive Complaints -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <div
+                class="card dashboard-card border-0 shadow-sm h-100"
+            >
+
+                <div class="card-body">
+
+                    <div
+                        class="d-flex justify-content-between align-items-center"
+                    >
+
+                        <div>
+
+                            <p class="text-muted mb-1">
+                                Total Complaints
+                            </p>
+
+                            <h2 class="fw-bold mb-0">
+                                {{ complaints|length }}
+                            </h2>
+
+                        </div>
+
+
+                        <div
+                            class="stat-icon bg-primary-subtle text-primary"
+                        >
+
+                            <i class="bi bi-file-earmark-text"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Pending Complaints -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <div
+                class="card dashboard-card border-0 shadow-sm h-100"
+            >
+
+                <div class="card-body">
+
+                    <div
+                        class="d-flex justify-content-between align-items-center"
+                    >
+
+                        <div>
+
+                            <p class="text-muted mb-1">
+                                Pending
+                            </p>
+
+                            <h2 class="fw-bold mb-0">
+
+                                {{
+                                    complaints
+                                    | selectattr("status", "equalto", "Pending")
+                                    | list
+                                    | length
+                                }}
+
+                            </h2>
+
+                        </div>
+
+
+                        <div
+                            class="stat-icon bg-warning-subtle text-warning"
+                        >
+
+                            <i class="bi bi-clock-history"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Emergency Complaints -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <div
+                class="card dashboard-card border-0 shadow-sm h-100"
+            >
+
+                <div class="card-body">
+
+                    <div
+                        class="d-flex justify-content-between align-items-center"
+                    >
+
+                        <div>
+
+                            <p class="text-muted mb-1">
+                                Emergency
+                            </p>
+
+                            <h2 class="fw-bold mb-0">
+
+                                {{
+                                    complaints
+                                    | selectattr(
+                                        "urgency_level",
+                                        "equalto",
+                                        "Emergency"
+                                    )
+                                    | selectattr(
+                                        "status",
+                                        "equalto",
+                                        "Pending"
+                                    )
+                                    | list
+                                    | length
+                                }}
+
+                            </h2>
+
+                        </div>
+
+
+                        <div
+                            class="stat-icon bg-danger-subtle text-danger"
+                        >
+
+                            <i class="bi bi-exclamation-triangle"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- ============================= -->
+    <!-- SENSITIVE COMPLAINTS -->
+    <!-- ============================= -->
+
+    <div class="card border-0 shadow-sm">
+
+
+        <!-- CARD HEADER -->
+
+        <div class="card-header bg-white border-bottom py-3">
+
+            <div
+                class="d-flex flex-column flex-md-row justify-content-between align-items-md-center"
+            >
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+
+                        <i class="bi bi-shield-exclamation me-2"></i>
+
+                        Sensitive Complaints
+
+                    </h5>
+
+                    <p class="text-muted small mb-0">
+
+                        Complaints directed against administrators are routed
+                        directly to the HOD for review.
+
+                    </p>
+
+                </div>
+
+
+                <span
+                    class="badge text-bg-secondary mt-2 mt-md-0"
+                >
+
+                    {{ complaints|length }} Complaints
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- CARD BODY -->
+
+        <div class="card-body p-0">
+
+
+            {% if complaints %}
+
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+
+                    <!-- TABLE HEADER -->
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th class="ps-4">
+                                ID
+                            </th>
+
+                            <th>
+                                Student
+                            </th>
+
+                            <th>
+                                Category
+                            </th>
+
+                            <th>
+                                Directed Against
+                            </th>
+
+                            <th>
+                                Description
+                            </th>
+
+                            <th>
+                                Urgency
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th class="pe-4">
+                                Date Submitted
+                            </th>
+
+                            <th class="pe-4">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <!-- TABLE BODY -->
+
+                    <tbody>
+
+
+                        {% for complaint in complaints %}
+
+
+                        <tr
+
+                            {% if
+                                complaint.urgency_level == "Emergency"
+                                and complaint.status == "Pending"
+                            %}
+
+                            class="table-danger"
+
+                            {% endif %}
+
+                        >
+
+
+                            <!-- ID -->
+
+                            <td class="ps-4">
+
+                                <strong>
+                                    #{{ complaint.id }}
+                                </strong>
+
+                            </td>
+
+
+                            <!-- STUDENT -->
+
+                            <td>
+
+                                <i class="bi bi-person me-1"></i>
+
+                                Student {{ complaint.student_id }}
+
+                            </td>
+
+
+                            <!-- CATEGORY -->
+
+                            <td>
+
+                                <span class="fw-semibold">
+
+                                    {{ complaint.category }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- DIRECTED AGAINST -->
+
+                            <td>
+
+                                <span class="badge text-bg-dark">
+
+                                    {{ complaint.directed_against }}
+
+                                </span>
+
+                            </td>
+                            
+                            <!-- Description -->
+
+                            <td style="max-width: 250px;">
+
+                                {% if complaint.description|length > 60 %}
+
+                                <details class="description-details">
+
+                                    <summary>
+
+                                        <span class="short-description">
+                                            {{ complaint.description[:60] }}...
+                                        </span>
+
+                                        <span class="full-description">
+                                            {{ complaint.description }}
+                                        </span>
+
+                                    </summary>
+
+                                </details>
+
+                                {% else %}
+
+                                <span>
+                                    {{ complaint.description }}
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <!-- URGENCY -->
+
+                            <td>
+
+
+                                {% if complaint.urgency_level == "Emergency" %}
+
+                                <span class="badge text-bg-danger">
+
+                                    <i
+                                        class="bi bi-exclamation-triangle-fill"
+                                    ></i>
+
+                                    Emergency
+
+                                </span>
+
+
+                                {% else %}
+
+                                <span class="badge text-bg-secondary">
+
+                                    {{ complaint.urgency_level }}
+
+                                </span>
+
+
+                                {% endif %}
+
+
+                            </td>
+
+
+                            <!-- STATUS -->
+
+                            <td>
+
+
+                                {% if complaint.status == "Pending" %}
+
+                                <span class="badge text-bg-warning">
+
+                                    <i class="bi bi-clock"></i>
+
+                                    Pending
+
+                                </span>
+
+
+                                {% elif complaint.status == "Forwarded" %}
+
+                                <span class="badge text-bg-info">
+
+                                    <i class="bi bi-send"></i>
+
+                                    Forwarded
+
+                                </span>
+
+
+                                {% elif complaint.status == "Solved" %}
+
+                                <span class="badge text-bg-success">
+
+                                    <i class="bi bi-check-circle"></i>
+
+                                    Solved
+
+                                </span>
+
+
+                                {% else %}
+
+                                <span class="badge text-bg-secondary">
+
+                                    {{ complaint.status }}
+
+                                </span>
+
+
+                                {% endif %}
+
+
+                            </td>
+
+
+                            <!-- DATE -->
+
+                            <td
+                                class="text-muted small pe-4"
+                            >
+
+                                {{ complaint.date_submitted.strftime('%d %b %Y') }}
+
+                                <br>
+
+                                {{ complaint.date_submitted.strftime('%I:%M %p') }}
+
+                            </td>
+
+                            <!-- Actions -->
+
+                            <td class="text-end pe-4">
+
+                                {% if complaint.status != "Solved" %}
+
+                                <form
+                                    method="POST"
+                                    action="{{ url_for('hod_solve_complaint', complaint_id=complaint.id) }}"
+                                >
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-success"
+                                        onclick="return confirm('Are you sure you want to mark this complaint as solved?')"
+                                    >
+                                        <i class="bi bi-check-lg"></i>
+                                        Solve
+                                    </button>
+
+                                </form>
+
+                                {% else %}
+
+                                <span class="text-muted small">
+                                    <i class="bi bi-check-circle"></i>
+                                    No action required
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                        </tr>
+
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            {% else %}
+
+
+            <!-- EMPTY STATE -->
+
+            <div class="text-center py-5">
+
+
+                <div class="fs-1">
+
+                    🛡️
+
+                </div>
+
+
+                <h5 class="mt-3">
+
+                    No Sensitive Complaints
+
+                </h5>
+
+
+                <p class="text-muted mb-0">
+
+                    There are currently no complaints requiring HOD review.
+
+                </p>
+
+
+            </div>
+
+
+            {% endif %}
+
+
+        </div>
+
+    </div>
+
+
+</div>
+
+{% endblock %}

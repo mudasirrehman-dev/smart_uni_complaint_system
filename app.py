@@ -74,6 +74,27 @@ def login():
 
     return render_template("login.html")
 
+@app.route("/hod/complaint/<int:complaint_id>/solve", methods=["POST"])
+@role_required("hod")
+def hod_solve_complaint(complaint_id):
+
+    complaint = Complaint.query.get_or_404(complaint_id)
+
+    # HOD can only solve complaints:
+    # 1. Directed Against Admin
+    # 2. Forwarded by Admin
+    if (
+        complaint.directed_against != "Admin"
+        and complaint.status != "Forwarded"
+    ):
+        return "Access Denied", 403
+
+    # Mark complaint as solved
+    complaint.status = "Solved"
+
+    db.session.commit()
+
+    return redirect(url_for("hod_dashboard"))
 
 @app.route("/student/dashboard")
 @role_required("student")
@@ -477,7 +498,40 @@ def hod_dashboard():
             Complaint.status == "Forwarded"
         )
     ).order_by(
+
+        case(
+            # 1. Emergency + Pending → Top
+            (
+                (Complaint.urgency_level == "Emergency") &
+                (Complaint.status == "Pending"),
+                1
+            ),
+
+            # 2. Other Pending complaints
+            (
+                Complaint.status == "Pending",
+                2
+            ),
+
+            # 3. Forwarded complaints
+            (
+                Complaint.status == "Forwarded",
+                3
+            ),
+
+            # 4. Solved complaints → Last
+            (
+                Complaint.status == "Solved",
+                4
+            ),
+
+            # Anything else
+            else_=5
+        ),
+
+        # Newer complaints first within the same category
         Complaint.date_submitted.desc()
+
     ).all()
 
     return render_template(
@@ -485,7 +539,6 @@ def hod_dashboard():
         username=session.get("username"),
         complaints=complaints
     )
-
 
 @app.route("/logout")
 def logout():
