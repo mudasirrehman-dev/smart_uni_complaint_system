@@ -284,10 +284,37 @@ Student Dashboard | Smart University Complaint System
                             </td>
 
 
+                          
+                            <!-- ============================= -->
+                            <!-- DESCRIPTION WITH READ MORE -->
+                            <!-- ============================= -->
+
                             <td style="max-width: 250px;">
-                                <span class="text-muted">
+
+                                {% if complaint.description|length > 60 %}
+
+                                <details class="description-details">
+
+                                    <summary>
+                                        <span class="short-description">
+                                            {{ complaint.description[:60] }}...
+                                        </span>
+
+                                        <span class="full-description">
+                                            {{ complaint.description }}
+                                        </span>
+                                    </summary>
+
+                                </details>
+
+                                {% else %}
+
+                                <span>
                                     {{ complaint.description }}
                                 </span>
+
+                                {% endif %}
+
                             </td>
 
 
