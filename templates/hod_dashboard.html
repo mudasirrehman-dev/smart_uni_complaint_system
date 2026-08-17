@@ -178,10 +178,10 @@ HOD Dashboard | Smart University Complaint System
                                         "equalto",
                                         "Emergency"
                                     )
-                                    | selectattr(
+                                    | rejectattr(
                                         "status",
                                         "equalto",
-                                        "Pending"
+                                        "Solved"
                                     )
                                     | list
                                     | length

@@ -761,31 +761,34 @@ def hod_dashboard():
         # PRIORITY SORTING
         # ----------------------------------------------------
         # Priority order:
-        # 1. Emergency + Pending
-        # 2. Other Pending complaints
-        # 3. Forwarded complaints
+        # 1. All active Emergency complaints
+        #    (Pending OR Forwarded)
+        # 2. Normal Pending complaints
+        # 3. Normal Forwarded complaints
         # 4. Solved complaints
         # 5. Anything else
         # ----------------------------------------------------
 
         case(
+
             # Priority 1:
-            # Emergency complaints that are Pending
+            # Emergency complaints always remain highest priority
+            # unless they are already Solved.
             (
                 (Complaint.urgency_level == "Emergency") &
-                (Complaint.status == "Pending"),
+                (Complaint.status != "Solved"),
                 1
             ),
 
             # Priority 2:
-            # Other Pending complaints
+            # Normal Pending complaints
             (
                 Complaint.status == "Pending",
                 2
             ),
 
             # Priority 3:
-            # Forwarded complaints
+            # Normal Forwarded complaints
             (
                 Complaint.status == "Forwarded",
                 3
@@ -809,13 +812,36 @@ def hod_dashboard():
 
     ).all()
 
-    # Send complaint data to HOD Dashboard
+
+    # ========================================================
+    # COUNT ACTIVE EMERGENCY COMPLAINTS
+    # ========================================================
+    # Count Emergency complaints that are not solved.
+    # This includes both:
+    # - Emergency + Pending
+    # - Emergency + Forwarded
+    # ========================================================
+
+    emergency_count = sum(
+        1
+        for complaint in complaints
+        if (
+            complaint.urgency_level == "Emergency"
+            and complaint.status != "Solved"
+        )
+    )
+
+
+    # ========================================================
+    # SEND DATA TO HOD DASHBOARD
+    # ========================================================
+
     return render_template(
         "hod_dashboard.html",
         username=session.get("username"),
-        complaints=complaints
+        complaints=complaints,
+        emergency_count=emergency_count
     )
-
 
 # ============================================================
 # HOD SOLVE COMPLAINT
