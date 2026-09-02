@@ -280,20 +280,6 @@ Before deploying to production:
 - Add proper form validation
 - Add better error handling
 
-## Future Improvements
-
-- Email notifications
-- Complaint search and filtering
-- Admin analytics
-- Complaint categories management
-- File attachments
-- User registration
-- Password reset
-- Notification system
-- Better audit logging
-- REST API
-- Deployment to a production server
-
 ## Author
 
 **Mudasir Rehman**
