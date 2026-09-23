@@ -445,38 +445,51 @@ Admin Dashboard | Smart University Complaint System
 
                                     {% if complaint.status == "Pending" %}
 
-                                    <div class="btn-group">
+                                        <!-- Solution / Feedback -->
 
-                                        <!-- Solve -->
-
-                                        <button
-                                            type="submit"
-                                            formaction="{{ url_for('solve_complaint', complaint_id=complaint.id) }}"
-                                            class="btn btn-sm btn-success"
-                                        >
-                                            <i class="bi bi-check-lg"></i>
-                                            Solve
-                                        </button>
+                                        <textarea
+                                            name="solution_{{ complaint.id }}"
+                                            class="form-control form-control-sm mb-2"
+                                            rows="2"
+                                            placeholder="Enter solution / feedback before solving..."
+                                            style="min-width: 220px;"
+                                        ></textarea>
 
 
-                                        <!-- Forward -->
+                                        <!-- Action Buttons -->
 
-                                        <button
-                                            type="submit"
-                                            formaction="{{ url_for('forward_to_hod', complaint_id=complaint.id) }}"
-                                            class="btn btn-sm btn-outline-primary"
-                                        >
-                                            <i class="bi bi-send"></i>
-                                            Forward
-                                        </button>
+                                        <div class="btn-group">
 
-                                    </div>
+                                            <!-- Solve -->
+
+                                            <button
+                                                type="submit"
+                                                formaction="{{ url_for('solve_complaint', complaint_id=complaint.id) }}"
+                                                class="btn btn-sm btn-success"
+                                            >
+                                                <i class="bi bi-check-lg"></i>
+                                                Solve
+                                            </button>
+
+
+                                            <!-- Forward -->
+
+                                            <button
+                                                type="submit"
+                                                formaction="{{ url_for('forward_to_hod', complaint_id=complaint.id) }}"
+                                                class="btn btn-sm btn-outline-primary"
+                                            >
+                                                <i class="bi bi-send"></i>
+                                                Forward
+                                            </button>
+
+                                        </div>
 
                                     {% else %}
 
-                                    <span class="text-muted small">
-                                        No action required
-                                    </span>
+                                        <span class="text-muted small">
+                                            No action required
+                                        </span>
 
                                     {% endif %}
 

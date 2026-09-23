@@ -57,13 +57,15 @@ Submit Complaint | Smart University Complaint System
                 <!-- Card Body -->
                 <div class="card-body p-4">
 
-                    <!-- IMPORTANT: Added ID -->
                     <form
                         method="POST"
                         id="complaintForm"
                     >
 
-                        <!-- Category -->
+                        <!-- ================================= -->
+                        <!-- CATEGORY -->
+                        <!-- ================================= -->
+
                         <div class="mb-3">
 
                             <label
@@ -79,25 +81,60 @@ Submit Complaint | Smart University Complaint System
                                 class="form-select"
                                 required
                             >
+
                                 <option value="">
                                     Select Category
                                 </option>
 
-                                <option value="Academic">Academic</option>
-                                <option value="IT">IT</option>
-                                <option value="Hostel">Hostel</option>
-                                <option value="Transport">Transport</option>
-                                <option value="Classroom">Classroom</option>
-                                <option value="Library">Library</option>
-                                <option value="Finance">Finance</option>
-                                <option value="Other">Other</option>
+                                <option value="Academic">
+                                    Academic
+                                </option>
+
+                                <option value="IT">
+                                    IT
+                                </option>
+
+                                <option value="Hostel">
+                                    Hostel
+                                </option>
+
+                                <option value="Transport">
+                                    Transport
+                                </option>
+
+                                <option value="Classroom">
+                                    Classroom
+                                </option>
+
+                                <option value="Library">
+                                    Library
+                                </option>
+
+                                <option value="Finance">
+                                    Finance
+                                </option>
+
+                                <option value="Examination">
+                                    Examination
+                                </option>
+
+                                <option value="Administration">
+                                    Administration
+                                </option>
+
+                                <option value="Other">
+                                    Other
+                                </option>
 
                             </select>
 
                         </div>
 
 
-                        <!-- Directed Against -->
+                        <!-- ================================= -->
+                        <!-- DIRECTED AGAINST -->
+                        <!-- ================================= -->
+
                         <div class="mb-3">
 
                             <label
@@ -113,6 +150,7 @@ Submit Complaint | Smart University Complaint System
                                 class="form-select"
                                 required
                             >
+
                                 <option value="">
                                     Select Department / Person
                                 </option>
@@ -149,12 +187,53 @@ Submit Complaint | Smart University Complaint System
                                     HOD
                                 </option>
 
+                                <option value="Other">
+                                    Other
+                                </option>
+
                             </select>
 
                         </div>
 
 
-                        <!-- Description -->
+                        <!-- ================================= -->
+                        <!-- CUSTOM TARGET -->
+                        <!-- Shows only when Other is selected -->
+                        <!-- ================================= -->
+
+                        <div
+                            class="mb-3"
+                            id="customTargetContainer"
+                            style="display: none;"
+                        >
+
+                            <label
+                                for="custom_target"
+                                class="form-label fw-semibold"
+                            >
+                                Specify Person / Department
+                            </label>
+
+                            <input
+                                type="text"
+                                name="custom_target"
+                                id="custom_target"
+                                class="form-control"
+                                placeholder="Enter person, department, or other target"
+                                maxlength="200"
+                            >
+
+                            <div class="form-text">
+                                Please specify who or which department your complaint is directed against.
+                            </div>
+
+                        </div>
+
+
+                        <!-- ================================= -->
+                        <!-- DESCRIPTION -->
+                        <!-- ================================= -->
+
                         <div class="mb-4">
 
                             <label
@@ -180,7 +259,10 @@ Submit Complaint | Smart University Complaint System
                         </div>
 
 
-                        <!-- Emergency -->
+                        <!-- ================================= -->
+                        <!-- EMERGENCY -->
+                        <!-- ================================= -->
+
                         <div class="card bg-light border mb-4">
 
                             <div class="card-body">
@@ -193,6 +275,10 @@ Submit Complaint | Smart University Complaint System
                                         name="is_emergency"
                                         value="1"
                                         id="is_emergency"
+
+                                        {% if emergency_count >= 2 %}
+                                            disabled
+                                        {% endif %}
                                     >
 
                                     <label
@@ -204,16 +290,52 @@ Submit Complaint | Smart University Complaint System
 
                                 </div>
 
-                                <small class="text-muted">
-                                    Only select this option for urgent issues requiring immediate attention.
-                                </small>
+
+                                {% if emergency_count >= 2 %}
+
+                                    <!-- Emergency limit reached -->
+                                    <div class="alert alert-danger mt-3 mb-0">
+
+                                        <strong>
+                                            Emergency complaint limit reached.
+                                        </strong>
+
+                                        <br>
+
+                                        You have already submitted
+                                        {{ emergency_count }}/2
+                                        Emergency complaints this month.
+
+                                    </div>
+
+                                {% else %}
+
+                                    <!-- Emergency information -->
+                                    <small class="text-muted">
+                                        Only select this option for urgent issues requiring immediate attention.
+                                    </small>
+
+                                    <!-- Emergency Counter -->
+                                    <div class="mt-2">
+
+                                        <small class="text-muted fw-semibold">
+                                            Emergency Complaints:
+                                            {{ emergency_count }}/2
+                                        </small>
+
+                                    </div>
+
+                                {% endif %}
 
                             </div>
 
                         </div>
 
 
-                        <!-- Buttons -->
+                        <!-- ================================= -->
+                        <!-- BUTTONS -->
+                        <!-- ================================= -->
+
                         <div class="d-flex gap-2">
 
                             <button
@@ -221,8 +343,11 @@ Submit Complaint | Smart University Complaint System
                                 class="btn btn-primary px-4"
                                 id="submitBtn"
                             >
+
                                 <i class="bi bi-send me-1"></i>
+
                                 Submit Complaint
+
                             </button>
 
 
@@ -248,17 +373,70 @@ Submit Complaint | Smart University Complaint System
 </div>
 
 
-<!-- ============================= -->
-<!-- PREVENT DOUBLE SUBMISSION -->
-<!-- ============================= -->
+<!-- ========================================= -->
+<!-- JAVASCRIPT -->
+<!-- ========================================= -->
 
 <script>
+
+const directedAgainst = document.getElementById(
+    "directed_against"
+);
+
+const customTargetContainer = document.getElementById(
+    "customTargetContainer"
+);
+
+const customTarget = document.getElementById(
+    "custom_target"
+);
+
+
+/*
+    Show Custom Target field only when
+    "Other" is selected.
+*/
+
+directedAgainst.addEventListener(
+    "change",
+    function () {
+
+        if (this.value === "Other") {
+
+            // Show custom target field
+            customTargetContainer.style.display = "block";
+
+            // Make field required
+            customTarget.required = true;
+
+        } else {
+
+            // Hide custom target field
+            customTargetContainer.style.display = "none";
+
+            // Remove required validation
+            customTarget.required = false;
+
+            // Clear previous value
+            customTarget.value = "";
+
+        }
+
+    }
+);
+
+
+/*
+    Prevent double submission.
+*/
 
 document.getElementById("complaintForm").addEventListener(
     "submit",
     function () {
 
-        const submitBtn = document.getElementById("submitBtn");
+        const submitBtn = document.getElementById(
+            "submitBtn"
+        );
 
         // Disable button immediately
         submitBtn.disabled = true;
@@ -278,3 +456,4 @@ document.getElementById("complaintForm").addEventListener(
 </script>
 
 {% endblock %}
+

@@ -1,0 +1,464 @@
+{% extends "base.html" %}
+
+{% block title %}
+Complaint Details | Smart University Complaint System
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ========================================================= -->
+<!-- PAGE HEADER -->
+<!-- ========================================================= -->
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+
+        <h2 class="fw-bold mb-1">
+            Complaint #{{ complaint.id }}
+        </h2>
+
+        <p class="text-muted mb-0">
+            View complaint details, solution/feedback and history.
+        </p>
+
+    </div>
+
+
+    <a
+        href="{{ url_for('student_dashboard') }}"
+        class="btn btn-outline-secondary"
+    >
+
+        <i class="bi bi-arrow-left"></i>
+
+        Back to Dashboard
+
+    </a>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- COMPLAINT DETAILS -->
+<!-- ========================================================= -->
+
+<div class="card border-0 shadow-sm mb-4">
+
+    <div class="card-body p-4">
+
+        <h5 class="fw-bold mb-4">
+            Complaint Details
+        </h5>
+
+
+        <div class="row g-4">
+
+
+            <!-- ================================================= -->
+            <!-- CATEGORY -->
+            <!-- ================================================= -->
+
+            <div class="col-md-6">
+
+                <label class="text-muted small">
+                    Category
+                </label>
+
+                <div class="fw-semibold">
+                    {{ complaint.category }}
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- DIRECTED AGAINST -->
+            <!-- ================================================= -->
+
+            <div class="col-md-6">
+
+                <label class="text-muted small">
+                    Directed Against
+                </label>
+
+                <div class="fw-semibold">
+
+                    {{ complaint.directed_against }}
+
+                    {% if complaint.custom_target %}
+
+                        <span class="text-muted">
+                            ({{ complaint.custom_target }})
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- URGENCY -->
+            <!-- ================================================= -->
+
+            <div class="col-md-6">
+
+                <label class="text-muted small">
+                    Urgency
+                </label>
+
+                <div>
+
+                    {% if complaint.urgency_level == "Emergency" %}
+
+                    <span class="badge text-bg-danger">
+                        🚨 Emergency
+                    </span>
+
+                    {% else %}
+
+                    <span class="badge text-bg-secondary">
+                        {{ complaint.urgency_level }}
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- STATUS -->
+            <!-- ================================================= -->
+
+            <div class="col-md-6">
+
+                <label class="text-muted small">
+                    Status
+                </label>
+
+                <div>
+
+                    {% if complaint.status == "Pending" %}
+
+                    <span class="badge text-bg-warning">
+                        Pending
+                    </span>
+
+                    {% elif complaint.status == "Forwarded" %}
+
+                    <span class="badge text-bg-info">
+                        Forwarded
+                    </span>
+
+                    {% elif complaint.status == "Solved" %}
+
+                    <span class="badge text-bg-success">
+                        Solved
+                    </span>
+
+                    {% else %}
+
+                    <span class="badge text-bg-secondary">
+                        {{ complaint.status }}
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- DATE -->
+            <!-- ================================================= -->
+
+            <div class="col-md-6">
+
+                <label class="text-muted small">
+                    Submitted
+                </label>
+
+                <div class="fw-semibold">
+
+                    {{ complaint.date_submitted.strftime('%d %b %Y') }}
+
+                    at
+
+                    {{ complaint.date_submitted.strftime('%I:%M %p') }}
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- DESCRIPTION -->
+            <!-- ================================================= -->
+
+            <div class="col-12">
+
+                <label class="text-muted small">
+                    Description
+                </label>
+
+                <div class="p-3 bg-light rounded">
+
+                    {{ complaint.description }}
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- ADMIN / HOD SOLUTION & FEEDBACK -->
+<!-- ========================================================= -->
+
+<div class="card border-0 shadow-sm mb-4">
+
+    <div class="card-body p-4">
+
+        <h5 class="fw-bold mb-4">
+
+            <i class="bi bi-chat-square-text me-1"></i>
+
+            Solution / Feedback
+
+        </h5>
+
+
+        <!-- ================================================= -->
+        <!-- GET SOLUTIONS FROM HISTORY -->
+        <!-- ================================================= -->
+
+        {% set solutions = history
+            | selectattr("action", "equalto", "Complaint Solved")
+            | list
+        %}
+
+
+        {% if solutions %}
+
+
+            {% for solution in solutions %}
+
+
+            <!-- ================================================= -->
+            <!-- SOLUTION -->
+            <!-- ================================================= -->
+
+            <div class="border rounded p-3 mb-3">
+
+                <div
+                    class="d-flex justify-content-between align-items-center mb-2"
+                >
+
+                    <strong>
+                        Solution Provided
+                    </strong>
+
+
+                    <small class="text-muted">
+
+                        {{ solution.created_at.strftime('%d %b %Y') }}
+
+                        at
+
+                        {{ solution.created_at.strftime('%I:%M %p') }}
+
+                    </small>
+
+                </div>
+
+
+                <!-- Solution Text -->
+
+                <div class="bg-light rounded p-3">
+
+                    {{ solution.description }}
+
+                </div>
+
+            </div>
+
+
+            {% endfor %}
+
+
+        {% else %}
+
+
+            <!-- ================================================= -->
+            <!-- NO SOLUTION YET -->
+            <!-- ================================================= -->
+
+            <div class="text-muted">
+
+                <i class="bi bi-info-circle me-1"></i>
+
+                No solution or feedback has been provided yet.
+
+            </div>
+
+
+        {% endif %}
+
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- COMPLAINT HISTORY -->
+<!-- ========================================================= -->
+
+<div class="card border-0 shadow-sm mb-4">
+
+    <div class="card-body p-4">
+
+        <h5 class="fw-bold mb-4">
+
+            <i class="bi bi-clock-history me-1"></i>
+
+            Complaint History
+
+        </h5>
+
+
+        {% if history %}
+
+
+        <div class="list-group">
+
+
+            {% for item in history %}
+
+
+            <div class="list-group-item">
+
+
+                <!-- ================================================= -->
+                <!-- HISTORY HEADER -->
+                <!-- ================================================= -->
+
+                <div class="d-flex justify-content-between">
+
+
+                    <div>
+
+                        <strong>
+                            {{ item.action }}
+                        </strong>
+
+
+                        {% if item.old_status or item.new_status %}
+
+
+                        <div class="small text-muted mt-1">
+
+
+                            {% if item.old_status %}
+
+                                {{ item.old_status }}
+
+                            {% endif %}
+
+
+                            {% if item.old_status and item.new_status %}
+
+                                →
+
+                            {% endif %}
+
+
+                            {% if item.new_status %}
+
+                                {{ item.new_status }}
+
+                            {% endif %}
+
+
+                        </div>
+
+
+                        {% endif %}
+
+
+                    </div>
+
+
+                    <!-- ================================================= -->
+                    <!-- HISTORY DATE -->
+                    <!-- ================================================= -->
+
+                    <small class="text-muted">
+
+                        {{ item.created_at.strftime('%d %b %Y') }}
+
+                        <br>
+
+                        {{ item.created_at.strftime('%I:%M %p') }}
+
+                    </small>
+
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- HISTORY DESCRIPTION -->
+                <!-- ================================================= -->
+
+                {% if item.description %}
+
+                <div class="mt-2 text-muted">
+
+                    {{ item.description }}
+
+                </div>
+
+                {% endif %}
+
+
+            </div>
+
+
+            {% endfor %}
+
+
+        </div>
+
+
+        {% else %}
+
+
+        <p class="text-muted mb-0">
+
+            No history available.
+
+        </p>
+
+
+        {% endif %}
+
+
+    </div>
+
+</div>
+
+
+{% endblock %}

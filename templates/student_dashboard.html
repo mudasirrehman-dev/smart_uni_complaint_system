@@ -254,6 +254,7 @@ Student Dashboard | Smart University Complaint System
                             <th>Urgency</th>
                             <th>Status</th>
                             <th>Date</th>
+                            <th>Action</th>
                         </tr>
 
                     </thead>
@@ -378,6 +379,19 @@ Student Dashboard | Smart University Complaint System
                                 <br>
 
                                 {{ complaint.date_submitted.strftime('%I:%M %p') }}
+
+                            </td>
+                            <!-- Action -->
+
+                            <td>
+
+                                <a
+                                    href="{{ url_for('complaint_details', complaint_id=complaint.id) }}"
+                                    class="btn btn-sm btn-outline-primary"
+                                >
+                                    <i class="bi bi-eye"></i>
+                                    View Details
+                                </a>
 
                             </td>
 

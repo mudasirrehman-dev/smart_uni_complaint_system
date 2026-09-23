@@ -9,7 +9,13 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from extensions import db
 
 # Database models
-from models import User, Complaint
+from models import (
+    User,
+    Complaint,
+    ComplaintComment,
+    ComplaintHistory,
+    Notification
+)
 
 # Password verification
 from werkzeug.security import check_password_hash
@@ -43,6 +49,32 @@ app.secret_key = "dev-secret-key"
 # Connect SQLAlchemy database with Flask application
 db.init_app(app)
 
+# ============================================================
+# COMPLAINT HISTORY HELPER
+# ============================================================
+
+def add_complaint_history(
+    complaint,
+    user_id,
+    action,
+    old_status=None,
+    new_status=None,
+    description=None
+):
+    """
+    Complaint ki history mein ek new record create karta hai.
+    """
+
+    history = ComplaintHistory(
+        complaint_id=complaint.id,
+        user_id=user_id,
+        action=action,
+        old_status=old_status,
+        new_status=new_status,
+        description=description
+    )
+
+    db.session.add(history)
 
 # ============================================================
 # HOME ROUTE
@@ -165,6 +197,24 @@ def student_dashboard():
     complaints_remaining = 5 - complaints_used
 
     # --------------------------------------------------------
+    # EMERGENCY COMPLAINT COUNTER
+    # --------------------------------------------------------
+
+    # Count Emergency complaints submitted by this student
+    emergency_count = sum(
+        1
+        for complaint in complaints
+        if complaint.urgency_level == "Emergency"
+    )
+
+    # Emergency complaint limit is 2 per month
+    emergency_remaining = 2 - emergency_count
+
+    # Prevent negative value
+    if emergency_remaining < 0:
+        emergency_remaining = 0
+
+    # --------------------------------------------------------
     # COMPLAINT STATUS COUNTS
     # --------------------------------------------------------
 
@@ -196,10 +246,14 @@ def student_dashboard():
         complaints=complaints,
         complaints_used=complaints_used,
         complaints_remaining=complaints_remaining,
+        emergency_count=emergency_count,
+        emergency_remaining=emergency_remaining,
         pending_count=pending_count,
         forwarded_count=forwarded_count,
         solved_count=solved_count
     )
+
+
 
 
 # ============================================================
@@ -210,69 +264,317 @@ def student_dashboard():
 @role_required("student")
 def submit_complaint():
 
-    # Run this code when the complaint form is submitted
+    # Get the currently logged-in student's ID
+    student_id = session["user_id"]
+
+    # ========================================================
+    # GET CURRENT MONTH
+    # ========================================================
+
+    # Get the current date and time
+    now = datetime.now()
+
+    # Create the first date of the current month
+    month_start = datetime(
+        now.year,
+        now.month,
+        1
+    )
+
+    # ========================================================
+    # POST - SUBMIT COMPLAINT
+    # ========================================================
+
     if request.method == "POST":
 
         # Get complaint information from the form
         category = request.form.get("category")
         directed_against = request.form.get("directed_against")
         description = request.form.get("description")
+
+        # Get custom target when "Other" is selected
+        custom_target = request.form.get("custom_target")
+
+        # Get emergency checkbox value
         is_emergency = request.form.get("is_emergency")
 
-        # Get the currently logged-in student's ID
-        student_id = session["user_id"]
+        # ====================================================
+        # BASIC BACKEND VALIDATION
+        # ====================================================
 
-        # Get the current date and time
-        now = datetime.now()
+        # Check category
+        if not category or not category.strip():
+            return "Complaint category is required."
 
-        # Create the first date of the current month
-        month_start = datetime(now.year, now.month, 1)
+        # Check directed against
+        if not directed_against or not directed_against.strip():
+            return "Directed Against is required."
 
-        # Count complaints submitted by this student
+        # Check description
+        if not description or not description.strip():
+            return "Complaint description is required."
+
+        # ====================================================
+        # CUSTOM TARGET VALIDATION
+        # ====================================================
+
+        # If "Other" is selected, custom target is required
+        if directed_against == "Other":
+
+            if not custom_target or not custom_target.strip():
+                return "Please specify the person or department."
+
+            # Remove unnecessary spaces
+            custom_target = custom_target.strip()
+
+        else:
+
+            # No custom target for predefined options
+            custom_target = None
+
+        # ====================================================
+        # MONTHLY COMPLAINT LIMIT
+        # ====================================================
+
+        # Count all complaints submitted by this student
         # during the current month
         monthly_count = Complaint.query.filter(
             Complaint.student_id == student_id,
             Complaint.date_submitted >= month_start
         ).count()
 
-        # Check the monthly complaint limit
+        # Maximum 5 complaints per month
         if monthly_count >= 5:
             return "Monthly complaint limit reached (5/5)."
 
-        # ----------------------------------------------------
-        # SET COMPLAINT URGENCY
-        # ----------------------------------------------------
+        # ====================================================
+        # EMERGENCY COMPLAINT LIMIT
+        # ====================================================
 
-        # Emergency complaint
+        # Default urgency
+        urgency_level = "Medium"
+
+        # If student selected Emergency
         if is_emergency == "1":
+
+            # Count Emergency complaints submitted by this
+            # student during the current month
+            emergency_count = Complaint.query.filter(
+                Complaint.student_id == student_id,
+                Complaint.urgency_level == "Emergency",
+                Complaint.date_submitted >= month_start
+            ).count()
+
+            # Maximum 2 Emergency complaints per month
+            if emergency_count >= 2:
+                return "Emergency complaint limit reached."
+
+            # Set urgency as Emergency
             urgency_level = "Emergency"
 
-        # Normal complaint
-        else:
-            urgency_level = "Medium"
-
-        # ----------------------------------------------------
+        # ====================================================
         # CREATE NEW COMPLAINT
-        # ----------------------------------------------------
+        # ====================================================
 
         complaint = Complaint(
             student_id=student_id,
-            category=category,
-            directed_against=directed_against,
-            description=description,
+            category=category.strip(),
+            directed_against=directed_against.strip(),
+            custom_target=custom_target,
+            description=description.strip(),
             urgency_level=urgency_level,
             status="Pending"
         )
 
-        # Save the new complaint in the database
+        # ========================================================
+        # SAVE COMPLAINT
+        # ========================================================
+
         db.session.add(complaint)
+
+        # Commit first so complaint gets its database ID
         db.session.commit()
 
-        # Return the student to their dashboard
-        return redirect(url_for("student_dashboard"))
 
-    # Show the complaint submission form
-    return render_template("submit_complaint.html")
+        # ========================================================
+        # CREATE COMPLAINT HISTORY
+        # ========================================================
+
+        add_complaint_history(
+            complaint=complaint,
+            user_id=student_id,
+            action="Complaint Submitted",
+            old_status=None,
+            new_status="Pending",
+            description="Complaint submitted by student."
+        )
+
+        # Save history record
+        db.session.commit()
+
+
+        # ========================================================
+        # RETURN TO STUDENT DASHBOARD
+        # ========================================================
+
+        return redirect(
+            url_for("student_dashboard")
+        )
+
+# ========================================================
+    # GET - SHOW COMPLAINT FORM
+    # ========================================================
+
+    # Count Emergency complaints for this student
+    # during the current month
+    emergency_count = Complaint.query.filter(
+        Complaint.student_id == student_id,
+        Complaint.urgency_level == "Emergency",
+        Complaint.date_submitted >= month_start
+    ).count()
+
+    # Show complaint form
+    return render_template(
+        "submit_complaint.html",
+        emergency_count=emergency_count
+    )
+
+
+# ============================================================
+# COMPLAINT DETAILS
+# ============================================================
+
+@app.route("/complaint/<int:complaint_id>/details")
+@role_required("student")
+def complaint_details(complaint_id):
+
+    # --------------------------------------------------------
+    # Get complaint
+    # --------------------------------------------------------
+
+    complaint = Complaint.query.get_or_404(complaint_id)
+
+    # --------------------------------------------------------
+    # Security Check
+    # --------------------------------------------------------
+    # Student can only view their own complaint.
+    # --------------------------------------------------------
+
+    if complaint.student_id != session["user_id"]:
+        return "Access Denied", 403
+
+    # --------------------------------------------------------
+    # Get comments
+    # --------------------------------------------------------
+
+    comments = ComplaintComment.query.filter_by(
+        complaint_id=complaint.id
+    ).order_by(
+        ComplaintComment.created_at.asc()
+    ).all()
+
+    # --------------------------------------------------------
+    # Get complaint history
+    # --------------------------------------------------------
+
+    history = ComplaintHistory.query.filter_by(
+        complaint_id=complaint.id
+    ).order_by(
+        ComplaintHistory.created_at.asc()
+    ).all()
+
+    # --------------------------------------------------------
+    # Display complaint details
+    # --------------------------------------------------------
+
+    return render_template(
+        "complaint_details.html",
+        complaint=complaint,
+        comments=comments,
+        history=history
+    )
+
+# ============================================================
+# ADD COMPLAINT COMMENT
+# ============================================================
+
+@app.route(
+    "/complaint/<int:complaint_id>/comment",
+    methods=["POST"]
+)
+@role_required("student")
+def add_complaint_comment(complaint_id):
+
+    # --------------------------------------------------------
+    # Get complaint
+    # --------------------------------------------------------
+
+    complaint = Complaint.query.get_or_404(complaint_id)
+
+    # --------------------------------------------------------
+    # Security Check
+    # --------------------------------------------------------
+    # Student can only comment on their own complaint.
+    # --------------------------------------------------------
+
+    if complaint.student_id != session["user_id"]:
+        return "Access Denied", 403
+
+    # --------------------------------------------------------
+    # Get comment
+    # --------------------------------------------------------
+
+    comment_text = request.form.get("comment")
+
+    if comment_text:
+        comment_text = comment_text.strip()
+
+    # --------------------------------------------------------
+    # Validate comment
+    # --------------------------------------------------------
+
+    if not comment_text:
+        return """
+        <h3>Comment Required</h3>
+        <p>Please enter a comment or feedback.</p>
+        <a href="/complaint/{}/details">
+            Back to Complaint
+        </a>
+        """.format(complaint.id), 400
+
+    # --------------------------------------------------------
+    # Create comment
+    # --------------------------------------------------------
+
+    comment = ComplaintComment(
+        complaint_id=complaint.id,
+        user_id=session["user_id"],
+        comment=comment_text
+    )
+
+    db.session.add(comment)
+
+    # --------------------------------------------------------
+    # Save comment
+    # --------------------------------------------------------
+
+    db.session.commit()
+
+    # --------------------------------------------------------
+    # Return to complaint details
+    # --------------------------------------------------------
+
+    return redirect(
+        url_for(
+            "complaint_details",
+            complaint_id=complaint.id
+        )
+    )
+
+
+
+
+
 
 # ============================================================
 # ADMIN DASHBOARD
@@ -398,90 +700,204 @@ def admin_dashboard():
 # SOLVE SINGLE COMPLAINT
 # ============================================================
 
-@app.route("/complaint/<int:complaint_id>/solve", methods=["POST"])
+@app.route(
+    "/complaint/<int:complaint_id>/solve",
+    methods=["POST"]
+)
 @role_required("admin")
 def solve_complaint(complaint_id):
 
-    # Find the complaint using its ID.
-    # If it does not exist, return 404.
+    # ========================================================
+    # GET COMPLAINT
+    # ========================================================
+
     complaint = Complaint.query.get_or_404(complaint_id)
 
 
-    # --------------------------------------------------------
+    # ========================================================
     # SECURITY CHECK
-    # --------------------------------------------------------
-    # Admin cannot solve a complaint directed against Admin.
-    # Such complaints are handled by HOD.
-    # --------------------------------------------------------
+    # ========================================================
+    # Admin cannot solve complaints directed against Admin.
+    # These complaints are handled by HOD.
 
     if complaint.directed_against == "Admin":
         return "Access Denied", 403
 
 
-    # --------------------------------------------------------
+    # ========================================================
+    # GET SOLUTION / FEEDBACK
+    # ========================================================
+
+    solution = request.form.get(
+        f"solution_{complaint_id}"
+    )
+
+
+    # Remove unnecessary spaces
+    if solution:
+        solution = solution.strip()
+
+
+    # ========================================================
+    # SOLUTION IS REQUIRED
+    # ========================================================
+
+    if not solution:
+
+        return """
+        <h3>Solution / Feedback Required</h3>
+
+        <p>
+            Please enter a solution or feedback before solving
+            the complaint.
+        </p>
+
+        <a href="/admin/dashboard">
+            Back to Admin Dashboard
+        </a>
+        """, 400
+
+
+    # ========================================================
     # CHECK IF COMPLAINT BELONGS TO A GROUP
-    # --------------------------------------------------------
+    # ========================================================
 
     if complaint.group_id is not None:
 
-        # Get every complaint belonging to the same group
+        # Get all complaints in this group
         grouped_complaints = Complaint.query.filter_by(
             group_id=complaint.group_id
         ).all()
 
 
-        # Solve every complaint in this group
+        # ====================================================
+        # SOLVE ALL GROUP COMPLAINTS
+        # ====================================================
+
         for grouped_complaint in grouped_complaints:
+
+            old_status = grouped_complaint.status
+
             grouped_complaint.status = "Solved"
 
 
+            # Add history for every complaint
+            add_complaint_history(
+                complaint=grouped_complaint,
+                user_id=session["user_id"],
+                action="Complaint Solved",
+                old_status=old_status,
+                new_status="Solved",
+                description=solution
+            )
+
+
     else:
-        # This is a normal single complaint,
-        # so solve only this complaint.
+
+        # ====================================================
+        # SINGLE COMPLAINT
+        # ====================================================
+
+        old_status = complaint.status
+
         complaint.status = "Solved"
 
 
-    # Save all changes in the database
+        # ====================================================
+        # ADD HISTORY
+        # ====================================================
+
+        add_complaint_history(
+            complaint=complaint,
+            user_id=session["user_id"],
+            action="Complaint Solved",
+            old_status=old_status,
+            new_status="Solved",
+            description=solution
+        )
+
+
+    # ========================================================
+    # SAVE CHANGES
+    # ========================================================
+
     db.session.commit()
 
 
-    # Return to the Admin Dashboard
-    return redirect(url_for("admin_dashboard"))
+    # ========================================================
+    # RETURN TO ADMIN DASHBOARD
+    # ========================================================
+
+    return redirect(
+        url_for("admin_dashboard")
+    )
 
 
 # ============================================================
 # FORWARD SINGLE COMPLAINT TO HOD
 # ============================================================
 
-@app.route("/complaint/<int:complaint_id>/forward", methods=["POST"])
+@app.route(
+    "/complaint/<int:complaint_id>/forward",
+    methods=["POST"]
+)
 @role_required("admin")
 def forward_to_hod(complaint_id):
 
-    # Find the complaint using its ID
+    # ========================================================
+    # GET COMPLAINT
+    # ========================================================
+
     complaint = Complaint.query.get_or_404(complaint_id)
 
-
-    # --------------------------------------------------------
+    # ========================================================
     # SECURITY CHECK
-    # --------------------------------------------------------
-    # Admin cannot forward a complaint directed against Admin
-    # because complaints against Admin already belong to HOD.
-    # --------------------------------------------------------
+    # ========================================================
+    # Admin cannot forward complaints directed against Admin.
+    # Those complaints are handled directly by HOD.
 
     if complaint.directed_against == "Admin":
         return "Access Denied", 403
 
+    # ========================================================
+    # SAVE OLD STATUS
+    # ========================================================
 
-    # Change complaint status to Forwarded
+    old_status = complaint.status
+
+    # ========================================================
+    # CHANGE STATUS
+    # ========================================================
+
     complaint.status = "Forwarded"
 
+    # ========================================================
+    # CREATE HISTORY RECORD
+    # ========================================================
 
-    # Save the change
+    add_complaint_history(
+        complaint=complaint,
+        user_id=session["user_id"],
+        action="Forwarded to HOD",
+        old_status=old_status,
+        new_status="Forwarded",
+        description="Complaint forwarded to HOD by Admin."
+    )
+
+    # ========================================================
+    # SAVE CHANGES
+    # ========================================================
+
     db.session.commit()
 
+    # ========================================================
+    # RETURN TO ADMIN DASHBOARD
+    # ========================================================
 
-    # Return to the Admin Dashboard
-    return redirect(url_for("admin_dashboard"))
+    return redirect(
+        url_for("admin_dashboard")
+    )
+
 
 # ============================================================
 # COMPLAINT GROUPING
@@ -748,32 +1164,29 @@ def hod_dashboard():
     # HOD can see:
     # 1. Complaints directed against Admin
     # 2. Complaints forwarded by Admin
+    # 3. Complaints previously solved by HOD
     # ========================================================
 
     complaints = Complaint.query.filter(
         or_(
             Complaint.directed_against == "Admin",
-            Complaint.status == "Forwarded"
+
+            Complaint.status == "Forwarded",
+
+            Complaint.id.in_(
+                db.session.query(ComplaintHistory.complaint_id)
+                .filter(
+                    ComplaintHistory.user_id == session["user_id"],
+                    ComplaintHistory.action == "Complaint Solved"
+                )
+            )
         )
     ).order_by(
-
-        # ----------------------------------------------------
-        # PRIORITY SORTING
-        # ----------------------------------------------------
-        # Priority order:
-        # 1. All active Emergency complaints
-        #    (Pending OR Forwarded)
-        # 2. Normal Pending complaints
-        # 3. Normal Forwarded complaints
-        # 4. Solved complaints
-        # 5. Anything else
-        # ----------------------------------------------------
 
         case(
 
             # Priority 1:
-            # Emergency complaints always remain highest priority
-            # unless they are already Solved.
+            # Active Emergency complaints
             (
                 (Complaint.urgency_level == "Emergency") &
                 (Complaint.status != "Solved"),
@@ -781,14 +1194,14 @@ def hod_dashboard():
             ),
 
             # Priority 2:
-            # Normal Pending complaints
+            # Pending complaints
             (
                 Complaint.status == "Pending",
                 2
             ),
 
             # Priority 3:
-            # Normal Forwarded complaints
+            # Forwarded complaints
             (
                 Complaint.status == "Forwarded",
                 3
@@ -801,13 +1214,9 @@ def hod_dashboard():
                 4
             ),
 
-            # Priority 5:
-            # Any other status
             else_=5
         ),
 
-        # Show newer complaints first
-        # when complaints have the same priority
         Complaint.date_submitted.desc()
 
     ).all()
@@ -815,11 +1224,6 @@ def hod_dashboard():
 
     # ========================================================
     # COUNT ACTIVE EMERGENCY COMPLAINTS
-    # ========================================================
-    # Count Emergency complaints that are not solved.
-    # This includes both:
-    # - Emergency + Pending
-    # - Emergency + Forwarded
     # ========================================================
 
     emergency_count = sum(
@@ -854,16 +1258,21 @@ def hod_dashboard():
 @role_required("hod")
 def hod_solve_complaint(complaint_id):
 
-    # Find the complaint using its ID
+    # ========================================================
+    # GET COMPLAINT
+    # ========================================================
+
     complaint = Complaint.query.get_or_404(complaint_id)
+
 
     # ========================================================
     # SECURITY CHECK
     # ========================================================
-    # HOD can only solve complaints that are:
-    # 1. Directed against Admin
+    # HOD can only solve:
+    #
+    # 1. Complaints directed against Admin
     # OR
-    # 2. Forwarded by Admin
+    # 2. Complaints forwarded by Admin
     # ========================================================
 
     if (
@@ -872,14 +1281,81 @@ def hod_solve_complaint(complaint_id):
     ):
         return "Access Denied", 403
 
-    # Mark the complaint as solved
+
+    # ========================================================
+    # GET SOLUTION / FEEDBACK
+    # ========================================================
+
+    solution = request.form.get("solution")
+
+
+    # Remove unnecessary spaces
+    if solution:
+        solution = solution.strip()
+
+
+    # ========================================================
+    # SOLUTION IS REQUIRED
+    # ========================================================
+
+    if not solution:
+
+        return """
+        <h3>Solution / Feedback Required</h3>
+
+        <p>
+            Please enter a solution or feedback before solving
+            the complaint.
+        </p>
+
+        <a href="/hod/dashboard">
+            Back to HOD Dashboard
+        </a>
+        """, 400
+
+
+    # ========================================================
+    # SAVE OLD STATUS
+    # ========================================================
+
+    old_status = complaint.status
+
+
+    # ========================================================
+    # CHANGE STATUS
+    # ========================================================
+
     complaint.status = "Solved"
 
-    # Save the change
+
+    # ========================================================
+    # CREATE HISTORY
+    # ========================================================
+
+    add_complaint_history(
+        complaint=complaint,
+        user_id=session["user_id"],
+        action="Complaint Solved",
+        old_status=old_status,
+        new_status="Solved",
+        description=solution
+    )
+
+
+    # ========================================================
+    # SAVE CHANGES
+    # ========================================================
+
     db.session.commit()
 
-    # Return to HOD Dashboard
-    return redirect(url_for("hod_dashboard"))
+
+    # ========================================================
+    # RETURN TO HOD DASHBOARD
+    # ========================================================
+
+    return redirect(
+        url_for("hod_dashboard")
+    )
 
 
 # ============================================================

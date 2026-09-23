@@ -525,28 +525,44 @@ HOD Dashboard | Smart University Complaint System
 
                                 {% if complaint.status != "Solved" %}
 
-                                <form
-                                    method="POST"
-                                    action="{{ url_for('hod_solve_complaint', complaint_id=complaint.id) }}"
-                                >
-
-                                    <button
-                                        type="submit"
-                                        class="btn btn-success"
-                                        onclick="return confirm('Are you sure you want to mark this complaint as solved?')"
+                                    <form
+                                        method="POST"
+                                        action="{{ url_for('hod_solve_complaint', complaint_id=complaint.id) }}"
                                     >
-                                        <i class="bi bi-check-lg"></i>
-                                        Solve
-                                    </button>
 
-                                </form>
+                                        <!-- Solution / Feedback -->
+
+                                        <textarea
+                                            name="solution"
+                                            class="form-control form-control-sm mb-2"
+                                            rows="3"
+                                            placeholder="Enter solution / feedback before solving..."
+                                            required
+                                        ></textarea>
+
+
+                                        <!-- Solve Button -->
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-success"
+                                            onclick="return confirm('Are you sure you want to mark this complaint as solved?')"
+                                        >
+                                            <i class="bi bi-check-lg"></i>
+                                            Solve
+                                        </button>
+
+                                    </form>
 
                                 {% else %}
 
-                                <span class="text-muted small">
-                                    <i class="bi bi-check-circle"></i>
-                                    No action required
-                                </span>
+                                    <span class="text-muted small">
+
+                                        <i class="bi bi-check-circle"></i>
+
+                                        No action required
+
+                                    </span>
 
                                 {% endif %}
 
