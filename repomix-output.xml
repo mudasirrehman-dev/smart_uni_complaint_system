@@ -1,0 +1,6773 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+static/
+  css/
+    style.css
+  js/
+    script.js
+templates/
+  admin_dashboard.html
+  base.html
+  complaint_details.html
+  hod_dashboard.html
+  login.html
+  student_dashboard.html
+  submit_complaint.html
+.gitignore
+app.py
+create_users.py
+extensions.py
+migrate_db.py
+models.py
+README.md
+requirements.txt
+seed.py
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="static/js/script.js">
+const togglePassword = document.getElementById("togglePassword");
+const password = document.getElementById("password");
+const togglePasswordIcon = document.getElementById("togglePasswordIcon");
+
+if (togglePassword && password && togglePasswordIcon) {
+
+    togglePassword.addEventListener("click", function () {
+
+        if (password.type === "password") {
+
+            password.type = "text";
+
+            togglePasswordIcon.classList.remove("bi-eye");
+            togglePasswordIcon.classList.add("bi-eye-slash");
+
+        } else {
+
+            password.type = "password";
+
+            togglePasswordIcon.classList.remove("bi-eye-slash");
+            togglePasswordIcon.classList.add("bi-eye");
+
+        }
+
+    });
+
+}
+</file>
+
+<file path="templates/complaint_details.html">
+{% extends "base.html" %}
+
+{% block title %}
+Complaint Details | Smart University Complaint System
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ========================================================= -->
+<!-- PAGE HEADER -->
+<!-- ========================================================= -->
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+
+        <h2 class="fw-bold mb-1">
+            Complaint #{{ complaint.id }}
+        </h2>
+
+        <p class="text-muted mb-0">
+            View complaint details, solution/feedback and history.
+        </p>
+
+    </div>
+
+
+    <a
+        href="{{ url_for('student_dashboard') }}"
+        class="btn btn-outline-secondary"
+    >
+
+        <i class="bi bi-arrow-left"></i>
+
+        Back to Dashboard
+
+    </a>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- COMPLAINT DETAILS -->
+<!-- ========================================================= -->
+
+<div class="card border-0 shadow-sm mb-4">
+
+    <div class="card-body p-4">
+
+        <h5 class="fw-bold mb-4">
+            Complaint Details
+        </h5>
+
+
+        <div class="row g-4">
+
+
+            <!-- ================================================= -->
+            <!-- CATEGORY -->
+            <!-- ================================================= -->
+
+            <div class="col-md-6">
+
+                <label class="text-muted small">
+                    Category
+                </label>
+
+                <div class="fw-semibold">
+                    {{ complaint.category }}
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- DIRECTED AGAINST -->
+            <!-- ================================================= -->
+
+            <div class="col-md-6">
+
+                <label class="text-muted small">
+                    Directed Against
+                </label>
+
+                <div class="fw-semibold">
+
+                    {{ complaint.directed_against }}
+
+                    {% if complaint.custom_target %}
+
+                        <span class="text-muted">
+                            ({{ complaint.custom_target }})
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- URGENCY -->
+            <!-- ================================================= -->
+
+            <div class="col-md-6">
+
+                <label class="text-muted small">
+                    Urgency
+                </label>
+
+                <div>
+
+                    {% if complaint.urgency_level == "Emergency" %}
+
+                    <span class="badge text-bg-danger">
+                        🚨 Emergency
+                    </span>
+
+                    {% else %}
+
+                    <span class="badge text-bg-secondary">
+                        {{ complaint.urgency_level }}
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- STATUS -->
+            <!-- ================================================= -->
+
+            <div class="col-md-6">
+
+                <label class="text-muted small">
+                    Status
+                </label>
+
+                <div>
+
+                    {% if complaint.status == "Pending" %}
+
+                    <span class="badge text-bg-warning">
+                        Pending
+                    </span>
+
+                    {% elif complaint.status == "Forwarded" %}
+
+                    <span class="badge text-bg-info">
+                        Forwarded
+                    </span>
+
+                    {% elif complaint.status == "Solved" %}
+
+                    <span class="badge text-bg-success">
+                        Solved
+                    </span>
+
+                    {% elif complaint.status == "Rejected" %}
+
+                    <span class="badge text-bg-danger">
+                        Rejected
+                    </span>
+
+                    {% else %}
+
+                    <span class="badge text-bg-secondary">
+                        {{ complaint.status }}
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- DATE -->
+            <!-- ================================================= -->
+
+            <div class="col-md-6">
+
+                <label class="text-muted small">
+                    Submitted
+                </label>
+
+                <div class="fw-semibold">
+
+                    {{ complaint.date_submitted.strftime('%d %b %Y') }}
+
+                    at
+
+                    {{ complaint.date_submitted.strftime('%I:%M %p') }}
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- DESCRIPTION -->
+            <!-- ================================================= -->
+
+            <div class="col-12">
+
+                <label class="text-muted small">
+                    Description
+                </label>
+
+                <div class="p-3 bg-light rounded">
+
+                    {{ complaint.description }}
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- ADMIN / HOD SOLUTION & FEEDBACK -->
+<!-- ========================================================= -->
+
+<div class="card border-0 shadow-sm mb-4">
+
+    <div class="card-body p-4">
+
+        <h5 class="fw-bold mb-4">
+
+            {% if complaint.status == "Rejected" %}
+
+                <i class="bi bi-x-circle me-1 text-danger"></i>
+
+                Rejection Feedback
+
+            {% elif complaint.status == "Solved" %}
+
+                <i class="bi bi-check-circle me-1 text-success"></i>
+
+                Solution / Feedback
+
+            {% else %}
+
+                <i class="bi bi-chat-square-text me-1"></i>
+
+                Solution / Feedback
+
+            {% endif %}
+
+        </h5>
+
+
+        <!-- ================================================= -->
+        <!-- GET SOLUTIONS FROM HISTORY -->
+        <!-- ================================================= -->
+
+        {% set solutions = history
+            | selectattr(
+                "action",
+                "in",
+                ["Complaint Solved", "Complaint Rejected"]
+            )
+            | list
+        %}
+
+
+        {% if solutions %}
+
+
+            {% for solution in solutions %}
+
+
+            <!-- ================================================= -->
+            <!-- SOLUTION -->
+            <!-- ================================================= -->
+
+            <div class="border rounded p-3 mb-3">
+
+                <div
+                    class="d-flex justify-content-between align-items-center mb-2"
+                >
+
+                    <strong>
+                        {% if solution.action == "Complaint Rejected" %}
+                            <i class="text-danger" >Rejection Feedback</i>
+                        {% else %}
+                            <i class="text-success">Solution Provided</i>
+                        {% endif %}
+                    </strong>
+
+
+                    <small class="text-muted">
+
+                        {{ solution.created_at.strftime('%d %b %Y') }}
+
+                        at
+
+                        {{ solution.created_at.strftime('%I:%M %p') }}
+
+                    </small>
+
+                </div>
+
+
+                <!-- Solution Text -->
+
+                <div class="bg-light rounded p-3">
+
+                    {{ solution.description }}
+
+                </div>
+
+            </div>
+
+
+            {% endfor %}
+
+
+        {% else %}
+
+
+            <!-- ================================================= -->
+            <!-- NO SOLUTION YET -->
+            <!-- ================================================= -->
+
+            <div class="text-muted">
+
+                <i class="bi bi-info-circle me-1"></i>
+
+                No solution or feedback has been provided yet.
+
+            </div>
+
+
+        {% endif %}
+
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- COMPLAINT HISTORY -->
+<!-- ========================================================= -->
+
+<div class="card border-0 shadow-sm mb-4">
+
+    <div class="card-body p-4">
+
+        <h5 class="fw-bold mb-4">
+
+            <i class="bi bi-clock-history me-1"></i>
+
+            Complaint History
+
+        </h5>
+
+
+        {% if history %}
+
+
+        <div class="list-group">
+
+
+            {% for item in history %}
+
+
+            <div class="list-group-item">
+
+
+                <!-- ================================================= -->
+                <!-- HISTORY HEADER -->
+                <!-- ================================================= -->
+
+                <div class="d-flex justify-content-between">
+
+
+                    <div>
+
+                        <strong>
+                            {{ item.action }}
+                        </strong>
+
+
+                        {% if item.old_status or item.new_status %}
+
+
+                        <div class="small text-muted mt-1">
+
+
+                            {% if item.old_status %}
+
+                                {{ item.old_status }}
+
+                            {% endif %}
+
+
+                            {% if item.old_status and item.new_status %}
+
+                                →
+
+                            {% endif %}
+
+
+                            {% if item.new_status %}
+
+                                {{ item.new_status }}
+
+                            {% endif %}
+
+
+                        </div>
+
+
+                        {% endif %}
+
+
+                    </div>
+
+
+                    <!-- ================================================= -->
+                    <!-- HISTORY DATE -->
+                    <!-- ================================================= -->
+
+                    <small class="text-muted">
+
+                        {{ item.created_at.strftime('%d %b %Y') }}
+
+                        <br>
+
+                        {{ item.created_at.strftime('%I:%M %p') }}
+
+                    </small>
+
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- HISTORY DESCRIPTION -->
+                <!-- ================================================= -->
+
+                {% if item.description %}
+
+                <div class="mt-2 text-muted">
+
+                    {{ item.description }}
+
+                </div>
+
+                {% endif %}
+
+
+            </div>
+
+
+            {% endfor %}
+
+
+        </div>
+
+
+        {% else %}
+
+
+        <p class="text-muted mb-0">
+
+            No history available.
+
+        </p>
+
+
+        {% endif %}
+
+
+    </div>
+
+</div>
+
+
+{% endblock %}
+</file>
+
+<file path=".gitignore">
+# ==============================================================================
+# Flask Specific
+# ==============================================================================
+instance/
+.webassets-cache
+.env
+.flaskenv
+
+# ==============================================================================
+# Python Caching & Byte-code
+# ==============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ==============================================================================
+# Virtual Environments (Dependencies)
+# ==============================================================================
+.venv/
+venv/
+ENV/
+env/
+target/
+.env/
+
+# ==============================================================================
+# Databases (Local Development)
+# ==============================================================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ==============================================================================
+# Testing & Code Coverage
+# ==============================================================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nosenv/
+
+# ==============================================================================
+# Distribution & Packaging
+# ==============================================================================
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+
+# ==============================================================================
+# IDEs and Text Editors
+# ==============================================================================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+</file>
+
+<file path="extensions.py">
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
+</file>
+
+<file path="migrate_db.py">
+from app import app
+from extensions import db
+from sqlalchemy import text
+
+
+# ============================================================
+# DATABASE MIGRATION
+# ============================================================
+
+with app.app_context():
+
+    # --------------------------------------------------------
+    # 1. Add custom_target column to existing complaint table
+    # --------------------------------------------------------
+
+    try:
+        db.session.execute(
+            text(
+                "ALTER TABLE complaint "
+                "ADD COLUMN custom_target VARCHAR(200)"
+            )
+        )
+
+        print("SUCCESS: custom_target column added.")
+
+    except Exception as e:
+
+        # Column may already exist
+        if "duplicate column name" in str(e).lower():
+            print("INFO: custom_target column already exists.")
+
+        else:
+            print("ERROR:", e)
+
+
+    # --------------------------------------------------------
+    # 2. Create new tables
+    # --------------------------------------------------------
+
+    db.create_all()
+
+    print("SUCCESS: New database tables created.")
+
+    # Save changes
+    db.session.commit()
+
+    print("Database migration completed successfully.")
+</file>
+
+<file path="seed.py">
+from app import app
+from extensions import db
+from models import User
+from werkzeug.security import generate_password_hash
+
+
+with app.app_context():
+
+    student = User(
+        username="student1",
+        password_hash=generate_password_hash("student123"),
+        role="student"
+    )
+
+    admin = User(
+        username="admin1",
+        password_hash=generate_password_hash("admin123"),
+        role="admin"
+    )
+
+    hod = User(
+        username="hod1",
+        password_hash=generate_password_hash("hod123"),
+        role="hod"
+    )
+
+    db.session.add_all([student, admin, hod])
+    db.session.commit()
+
+    print("3 test users created successfully!")
+</file>
+
+<file path="templates/base.html">
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}
+        Smart University Complaint System
+        {% endblock %}
+    </title>
+
+    <!-- Bootstrap CSS -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- Bootstrap Icons -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+
+    <!-- Custom CSS -->
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+    <style>
+
+    .description-details {
+        cursor: pointer;
+    }
+
+    .description-details summary {
+        list-style: none;
+        cursor: pointer;
+    }
+
+    .description-details summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .description-details summary::marker {
+        display: none;
+    }
+
+
+    /* Initially show short description */
+
+    .full-description {
+        display: none;
+    }
+
+
+    /* When expanded show full description */
+
+    .description-details[open] .short-description {
+        display: none;
+    }
+
+    .description-details[open] .full-description {
+        display: inline;
+    }
+
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- ================= HEADER / NAVBAR ================= -->
+
+    <nav class="navbar navbar-expand-lg navbar-dark university-navbar">
+        <div class="container">
+
+            <!-- Logo / Brand -->
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <div class="brand-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+
+                <div>
+                    <div class="brand-title">
+                        Smart University
+                    </div>
+
+                    <small class="brand-subtitle">
+                        Complaint System
+                    </small>
+                </div>
+            </a>
+
+            <!-- Mobile Menu Button -->
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#mainNavbar"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Navbar Links -->
+            <div
+                class="collapse navbar-collapse"
+                id="mainNavbar"
+            >
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+
+                    {% if session.get("user_id") %}
+
+                    <li class="nav-item">
+                        <span class="nav-link user-welcome">
+                            <i class="bi bi-person-circle"></i>
+                            {{ session.get("username") }}
+                        </span>
+                    </li>
+
+                    <li class="nav-item ms-lg-3">
+                        <a
+                            class="btn btn-light btn-sm px-3 logout-btn"
+                            href="{{ url_for('logout') }}"
+                        >
+                            <i class="bi bi-box-arrow-right"></i>
+                            Logout
+                        </a>
+                    </li>
+
+                    {% else %}
+
+                    <li class="nav-item">
+                        <span class="nav-link">
+                            Secure Complaint Management Portal
+                        </span>
+                    </li>
+
+                    {% endif %}
+
+                </ul>
+            </div>
+
+        </div>
+    </nav>
+
+
+    <!-- ================= MAIN CONTENT ================= -->
+
+    <main class="flex-grow-1 py-4">
+
+        <div class="container">
+
+            {% block content %}
+            {% endblock %}
+
+        </div>
+
+    </main>
+
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer class="footer mt-auto">
+
+        <div class="container">
+
+            <div class="row align-items-center py-4">
+
+                <!-- Left -->
+                <div class="col-md-6 text-center text-md-start">
+
+                    <h6 class="mb-1">
+                        <i class="bi bi-mortarboard-fill"></i>
+                        Smart University Complaint System
+                    </h6>
+
+                    <small>
+                        A secure platform for transparent and efficient
+                        complaint management.
+                    </small>
+
+                </div>
+
+                <!-- Right -->
+                <div class="col-md-6 text-center text-md-end mt-3 mt-md-0">
+
+                    <small>
+                        © 2026 Smart University
+                    </small>
+
+                    <span class="mx-2">|</span>
+
+                    <small>
+                        Final Year Project
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </footer>
+
+
+    <!-- Bootstrap JS -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+    <!-- Custom JS -->
+    <script
+        src="{{ url_for('static', filename='js/script.js') }}">
+    </script>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>
+</file>
+
+<file path="templates/login.html">
+{% extends "base.html" %}
+
+{% block title %}
+Login | Smart University Complaint System
+{% endblock %}
+
+
+{% block content %}
+
+<div class="row justify-content-center align-items-center login-page">
+
+    <div class="col-lg-5 col-md-7 col-sm-10">
+
+        <div class="card login-card border-0 shadow-lg">
+
+            <!-- Card Header -->
+            <div class="card-header login-card-header text-center border-0 py-4">
+
+                <div class="login-icon mb-3">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+
+                <h3 class="mb-1">
+                    Welcome Back
+                </h3>
+
+                <p class="mb-0">
+                    Login to access your complaint portal
+                </p>
+
+            </div>
+
+
+            <!-- Card Body -->
+            <div class="card-body p-4 p-md-5">
+
+                <form method="POST">
+
+                    <!-- Username -->
+                    <div class="mb-4">
+
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-person-fill me-1"></i>
+                            Username
+                        </label>
+
+                        <input
+                            type="text"
+                            name="username"
+                            class="form-control form-control-lg"
+                            placeholder="Enter your username"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- Password -->
+                    <div class="mb-4">
+
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-lock-fill me-1"></i>
+                            Password
+                        </label>
+
+                        <div class="input-group">
+
+                            <input
+                                type="password"
+                                name="password"
+                                id="password"
+                                class="form-control form-control-lg"
+                                placeholder="Enter your password"
+                                required
+                            >
+
+                            <button
+                                class="btn btn-outline-secondary"
+                                type="button"
+                                id="togglePassword"
+                            >
+                                <i
+                                    class="bi bi-eye"
+                                    id="togglePasswordIcon"
+                                ></i>
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Login Button -->
+                    <button
+                        type="submit"
+                        class="btn btn-primary btn-lg w-100 login-btn"
+                    >
+                        <i class="bi bi-box-arrow-in-right me-2"></i>
+                        Login
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <!-- Card Footer -->
+            <div class="card-footer text-center border-0 py-3">
+
+                <small class="text-muted">
+                    Secure Role-Based Complaint Management System
+                </small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+</file>
+
+<file path="requirements.txt">
+blinker==1.9.0
+click==8.4.2
+colorama==0.4.6
+Flask==3.1.3
+Flask-Login==0.6.3
+Flask-SQLAlchemy==3.1.1
+greenlet==3.5.5
+itsdangerous==2.2.0
+Jinja2==3.1.6
+MarkupSafe==3.0.3
+SQLAlchemy==2.0.51
+typing_extensions==4.16.0
+Werkzeug==3.1.8
+</file>
+
+<file path="static/css/style.css">
+/* ================================
+   GLOBAL
+================================ */
+
+body {
+    background-color: #f5f7fb;
+    color: #212529;
+}
+
+
+/* ================================
+   NAVBAR
+================================ */
+
+.university-navbar {
+    background: linear-gradient(135deg, #0d6efd, #0b3d91);
+    padding: 12px 0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+}
+
+.brand-icon {
+    width: 45px;
+    height: 45px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: rgba(255, 255, 255, 0.15);
+
+    border-radius: 10px;
+
+    font-size: 22px;
+}
+
+.brand-title {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.brand-subtitle {
+    opacity: 0.8;
+}
+
+.user-welcome {
+    color: white !important;
+}
+
+.logout-btn {
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+
+/* ================================
+   MAIN CONTENT
+================================ */
+
+main {
+    min-height: 500px;
+}
+
+
+/* ================================
+   FOOTER
+================================ */
+
+.footer {
+    background-color: #1f2937;
+    color: #d1d5db;
+}
+
+.footer h6 {
+    color: white;
+}
+
+/* ================================
+   LOGIN PAGE
+================================ */
+
+.login-page {
+    min-height: 70vh;
+}
+
+.login-card {
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.login-card-header {
+    background: linear-gradient(135deg, #0d6efd, #0b3d91);
+    color: white;
+}
+
+.login-card-header p {
+    opacity: 0.85;
+}
+
+.login-icon {
+    width: 65px;
+    height: 65px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: auto;
+
+    background-color: rgba(255, 255, 255, 0.15);
+
+    border-radius: 50%;
+
+    font-size: 30px;
+}
+
+.login-card .form-control {
+    border-radius: 10px;
+}
+
+.login-card .input-group .form-control {
+    border-radius: 10px 0 0 10px;
+}
+
+.login-card .input-group .btn {
+    border-radius: 0 10px 10px 0;
+}
+
+.login-btn {
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+/* =========================
+   STUDENT DASHBOARD
+========================= */
+
+.dashboard-card {
+    border-radius: 15px;
+    transition: 0.3s;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    width: 55px;
+    height: 55px;
+
+    border-radius: 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 24px;
+}
+
+.card {
+    border-radius: 15px;
+}
+
+.progress {
+    border-radius: 20px;
+}
+
+.progress-bar {
+    border-radius: 20px;
+}
+
+.table th {
+    white-space: nowrap;
+}
+
+.table td {
+    vertical-align: middle;
+}
+</file>
+
+<file path="templates/submit_complaint.html">
+{% extends "base.html" %}
+
+{% block title %}
+Submit Complaint | Smart University Complaint System
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container py-5">
+
+    <!-- Page Heading -->
+    <div class="row mb-4">
+
+        <div class="col-md-8">
+
+            <h2 class="fw-bold">
+                Submit a Complaint
+            </h2>
+
+            <p class="text-muted">
+                Submit your issue and track its status from your dashboard.
+            </p>
+
+        </div>
+
+        <div class="col-md-4 text-md-end">
+
+            <a
+                href="{{ url_for('student_dashboard') }}"
+                class="btn btn-outline-primary"
+            >
+                ← Back to Dashboard
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-8">
+
+            <div class="card shadow-sm border-0">
+
+                <!-- Card Header -->
+                <div class="card-header bg-primary text-white py-3">
+
+                    <h5 class="mb-0">
+                        Complaint Information
+                    </h5>
+
+                </div>
+
+
+                <!-- Card Body -->
+                <div class="card-body p-4">
+
+                    <form
+                        method="POST"
+                        id="complaintForm"
+                    >
+
+                        <!-- ================================= -->
+                        <!-- CATEGORY -->
+                        <!-- ================================= -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="category"
+                                class="form-label fw-semibold"
+                            >
+                                Complaint Category
+                            </label>
+
+                            <select
+                                name="category"
+                                id="category"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="">
+                                    Select Category
+                                </option>
+
+                                <option value="Academic">
+                                    Academic
+                                </option>
+
+                                <option value="IT">
+                                    IT
+                                </option>
+
+                                <option value="Hostel">
+                                    Hostel
+                                </option>
+
+                                <option value="Transport">
+                                    Transport
+                                </option>
+
+                                <option value="Classroom">
+                                    Classroom
+                                </option>
+
+                                <option value="Library">
+                                    Library
+                                </option>
+
+                                <option value="Finance">
+                                    Finance
+                                </option>
+
+                                <option value="Examination">
+                                    Examination
+                                </option>
+
+                                <option value="Administration">
+                                    Administration
+                                </option>
+
+                                <option value="Other">
+                                    Other
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- ================================= -->
+                        <!-- DIRECTED AGAINST -->
+                        <!-- ================================= -->
+
+                        <div class="mb-3">
+
+                            <label
+                                for="directed_against"
+                                class="form-label fw-semibold"
+                            >
+                                Directed Against
+                            </label>
+
+                            <select
+                                name="directed_against"
+                                id="directed_against"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="">
+                                    Select Department / Person
+                                </option>
+
+                                <option value="IT Department">
+                                    IT Department
+                                </option>
+
+                                <option value="Hostel Department">
+                                    Hostel Department
+                                </option>
+
+                                <option value="Library Department">
+                                    Library Department
+                                </option>
+
+                                <option value="Transport Department">
+                                    Transport Department
+                                </option>
+
+                                <option value="Finance Department">
+                                    Finance Department
+                                </option>
+
+                                <option value="Teacher">
+                                    Teacher
+                                </option>
+
+                                <option value="Admin">
+                                    Admin
+                                </option>
+
+                                <option value="HOD">
+                                    HOD
+                                </option>
+
+                                <option value="Other">
+                                    Other
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- ================================= -->
+                        <!-- CUSTOM TARGET -->
+                        <!-- Shows only when Other is selected -->
+                        <!-- ================================= -->
+
+                        <div
+                            class="mb-3"
+                            id="customTargetContainer"
+                            style="display: none;"
+                        >
+
+                            <label
+                                for="custom_target"
+                                class="form-label fw-semibold"
+                            >
+                                Specify Person / Department
+                            </label>
+
+                            <input
+                                type="text"
+                                name="custom_target"
+                                id="custom_target"
+                                class="form-control"
+                                placeholder="Enter person, department, or other target"
+                                maxlength="200"
+                            >
+
+                            <div class="form-text">
+                                Please specify who or which department your complaint is directed against.
+                            </div>
+
+                        </div>
+
+
+                        <!-- ================================= -->
+                        <!-- DESCRIPTION -->
+                        <!-- ================================= -->
+
+                        <div class="mb-4">
+
+                            <label
+                                for="description"
+                                class="form-label fw-semibold"
+                            >
+                                Complaint Description
+                            </label>
+
+                            <textarea
+                                name="description"
+                                id="description"
+                                rows="5"
+                                class="form-control"
+                                placeholder="Please describe your issue clearly..."
+                                required
+                            ></textarea>
+
+                            <div class="form-text">
+                                Provide enough details so your complaint can be handled properly.
+                            </div>
+
+                        </div>
+
+
+                        <!-- ================================= -->
+                        <!-- EMERGENCY -->
+                        <!-- ================================= -->
+
+                        <div class="card bg-light border mb-4">
+
+                            <div class="card-body">
+
+                                <div class="form-check">
+
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        name="is_emergency"
+                                        value="1"
+                                        id="is_emergency"
+
+                                        {% if emergency_count >= 2 %}
+                                            disabled
+                                        {% endif %}
+                                    >
+
+                                    <label
+                                        class="form-check-label fw-semibold"
+                                        for="is_emergency"
+                                    >
+                                        🚨 Mark as Emergency Complaint
+                                    </label>
+
+                                </div>
+
+
+                                {% if emergency_count >= 2 %}
+
+                                    <!-- Emergency limit reached -->
+                                    <div class="alert alert-danger mt-3 mb-0">
+
+                                        <strong>
+                                            Emergency complaint limit reached.
+                                        </strong>
+
+                                        <br>
+
+                                        You have already submitted
+                                        {{ emergency_count }}/2
+                                        Emergency complaints this month.
+
+                                    </div>
+
+                                {% else %}
+
+                                    <!-- Emergency information -->
+                                    <small class="text-muted">
+                                        Only select this option for urgent issues requiring immediate attention.
+                                    </small>
+
+                                    <!-- Emergency Counter -->
+                                    <div class="mt-2">
+
+                                        <small class="text-muted fw-semibold">
+                                            Emergency Complaints:
+                                            {{ emergency_count }}/2
+                                        </small>
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ================================= -->
+                        <!-- BUTTONS -->
+                        <!-- ================================= -->
+
+                        <div class="d-flex gap-2">
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary px-4"
+                                id="submitBtn"
+                            >
+
+                                <i class="bi bi-send me-1"></i>
+
+                                Submit Complaint
+
+                            </button>
+
+
+                            <a
+                                href="{{ url_for('student_dashboard') }}"
+                                class="btn btn-outline-secondary"
+                            >
+                                Cancel
+                            </a>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================= -->
+<!-- JAVASCRIPT -->
+<!-- ========================================= -->
+
+<script>
+
+const directedAgainst = document.getElementById(
+    "directed_against"
+);
+
+const customTargetContainer = document.getElementById(
+    "customTargetContainer"
+);
+
+const customTarget = document.getElementById(
+    "custom_target"
+);
+
+
+/*
+    Show Custom Target field only when
+    "Other" is selected.
+*/
+
+directedAgainst.addEventListener(
+    "change",
+    function () {
+
+        if (this.value === "Other") {
+
+            // Show custom target field
+            customTargetContainer.style.display = "block";
+
+            // Make field required
+            customTarget.required = true;
+
+        } else {
+
+            // Hide custom target field
+            customTargetContainer.style.display = "none";
+
+            // Remove required validation
+            customTarget.required = false;
+
+            // Clear previous value
+            customTarget.value = "";
+
+        }
+
+    }
+);
+
+
+/*
+    Prevent double submission.
+*/
+
+document.getElementById("complaintForm").addEventListener(
+    "submit",
+    function () {
+
+        const submitBtn = document.getElementById(
+            "submitBtn"
+        );
+
+        // Disable button immediately
+        submitBtn.disabled = true;
+
+        // Show loading state
+        submitBtn.innerHTML = `
+            <span
+                class="spinner-border spinner-border-sm me-2"
+                role="status"
+            ></span>
+            Submitting...
+        `;
+
+    }
+);
+
+</script>
+
+{% endblock %}
+</file>
+
+<file path="README.md">
+# Smart University Complaint System
+
+A web-based complaint management system developed using **Flask**. The system allows students to submit and track complaints while providing separate dashboards and complaint management features for **Administrators** and the **Head of Department (HOD)**.
+
+## Features
+
+### Student
+
+- Secure login
+- Submit complaints
+- Select complaint category
+- Select who the complaint is directed against
+- Add a complaint description
+- Submit emergency complaints
+- View submitted complaints
+- Track complaint status
+- View Pending, Forwarded, and Solved complaint counts
+- Monthly complaint limit of 5 complaints
+
+### Admin
+
+- Secure role-based access
+- View complaint queue
+- Priority-based complaint sorting
+- View emergency complaints with higher priority
+- Solve individual complaints
+- Forward complaints to HOD
+- Group similar compatible complaints
+- Solve grouped complaints
+- Forward grouped complaints to HOD
+- Undo pending complaint groups
+
+### Head of Department (HOD)
+
+- Secure role-based access
+- View complaints directed against Admin
+- View complaints forwarded by Admin
+- Priority-based complaint sorting
+- Solve authorized complaints
+
+## User Roles
+
+The system contains three main roles:
+
+| Role | Responsibilities |
+|------|------------------|
+| Student | Submit and track complaints |
+| Admin | Manage, group, solve, and forward complaints |
+| HOD | Handle complaints against Admin and forwarded complaints |
+
+## Complaint Workflow
+
+```text
+Student
+   |
+   | Submit Complaint
+   v
+Pending
+   |
+   +--------------------+
+   |                    |
+   v                    v
+Admin Solves       Admin Forwards
+   |                    |
+   v                    v
+Solved              HOD Reviews
+                          |
+                          v
+                       Solved
+```
+
+## Complaint Priority
+
+Complaints are sorted according to priority:
+
+1. Emergency + Pending
+2. Pending
+3. Forwarded
+4. Solved
+
+Newer complaints are displayed first when complaints have the same priority.
+
+## Monthly Complaint Limit
+
+Each student can submit a maximum of:
+
+```text
+5 complaints per month
+```
+
+When the limit is reached, the student cannot submit additional complaints for that month.
+
+## Complaint Grouping
+
+Administrators can group multiple compatible pending complaints.
+
+Rules:
+
+- At least 2 complaints must be selected
+- Complaints must be Pending
+- Complaints must not already belong to another group
+- Complaints cannot be directed against Admin
+- All complaints in the group must have the same `Directed Against` value
+
+Grouped complaints can be:
+
+- Solved together
+- Forwarded to HOD together
+- Ungrouped while they are still Pending
+
+## Technologies Used
+
+### Backend
+
+- Python
+- Flask
+- Flask-SQLAlchemy
+- SQLAlchemy
+
+### Database
+
+- SQLite
+
+### Frontend
+
+- HTML
+- CSS
+- JavaScript
+- Bootstrap 5
+- Bootstrap Icons
+
+### Security
+
+- Werkzeug password hashing
+- Flask session management
+- Role-based access control
+
+## Project Structure
+
+```text
+smart_uni_complaint_system/
+│
+├── app.py
+├── models.py
+├── extensions.py
+├── seed.py
+├── create_users.py
+├── requirements.txt
+├── .gitignore
+│
+├── static/
+│   ├── css/
+│   │   └── style.css
+│   │
+│   └── js/
+│       └── script.js
+│
+├── templates/
+│   ├── base.html
+│   ├── login.html
+│   ├── student_dashboard.html
+│   ├── admin_dashboard.html
+│   ├── hod_dashboard.html
+│   └── submit_complaint.html
+│
+└── instance/
+    └── complaints.db
+```
+
+## Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone <your-repository-url>
+```
+
+### 2. Go to the Project Folder
+
+```bash
+cd smart_uni_complaint_system
+```
+
+### 3. Create a Virtual Environment
+
+```bash
+python -m venv .env
+```
+
+### 4. Activate the Virtual Environment
+
+#### Windows PowerShell
+
+```powershell
+.env\Scripts\Activate.ps1
+```
+
+### 5. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+## Run the Application
+
+Start the Flask application:
+
+```bash
+python app.py
+```
+
+The application will run on:
+
+```text
+http://127.0.0.1:5000
+```
+
+Open this address in your browser.
+
+## Create Test Users
+
+You can create the initial test users by running:
+
+```bash
+python seed.py
+```
+
+This creates the following users:
+
+| Username | Password | Role |
+|----------|----------|------|
+| student1 | student123 | Student |
+| admin1 | admin123 | Admin |
+| hod1 | hod123 | HOD |
+
+You can also create an additional student user using:
+
+```bash
+python create_users.py
+```
+
+## Database
+
+The application uses SQLite with the following main models:
+
+### User
+
+Stores:
+
+- User ID
+- Username
+- Password Hash
+- Role
+
+### Complaint
+
+Stores:
+
+- Complaint ID
+- Student ID
+- Category
+- Directed Against
+- Description
+- Urgency Level
+- Status
+- Date Submitted
+- Group ID
+
+## Security Notes
+
+This is currently a prototype project.
+
+Before deploying to production:
+
+- Change the Flask secret key
+- Store the secret key in environment variables
+- Disable `debug=True`
+- Use a production-ready database
+- Add CSRF protection
+- Add proper form validation
+- Add better error handling
+
+## Author
+
+**Mudasir Rehman**
+
+## Project Status
+
+🚧 Prototype Phase — Under Development
+</file>
+
+<file path="models.py">
+from extensions import db
+from datetime import datetime, timedelta
+
+
+# ============================================================
+# USER MODEL
+# ============================================================
+
+class User(db.Model):
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    username = db.Column(
+        db.String(100),
+        unique=True,
+        nullable=False
+    )
+
+    password_hash = db.Column(
+        db.String(200),
+        nullable=False
+    )
+
+    role = db.Column(
+        db.String(20),
+        nullable=False
+    )
+
+
+# ============================================================
+# PAKISTAN / LAHORE TIME
+# UTC + 5
+# ============================================================
+
+def pakistan_time():
+    return datetime.utcnow() + timedelta(hours=5)
+
+
+# ============================================================
+# COMPLAINT MODEL
+# ============================================================
+
+class Complaint(db.Model):
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    student_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False
+    )
+
+    category = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    directed_against = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    # Used when student selects "Other"
+    custom_target = db.Column(
+        db.String(200),
+        nullable=True
+    )
+
+    description = db.Column(
+        db.Text,
+        nullable=False
+    )
+
+    urgency_level = db.Column(
+        db.String(20),
+        nullable=False,
+        default="Medium"
+    )
+
+    status = db.Column(
+        db.String(20),
+        nullable=False,
+        default="Pending"
+    )
+
+    # Pakistan / Lahore Date and Time
+    date_submitted = db.Column(
+        db.DateTime,
+        default=pakistan_time
+    )
+
+    # Existing grouping field
+    group_id = db.Column(
+        db.Integer,
+        nullable=True
+    )
+
+
+# ============================================================
+# COMPLAINT COMMENT MODEL
+# ============================================================
+
+class ComplaintComment(db.Model):
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    # Complaint to which this comment belongs
+    complaint_id = db.Column(
+        db.Integer,
+        db.ForeignKey("complaint.id"),
+        nullable=False
+    )
+
+    # User who wrote the comment
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False
+    )
+
+    # Comment / feedback / solution
+    comment = db.Column(
+        db.Text,
+        nullable=False
+    )
+
+    # Date and time of comment
+    created_at = db.Column(
+        db.DateTime,
+        default=pakistan_time
+    )
+
+
+# ============================================================
+# COMPLAINT HISTORY MODEL
+# ============================================================
+
+class ComplaintHistory(db.Model):
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    # Complaint whose history is being recorded
+    complaint_id = db.Column(
+        db.Integer,
+        db.ForeignKey("complaint.id"),
+        nullable=False
+    )
+
+    # User who performed the action
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False
+    )
+
+    # Example:
+    # Submitted
+    # Forwarded
+    # Solved
+    # Rejected
+    # Comment Added
+    action = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    # Status before the action
+    old_status = db.Column(
+        db.String(20),
+        nullable=True
+    )
+
+    # Status after the action
+    new_status = db.Column(
+        db.String(20),
+        nullable=True
+    )
+
+    # Additional information about the action
+    description = db.Column(
+        db.Text,
+        nullable=True
+    )
+
+    # Date and time of action
+    created_at = db.Column(
+        db.DateTime,
+        default=pakistan_time
+    )
+
+
+# ============================================================
+# NOTIFICATION MODEL
+# ============================================================
+
+class Notification(db.Model):
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    # User who will receive the notification
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False
+    )
+
+    # Related complaint
+    complaint_id = db.Column(
+        db.Integer,
+        db.ForeignKey("complaint.id"),
+        nullable=True
+    )
+
+    # Notification message
+    message = db.Column(
+        db.String(300),
+        nullable=False
+    )
+
+    # False = unread
+    # True = read
+    is_read = db.Column(
+        db.Boolean,
+        default=False
+    )
+
+    # Date and time of notification
+    created_at = db.Column(
+        db.DateTime,
+        default=pakistan_time
+    )
+</file>
+
+<file path="templates/hod_dashboard.html">
+{% extends "base.html" %}
+
+
+{% block title %}
+HOD Dashboard | Smart University Complaint System
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container py-4">
+
+
+    <!-- ============================= -->
+    <!-- PAGE HEADER -->
+    <!-- ============================= -->
+
+    <div
+        class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4"
+    >
+
+        <div>
+
+            <h2 class="fw-bold mb-1">
+                HOD Dashboard
+            </h2>
+
+            <p class="text-muted mb-0">
+                Welcome back, {{ username }}. Review and manage sensitive complaints.
+            </p>
+
+        </div>
+
+
+        <div class="mt-3 mt-md-0">
+
+            <span class="badge text-bg-primary px-3 py-2">
+
+                <i class="bi bi-person-badge me-1"></i>
+
+                Head of Department
+
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================= -->
+    <!-- STATISTICS CARDS -->
+    <!-- ============================= -->
+
+    <div class="row g-4 mb-4">
+
+
+        <!-- Total Sensitive Complaints -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <div
+                class="card dashboard-card border-0 shadow-sm h-100"
+            >
+
+                <div class="card-body">
+
+                    <div
+                        class="d-flex justify-content-between align-items-center"
+                    >
+
+                        <div>
+
+                            <p class="text-muted mb-1">
+                                Total Complaints
+                            </p>
+
+                            <h2 class="fw-bold mb-0">
+                                {{ complaints|length }}
+                            </h2>
+
+                        </div>
+
+
+                        <div
+                            class="stat-icon bg-primary-subtle text-primary"
+                        >
+
+                            <i class="bi bi-file-earmark-text"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Pending Complaints -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <div
+                class="card dashboard-card border-0 shadow-sm h-100"
+            >
+
+                <div class="card-body">
+
+                    <div
+                        class="d-flex justify-content-between align-items-center"
+                    >
+
+                        <div>
+
+                            <p class="text-muted mb-1">
+                                Pending
+                            </p>
+
+                            <h2 class="fw-bold mb-0">
+
+                                {{
+                                    complaints
+                                    | selectattr("status", "equalto", "Pending")
+                                    | list
+                                    | length
+                                }}
+
+                            </h2>
+
+                        </div>
+
+
+                        <div
+                            class="stat-icon bg-warning-subtle text-warning"
+                        >
+
+                            <i class="bi bi-clock-history"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Emergency Complaints -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <div
+                class="card dashboard-card border-0 shadow-sm h-100"
+            >
+
+                <div class="card-body">
+
+                    <div
+                        class="d-flex justify-content-between align-items-center"
+                    >
+
+                        <div>
+
+                            <p class="text-muted mb-1">
+                                Emergency
+                            </p>
+
+                            <h2 class="fw-bold mb-0">
+
+                                {{
+                                    complaints
+                                    | selectattr(
+                                        "urgency_level",
+                                        "equalto",
+                                        "Emergency"
+                                    )
+                                    | rejectattr(
+                                        "status",
+                                        "equalto",
+                                        "Solved"
+                                    )
+                                    | list
+                                    | length
+                                }}
+
+                            </h2>
+
+                        </div>
+
+
+                        <div
+                            class="stat-icon bg-danger-subtle text-danger"
+                        >
+
+                            <i class="bi bi-exclamation-triangle"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- ============================= -->
+    <!-- SENSITIVE COMPLAINTS -->
+    <!-- ============================= -->
+
+    <div class="card border-0 shadow-sm">
+
+
+        <!-- CARD HEADER -->
+
+        <div class="card-header bg-white border-bottom py-3">
+
+            <div
+                class="d-flex flex-column flex-md-row justify-content-between align-items-md-center"
+            >
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+
+                        <i class="bi bi-shield-exclamation me-2"></i>
+
+                        Sensitive Complaints
+
+                    </h5>
+
+                    <p class="text-muted small mb-0">
+
+                        Complaints directed against administrators are routed
+                        directly to the HOD for review.
+
+                    </p>
+
+                </div>
+
+
+                <span
+                    class="badge text-bg-secondary mt-2 mt-md-0"
+                >
+
+                    {{ complaints|length }} Complaints
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- CARD BODY -->
+
+        <div class="card-body p-0">
+
+
+            {% if complaints %}
+
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+
+                    <!-- TABLE HEADER -->
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th class="ps-4">
+                                ID
+                            </th>
+
+                            <th>
+                                Student
+                            </th>
+
+                            <th>
+                                Category
+                            </th>
+
+                            <th>
+                                Directed Against
+                            </th>
+
+                            <th>
+                                Description
+                            </th>
+
+                            <th>
+                                Urgency
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th class="pe-4">
+                                Date Submitted
+                            </th>
+
+                            <th class="pe-4">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <!-- TABLE BODY -->
+
+                    <tbody>
+
+
+                        {% for complaint in complaints %}
+
+
+                        <tr
+
+                            {% if
+                                complaint.urgency_level == "Emergency"
+                                and complaint.status == "Pending"
+                            %}
+
+                            class="table-danger"
+
+                            {% endif %}
+
+                        >
+
+
+                            <!-- ID -->
+
+                            <td class="ps-4">
+
+                                <strong>
+                                    #{{ complaint.id }}
+                                </strong>
+
+                            </td>
+
+
+                            <!-- STUDENT -->
+
+                            <td>
+
+                                Student {{ complaint.student_id }}
+
+                            </td>
+
+
+                            <!-- CATEGORY -->
+
+                            <td>
+
+                                <span class="fw-semibold">
+
+                                    {{ complaint.category }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- DIRECTED AGAINST -->
+
+                            <td>
+
+                                <span class="badge text-bg-dark">
+
+                                    {{ complaint.directed_against }}
+
+                                </span>
+
+                            </td>
+                            
+                            <!-- Description -->
+
+                            <td style="max-width: 250px;">
+
+                                {% if complaint.description|length > 60 %}
+
+                                <details class="description-details">
+
+                                    <summary>
+
+                                        <span class="short-description">
+                                            {{ complaint.description[:60] }}...
+                                        </span>
+
+                                        <span class="full-description">
+                                            {{ complaint.description }}
+                                        </span>
+
+                                    </summary>
+
+                                </details>
+
+                                {% else %}
+
+                                <span>
+                                    {{ complaint.description }}
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <!-- URGENCY -->
+
+                            <td>
+
+
+                                {% if complaint.urgency_level == "Emergency" %}
+
+                                <span class="badge text-bg-danger">
+
+                                    <i
+                                        class="bi bi-exclamation-triangle-fill"
+                                    ></i>
+
+                                    Emergency
+
+                                </span>
+
+
+                                {% else %}
+
+                                <span class="badge text-bg-secondary">
+
+                                    {{ complaint.urgency_level }}
+
+                                </span>
+
+
+                                {% endif %}
+
+
+                            </td>
+
+
+                            <!-- STATUS -->
+
+                            <td>
+
+
+                                {% if complaint.status == "Pending" %}
+
+                                <span class="badge text-bg-warning">
+
+                                    <i class="bi bi-clock"></i>
+
+                                    Pending
+
+                                </span>
+
+
+                                {% elif complaint.status == "Forwarded" %}
+
+                                <span class="badge text-bg-info">
+
+                                    <i class="bi bi-send"></i>
+
+                                    Forwarded
+
+                                </span>
+
+
+                                {% elif complaint.status == "Solved" %}
+
+                                <span class="badge text-bg-success">
+
+                                    <i class="bi bi-check-circle"></i>
+
+                                    Solved
+
+                                </span>
+
+
+                                {% else %}
+
+                                <span class="badge text-bg-secondary">
+
+                                    {{ complaint.status }}
+
+                                </span>
+
+
+                                {% endif %}
+
+
+                            </td>
+
+
+                            <!-- DATE -->
+
+                            <td
+                                class="text-muted small pe-4"
+                            >
+
+                                {{ complaint.date_submitted.strftime('%d %b %Y') }}
+
+                                <br>
+
+                                {{ complaint.date_submitted.strftime('%I:%M %p') }}
+
+                            </td>
+
+                            <!-- Actions -->
+
+                            <td class="text-end pe-4">
+
+                                {% if complaint.status != "Solved" %}
+
+                                    <form
+                                        method="POST"
+                                        action="{{ url_for('hod_solve_complaint', complaint_id=complaint.id) }}"
+                                    >
+
+                                        <!-- Solution / Feedback -->
+
+                                        <textarea
+                                            name="solution"
+                                            class="form-control form-control-sm mb-2"
+                                            rows="3"
+                                            placeholder="Enter solution / feedback before solving..."
+                                            required
+                                        ></textarea>
+
+
+                                        <!-- Solve Button -->
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-success"
+                                            onclick="return confirm('Are you sure you want to mark this complaint as solved?')"
+                                        >
+                                            <i class="bi bi-check-lg"></i>
+                                            Solve
+                                        </button>
+
+                                    </form>
+
+                                {% else %}
+
+                                    <span class="text-muted small">
+
+                                        <i class="bi bi-check-circle"></i>
+
+                                        No action required
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                        </tr>
+
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            {% else %}
+
+
+            <!-- EMPTY STATE -->
+
+            <div class="text-center py-5">
+
+
+                <div class="fs-1">
+
+                    🛡️
+
+                </div>
+
+
+                <h5 class="mt-3">
+
+                    No Sensitive Complaints
+
+                </h5>
+
+
+                <p class="text-muted mb-0">
+
+                    There are currently no complaints requiring HOD review.
+
+                </p>
+
+
+            </div>
+
+
+            {% endif %}
+
+
+        </div>
+
+    </div>
+
+
+</div>
+
+{% endblock %}
+</file>
+
+<file path="templates/student_dashboard.html">
+{% extends "base.html" %}
+
+{% block title %}
+Student Dashboard | Smart University Complaint System
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ============================= -->
+<!-- WELCOME SECTION -->
+<!-- ============================= -->
+
+<div class="mb-4">
+
+    <h2 class="fw-bold">
+        Welcome back, {{ username }} 👋
+    </h2>
+
+    <p class="text-muted mb-0">
+        Manage and track your submitted complaints.
+    </p>
+
+</div>
+
+
+<!-- ============================= -->
+<!-- STATISTICS CARDS -->
+<!-- ============================= -->
+
+<div class="row g-4 mb-4">
+
+    <!-- Total Complaints -->
+    <div class="col-lg-3 col-md-6">
+
+        <div class="card dashboard-card h-100 border-0 shadow-sm">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <p class="text-muted mb-1">
+                            Total Complaints
+                        </p>
+
+                        <h2 class="fw-bold mb-0">
+                            {{ complaints|length }}
+                        </h2>
+
+                    </div>
+
+                    <div class="stat-icon bg-primary-subtle text-primary">
+
+                        <i class="bi bi-file-earmark-text"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Pending Complaints -->
+    <div class="col-lg-3 col-md-6">
+
+        <div class="card dashboard-card h-100 border-0 shadow-sm">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <p class="text-muted mb-1">
+                            Pending
+                        </p>
+
+                        <h2 class="fw-bold mb-0">
+
+                            {{
+                                complaints
+                                | selectattr("status", "equalto", "Pending")
+                                | list
+                                | length
+                            }}
+
+                        </h2>
+
+                    </div>
+
+                    <div class="stat-icon bg-warning-subtle text-warning">
+
+                        <i class="bi bi-clock-history"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Forwarded Complaints -->
+    <div class="col-lg-3 col-md-6">
+
+        <div class="card dashboard-card h-100 border-0 shadow-sm">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <p class="text-muted mb-1">
+                            Forwarded
+                        </p>
+
+                        <h2 class="fw-bold mb-0">
+
+                            {{
+                                complaints
+                                | selectattr("status", "equalto", "Forwarded")
+                                | list
+                                | length
+                            }}
+
+                        </h2>
+
+                    </div>
+
+                    <div class="stat-icon bg-info-subtle text-info">
+
+                        <i class="bi bi-send"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Solved Complaints -->
+    <div class="col-lg-3 col-md-6">
+
+        <div class="card dashboard-card h-100 border-0 shadow-sm">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <p class="text-muted mb-1">
+                            Solved
+                        </p>
+
+                        <h2 class="fw-bold mb-0">
+
+                            {{
+                                complaints
+                                | selectattr("status", "equalto", "Solved")
+                                | list
+                                | length
+                            }}
+
+                        </h2>
+
+                    </div>
+
+                    <div class="stat-icon bg-success-subtle text-success">
+
+                        <i class="bi bi-check-circle"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ============================= -->
+<!-- MAIN DASHBOARD SECTION -->
+<!-- LEFT: MY COMPLAINTS -->
+<!-- RIGHT: MONTHLY QUOTA -->
+<!-- ============================= -->
+
+<div class="row g-4">
+
+
+    <!-- ============================= -->
+    <!-- MY COMPLAINTS - LEFT SIDE -->
+    <!-- ============================= -->
+
+    <div class="card shadow-sm border-0 h-100">
+
+        <div class="card-body p-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <div>
+                    <h4 class="fw-bold mb-1">
+                        My Complaints
+                    </h4>
+
+                    <p class="text-muted mb-0">
+                        Track the status of your submitted complaints.
+                    </p>
+                </div>
+
+                {% if complaints_remaining > 0 %}
+                <a
+                    href="{{ url_for('submit_complaint') }}"
+                    class="btn btn-primary"
+                >
+                    + Submit Complaint
+                </a>
+                {% endif %}
+
+            </div>
+
+
+            {% if complaints %}
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-light">
+
+                        <tr>
+                            <th>ID</th>
+                            <th>Category</th>
+                            <th>Directed Against</th>
+                            <th>Description</th>
+                            <th>Urgency</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for complaint in complaints %}
+
+                        <tr>
+
+                            <td>
+                                <span class="fw-bold">
+                                    #{{ complaint.id }}
+                                </span>
+                            </td>
+
+
+                            <td>
+                                <span class="fw-semibold">
+                                    {{ complaint.category }}
+                                </span>
+                            </td>
+
+
+                            <td>
+                                {{ complaint.directed_against }}
+                            </td>
+
+
+                          
+                            <!-- ============================= -->
+                            <!-- DESCRIPTION WITH READ MORE -->
+                            <!-- ============================= -->
+
+                            <td style="max-width: 250px;">
+
+                                {% if complaint.description|length > 60 %}
+
+                                <details class="description-details">
+
+                                    <summary>
+                                        <span class="short-description">
+                                            {{ complaint.description[:60] }}...
+                                        </span>
+
+                                        <span class="full-description">
+                                            {{ complaint.description }}
+                                        </span>
+                                    </summary>
+
+                                </details>
+
+                                {% else %}
+
+                                <span>
+                                    {{ complaint.description }}
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- Urgency -->
+                            <td>
+
+                                {% if complaint.urgency_level == "Emergency" %}
+
+                                <span class="badge text-bg-danger">
+                                    🚨 Emergency
+                                </span>
+
+                                {% else %}
+
+                                <span class="badge text-bg-secondary">
+                                    {{ complaint.urgency_level }}
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- Status -->
+                            <td>
+
+                                {% if complaint.status == "Pending" %}
+
+                                <span class="badge text-bg-warning">
+                                    Pending
+                                </span>
+
+                                {% elif complaint.status == "Forwarded" %}
+
+                                <span class="badge text-bg-info">
+                                    Forwarded
+                                </span>
+
+                                {% elif complaint.status == "Solved" %}
+
+                                <span class="badge text-bg-success">
+                                    Solved
+                                </span>
+
+                                {% elif complaint.status == "Rejected" %}
+
+                                <span class="badge text-bg-danger">
+                                    Rejected
+                                </span>
+
+                                {% else %}
+
+                                <span class="badge text-bg-secondary">
+                                    {{ complaint.status }}
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- Date -->
+                            <td class="text-muted small">
+
+                                {{ complaint.date_submitted.strftime('%d %b %Y') }}
+
+                                <br>
+
+                                {{ complaint.date_submitted.strftime('%I:%M %p') }}
+
+                            </td>
+                            <!-- Action -->
+
+                            <td>
+
+                                <a
+                                    href="{{ url_for('complaint_details', complaint_id=complaint.id) }}"
+                                    class="btn btn-sm btn-outline-primary"
+                                >
+                                    <i class="bi bi-eye"></i>
+                                    View Details
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            {% else %}
+
+            <!-- Empty State -->
+
+            <div class="text-center py-5">
+
+                <div class="fs-1">
+                    📭
+                </div>
+
+                <h5 class="mt-3">
+                    No Complaints Yet
+                </h5>
+
+                <p class="text-muted">
+                    You have not submitted any complaints yet.
+                </p>
+
+                {% if complaints_remaining > 0 %}
+
+                <a
+                    href="{{ url_for('submit_complaint') }}"
+                    class="btn btn-primary"
+                >
+                    Submit Your First Complaint
+                </a>
+
+                {% endif %}
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================= -->
+    <!-- MONTHLY QUOTA - RIGHT SIDE -->
+    <!-- ============================= -->
+
+    <div class="col-lg-4">
+
+        <div class="card border-0 shadow-sm h-100">
+
+            <div class="card-body p-4">
+
+
+                <!-- Header -->
+
+                <div
+                    class="d-flex justify-content-between align-items-center mb-4"
+                >
+
+                    <div>
+
+                        <h5 class="fw-bold mb-1">
+                            Monthly Complaint Quota
+                        </h5>
+
+                        <p class="text-muted small mb-0">
+                            Your complaint limit for this month.
+                        </p>
+
+                    </div>
+
+
+                    <div class="stat-icon bg-primary-subtle text-primary">
+
+                        <i class="bi bi-speedometer2"></i>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Used Complaints -->
+
+                <div class="text-center mb-4">
+
+                    <h1 class="fw-bold mb-1">
+
+                        {{ complaints_used }}
+
+                        <span class="text-muted fs-4">
+                            /5
+                        </span>
+
+                    </h1>
+
+                    <p class="text-muted mb-0">
+                        Complaints Used
+                    </p>
+
+                </div>
+
+
+                <!-- Progress Bar -->
+
+                <div
+                    class="progress mb-3"
+                    style="height: 10px;"
+                >
+
+                    <div
+                        class="progress-bar"
+                        role="progressbar"
+                        style="width: {{ complaints_used * 20 }}%;"
+                        aria-valuenow="{{ complaints_used }}"
+                        aria-valuemin="0"
+                        aria-valuemax="5"
+                    ></div>
+
+                </div>
+
+
+                <!-- Remaining -->
+
+                <div
+                    class="d-flex justify-content-between align-items-center mb-4"
+                >
+
+                    <span class="text-muted">
+
+                        Remaining Complaints
+
+                    </span>
+
+
+                    <span class="fw-bold">
+
+                        {{ complaints_remaining }}
+
+                    </span>
+
+                </div>
+
+
+                <hr>
+
+
+                <!-- Submit Complaint Button -->
+
+                {% if complaints_remaining > 0 %}
+
+                <a
+                    href="{{ url_for('submit_complaint') }}"
+                    class="btn btn-primary w-100 py-2"
+                >
+
+                    <i class="bi bi-plus-circle me-1"></i>
+
+                    Submit Complaint
+
+                </a>
+
+
+                {% else %}
+
+                <button
+                    class="btn btn-secondary w-100 py-2"
+                    disabled
+                >
+
+                    <i class="bi bi-lock me-1"></i>
+
+                    Monthly Limit Reached
+
+                </button>
+
+                {% endif %}
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+{% endblock %}
+</file>
+
+<file path="create_users.py">
+from app import app
+from extensions import db
+from models import User
+from werkzeug.security import generate_password_hash
+
+
+with app.app_context():
+
+    # Check if student6 already exists
+    existing_user = User.query.filter_by(
+        username="student6"
+    ).first()
+
+    if existing_user:
+        print("student6 already exists")
+
+    else:
+
+        student6 = User(
+            username="student6",
+            password_hash=generate_password_hash("student123"),
+            role="student"
+        )
+
+        db.session.add(student6)
+        db.session.commit()
+
+        print("student6 created successfully!")
+</file>
+
+<file path="templates/admin_dashboard.html">
+{% extends "base.html" %} 
+{% block title %} Admin Dashboard | Smart University
+Complaint System 
+{% endblock %} 
+
+{% block extra_css %}
+<!-- This is Text Editor CSS - Do Not remove it: Solution / Feedback -->
+ <style>
+  .rich-text-editor {
+    min-height: 220px;
+    max-height: 350px;
+
+    padding: 18px 20px;
+
+    background-color: #ffffff;
+
+    border: none;
+    outline: none;
+
+    font-size: 16px;
+    line-height: 1.6;
+
+    cursor: text;
+
+    overflow-y: auto;
+
+    white-space: normal;
+  }
+
+  /* Placeholder */
+
+  .rich-text-editor:empty::before {
+    content: attr(data-placeholder);
+
+    color: #6c757d;
+
+    pointer-events: none;
+  }
+
+  /* Editor focus */
+
+  .rich-text-editor:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  /* Selected text */
+
+  .rich-text-editor ::selection {
+    background-color: #b6d7ff;
+  }
+
+  /* Text inside editor */
+
+  .rich-text-editor p {
+    margin-bottom: 8px;
+  }
+
+  /* Highlighted text */
+
+  .rich-text-editor span {
+    line-height: inherit;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+  <!-- ============================= -->
+  <!-- PAGE HEADER -->
+  <!-- ============================= -->
+
+  <div
+    class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4"
+  >
+    <div>
+      <h2 class="fw-bold mb-1">Admin Dashboard</h2>
+
+      <p class="text-muted mb-0">
+        Welcome back, {{ username }}. Manage and monitor student complaints.
+      </p>
+    </div>
+
+    <div class="mt-3 mt-md-0">
+      <span class="badge text-bg-primary px-3 py-2">
+        <i class="bi bi-shield-check me-1"></i>
+        Administrator
+      </span>
+    </div>
+  </div>
+
+  <!-- ============================= -->
+  <!-- STATISTICS CARDS -->
+  <!-- ============================= -->
+
+  <div class="row g-4 mb-4">
+    <!-- Total Complaints -->
+
+    <div class="col-lg-3 col-md-6">
+      <div class="card dashboard-card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-muted mb-1">Total Complaints</p>
+
+              <h2 class="fw-bold mb-0">{{ complaints|length }}</h2>
+            </div>
+
+            <div class="stat-icon bg-primary-subtle text-primary">
+              <i class="bi bi-file-earmark-text"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Emergency -->
+
+    <div class="col-lg-3 col-md-6">
+      <div class="card dashboard-card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-muted mb-1">Emergency</p>
+
+              <h2 class="fw-bold mb-0">
+                {{ complaints | selectattr("urgency_level", "equalto",
+                "Emergency") | selectattr("status", "equalto", "Pending") | list
+                | length }}
+              </h2>
+            </div>
+
+            <div class="stat-icon bg-danger-subtle text-danger">
+              <i class="bi bi-exclamation-triangle"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending -->
+
+    <div class="col-lg-3 col-md-6">
+      <div class="card dashboard-card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-muted mb-1">Pending</p>
+
+              <h2 class="fw-bold mb-0">
+                {{ complaints | selectattr("status", "equalto", "Pending") |
+                list | length }}
+              </h2>
+            </div>
+
+            <div class="stat-icon bg-warning-subtle text-warning">
+              <i class="bi bi-clock-history"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Solved -->
+
+    <div class="col-lg-3 col-md-6">
+      <div class="card dashboard-card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-muted mb-1">Solved</p>
+
+              <h2 class="fw-bold mb-0">
+                {{ complaints | selectattr("status", "equalto", "Solved") | list
+                | length }}
+              </h2>
+            </div>
+
+            <div class="stat-icon bg-success-subtle text-success">
+              <i class="bi bi-check-circle"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= -->
+  <!-- COMPLAINT QUEUE -->
+  <!-- ============================= -->
+
+  <div class="card border-0 shadow-sm mb-4">
+    <!-- Header -->
+
+    <div class="card-header bg-white border-bottom py-3">
+      <div
+        class="d-flex flex-column flex-md-row justify-content-between align-items-md-center"
+      >
+        <div>
+          <h5 class="fw-bold mb-1">
+            <i class="bi bi-inbox me-2"></i>
+            Complaint Queue
+          </h5>
+
+          <p class="text-muted small mb-0">
+            Manage all student complaints and take appropriate action.
+          </p>
+        </div>
+
+        <span class="badge text-bg-secondary mt-2 mt-md-0">
+          {{ complaints|length }} Complaints
+        </span>
+      </div>
+    </div>
+
+    <!-- ============================= -->
+    <!-- COMPLAINT TABLE -->
+    <!-- ============================= -->
+
+    <div class="card-body p-0">
+      {% if complaints %}
+
+      <form method="POST">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">Select</th>
+                <th>ID</th>
+                <th>Student</th>
+                <th>Category</th>
+                <th>Directed Against</th>
+                <th>Description</th>
+                <th>Urgency</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th class="text-end pe-4">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+    {% for complaint in complaints %}
+
+    <!-- Emergency Pending Row -->
+
+    <tr
+        {% if complaint.urgency_level == "Emergency"
+        and complaint.status == "Pending" %}
+        class="table-danger"
+        {% endif %}
+    >
+
+        <!-- Select -->
+
+        <td class="ps-4">
+
+            {% if complaint.status == "Pending" %}
+
+            <input
+                class="form-check-input"
+                type="checkbox"
+                name="complaint_ids"
+                value="{{ complaint.id }}"
+            >
+
+            {% endif %}
+
+        </td>
+
+
+        <!-- Complaint ID -->
+
+        <td>
+
+            <strong>
+                #{{ complaint.id }}
+            </strong>
+
+        </td>
+
+
+        <!-- Student -->
+
+        <td>
+
+            Student {{ complaint.student_id }}
+
+        </td>
+
+
+        <!-- Category -->
+
+        <td>
+
+            <span class="fw-semibold">
+                {{ complaint.category }}
+            </span>
+
+        </td>
+
+
+        <!-- Directed Against -->
+
+        <td>
+
+            <span class="badge text-bg-dark">
+                {{ complaint.directed_against }}
+            </span>
+
+        </td>
+
+
+        <!-- Description -->
+
+        <td style="max-width: 250px;">
+
+            {% if complaint.description|length > 60 %}
+
+            <details class="description-details">
+
+                <summary>
+
+                    <span class="short-description">
+                        {{ complaint.description[:60] }}...
+                    </span>
+
+                    <span class="full-description">
+                        {{ complaint.description }}
+                    </span>
+
+                </summary>
+
+            </details>
+
+            {% else %}
+
+            <span>
+                {{ complaint.description }}
+            </span>
+
+            {% endif %}
+
+        </td>
+
+
+        <!-- Urgency -->
+
+        <td>
+
+            {% if complaint.urgency_level == "Emergency" %}
+
+            <span class="badge text-bg-danger">
+
+                <i class="bi bi-exclamation-triangle-fill"></i>
+
+                Emergency
+
+            </span>
+
+            {% else %}
+
+            <span class="badge text-bg-secondary">
+
+                {{ complaint.urgency_level }}
+
+            </span>
+
+            {% endif %}
+
+        </td>
+
+
+        <!-- Status -->
+
+        <td>
+
+            {% if complaint.status == "Pending" %}
+
+            <span class="badge text-bg-warning">
+
+                <i class="bi bi-clock"></i>
+
+                Pending
+
+            </span>
+
+            {% elif complaint.status == "Forwarded" %}
+
+            <span class="badge text-bg-info">
+
+                <i class="bi bi-send"></i>
+
+                Forwarded
+
+            </span>
+
+            {% elif complaint.status == "Solved" %}
+
+            <span class="badge text-bg-success">
+
+                <i class="bi bi-check-circle"></i>
+
+                Solved
+
+            </span>
+
+            {% elif complaint.status == "Rejected" %}
+
+            <span class="badge text-bg-danger">
+
+                <i class="bi bi-x-circle"></i>
+
+                Rejected
+
+            </span>
+
+            {% else %}
+
+            <span class="badge text-bg-secondary">
+
+                {{ complaint.status }}
+
+            </span>
+
+            {% endif %}
+
+        </td>
+
+
+        <!-- Date -->
+
+        <td class="text-muted small">
+
+            {{ complaint.date_submitted.strftime('%d %b %Y') }}
+
+            <br>
+
+            {{ complaint.date_submitted.strftime('%I:%M %p') }}
+
+        </td>
+
+
+        <!-- Actions -->
+
+        <td class="text-end pe-4">
+
+            {% if complaint.status == "Pending" %}
+
+            <div class="btn-group">
+
+
+                <!-- Solve -->
+
+                <button
+                    type="button"
+                    class="btn btn-sm btn-success"
+                    data-bs-toggle="modal"
+                    data-bs-target="#solveModal{{ complaint.id }}"
+                >
+
+                    <i class="bi bi-check-lg"></i>
+
+                    Solve
+
+                </button>
+
+
+                <!-- Forward -->
+
+                <button
+                    type="submit"
+                    formaction="{{ url_for('forward_to_hod', complaint_id=complaint.id) }}"
+                    class="btn btn-sm btn-outline-primary"
+                >
+
+                    <i class="bi bi-send"></i>
+
+                    Forward
+
+                </button>
+
+
+                <!-- Reject -->
+
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    data-bs-toggle="modal"
+                    data-bs-target="#rejectModal{{ complaint.id }}"
+                >
+
+                    <i class="bi bi-x-lg"></i>
+
+                    Reject
+
+                </button>
+
+
+            </div>
+
+            {% else %}
+
+            <span class="text-muted small">
+
+                No action required
+
+            </span>
+
+            {% endif %}
+
+        </td>
+
+    </tr>
+
+
+    {% endfor %}
+
+</tbody>
+          </table>
+        </div>
+
+        <!-- ============================= -->
+        <!-- GROUP SELECTED COMPLAINTS -->
+        <!-- ============================= -->
+
+        <div class="border-top p-3 bg-light">
+          <div
+            class="d-flex flex-column flex-md-row justify-content-between align-items-md-center"
+          >
+            <small class="text-muted mb-2 mb-md-0">
+              Select at least 2 pending complaints with the same
+              <strong>Directed Against</strong>
+              value to create a group.
+            </small>
+
+            <button
+              type="submit"
+              formaction="{{ url_for('group_complaints') }}"
+              class="btn btn-primary"
+            >
+              <i class="bi bi-collection me-1"></i>
+              Group Selected Complaints
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <!-- ========================================================= -->
+      <!-- SOLVE / REJECT MODALS -->
+      <!-- ========================================================= -->
+
+      {% for complaint in complaints %} {% if complaint.status == "Pending" %}
+
+      <!-- ===================================================== -->
+      <!-- SOLVE COMPLAINT MODAL -->
+      <!-- ===================================================== -->
+
+      <div
+        class="modal fade"
+        id="solveModal{{ complaint.id }}"
+        tabindex="-1"
+        aria-labelledby="solveModalLabel{{ complaint.id }}"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+          <div class="modal-content">
+            <!-- ============================= -->
+            <!-- MODAL HEADER -->
+            <!-- ============================= -->
+
+            <div class="modal-header">
+              <h4
+                class="modal-title fw-bold"
+                id="solveModalLabel{{ complaint.id }}"
+              >
+                <i class="bi bi-check-circle text-success me-2"></i>
+                Solve Complaint
+              </h4>
+
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+
+            <!-- ============================= -->
+            <!-- MODAL BODY -->
+            <!-- ============================= -->
+
+            <div class="modal-body bg-light">
+              <div class="container-fluid">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body p-4">
+                    <!-- Complaint Details -->
+
+                    <h5 class="fw-bold mb-4">
+                      <i class="bi bi-file-earmark-text me-2"></i>
+                      Complaint Details
+                    </h5>
+
+                    <!-- Details Table -->
+
+                    <div class="table-responsive">
+                      <table class="table table-bordered align-middle">
+                        <tbody>
+                          <tr>
+                            <th style="width: 180px">ID</th>
+
+                            <td>
+                              <strong> #{{ complaint.id }} </strong>
+                            </td>
+                          </tr>
+
+                          <tr>
+                            <th>Student</th>
+
+                            <td>Student {{ complaint.student_id }}</td>
+                          </tr>
+
+                          <tr>
+                            <th>Category</th>
+
+                            <td>{{ complaint.category }}</td>
+                          </tr>
+
+                          <tr>
+                            <th>Directed Against</th>
+
+                            <td>
+                              <span class="badge text-bg-dark">
+                                {{ complaint.directed_against }}
+                              </span>
+                            </td>
+                          </tr>
+
+                          <tr>
+                            <th>Urgency</th>
+
+                            <td>
+                              {% if complaint.urgency_level == "Emergency" %}
+
+                              <span class="badge text-bg-danger">
+                                <i
+                                  class="bi bi-exclamation-triangle-fill me-1"
+                                ></i>
+                                Emergency
+                              </span>
+
+                              {% else %}
+
+                              <span class="badge text-bg-secondary">
+                                {{ complaint.urgency_level }}
+                              </span>
+
+                              {% endif %}
+                            </td>
+                          </tr>
+
+                          <tr>
+                            <th>Status</th>
+
+                            <td>
+                              <span class="badge text-bg-warning">
+                                <i class="bi bi-clock me-1"></i>
+                                {{ complaint.status }}
+                              </span>
+                            </td>
+                          </tr>
+
+                          <tr>
+                            <th>Date</th>
+
+                            <td>
+                              {{ complaint.date_submitted.strftime('%d %b %Y')
+                              }} {{ complaint.date_submitted.strftime('%I:%M
+                              %p') }}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <!-- ============================= -->
+                    <!-- DESCRIPTION -->
+                    <!-- ============================= -->
+
+                    <div class="mt-4">
+                      <h6 class="fw-bold mb-2">
+                        <i class="bi bi-chat-left-text me-2"></i>
+                        Complaint Description
+                      </h6>
+
+                      <div class="card bg-light border">
+                        <div class="card-body">{{ complaint.description }}</div>
+                      </div>
+                    </div>
+
+                    <!-- Divider -->
+
+                    <hr class="my-4 border-3 opacity-50" />
+
+                    <!-- ============================= -->
+                    <!-- SOLUTION / FEEDBACK -->
+                    <!-- ============================= -->
+
+                    <form
+                        method="POST"
+                        action="{{ url_for('solve_complaint', complaint_id=complaint.id) }}"
+                    >
+
+                        <h5 class="fw-bold mb-3">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Solution / Feedback
+                        </h5>
+
+                        <!-- Simple Text Editor -->
+
+                        <div class="card border">
+                            <div
+                                id="solveEditor{{ complaint.id }}"
+                                class="rich-text-editor"
+                                contenteditable="true"
+                                spellcheck="true"
+                                data-placeholder="Type solution / feedback here..."
+                            ></div>
+                        </div>
+
+                        <!-- Hidden field sent to Flask -->
+
+                        <textarea
+                            id="solveHidden{{ complaint.id }}"
+                            name="solution_{{ complaint.id }}"
+                            hidden
+                        ></textarea>
+
+                        <!-- Modal Buttons -->
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+
+                            <button
+                                type="button"
+                                class="btn btn-secondary"
+                                data-bs-dismiss="modal"
+                            >
+                                Cancel
+                            </button>
+
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-lg me-1"></i>
+                                Solve Complaint
+                            </button>
+
+                        </div>
+
+                    </form>
+
+      <!-- ===================================================== -->
+      <!-- REJECT COMPLAINT MODAL -->
+      <!-- ===================================================== -->
+
+      <div
+        class="modal fade"
+        id="rejectModal{{ complaint.id }}"
+        tabindex="-1"
+        aria-labelledby="rejectModalLabel{{ complaint.id }}"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+          <div class="modal-content">
+            <!-- Header -->
+
+            <div class="modal-header">
+              <h4
+                class="modal-title fw-bold"
+                id="rejectModalLabel{{ complaint.id }}"
+              >
+                <i class="bi bi-x-circle text-danger me-2"></i>
+
+                Reject Complaint
+              </h4>
+
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+
+            <!-- Body -->
+
+            <div class="modal-body bg-light">
+              <div class="container-fluid">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body p-4">
+                    <!-- Complaint Details -->
+
+                    <h5 class="fw-bold mb-4">
+                      <i class="bi bi-file-earmark-text me-2"></i>
+
+                      Complaint Details
+                    </h5>
+
+                    <!-- Details Table -->
+
+                    <div class="table-responsive">
+                      <table class="table table-bordered align-middle">
+                        <tbody>
+                          <tr>
+                            <th style="width: 180px">ID</th>
+
+                            <td>
+                              <strong> #{{ complaint.id }} </strong>
+                            </td>
+                          </tr>
+
+                          <tr>
+                            <th>Student</th>
+
+                            <td>Student {{ complaint.student_id }}</td>
+                          </tr>
+
+                          <tr>
+                            <th>Category</th>
+
+                            <td>{{ complaint.category }}</td>
+                          </tr>
+
+                          <tr>
+                            <th>Directed Against</th>
+
+                            <td>
+                              <span class="badge text-bg-dark">
+                                {{ complaint.directed_against }}
+                              </span>
+                            </td>
+                          </tr>
+
+                          <tr>
+                            <th>Urgency</th>
+
+                            <td>
+                              {% if complaint.urgency_level == "Emergency" %}
+
+                              <span class="badge text-bg-danger">
+                                <i
+                                  class="bi bi-exclamation-triangle-fill me-1"
+                                ></i>
+                                Emergency
+                              </span>
+
+                              {% else %}
+
+                              <span class="badge text-bg-secondary">
+                                {{ complaint.urgency_level }}
+                              </span>
+
+                              {% endif %}
+                            </td>
+                          </tr>
+
+                          <tr>
+                            <th>Status</th>
+
+                            <td>
+                              <span class="badge text-bg-warning">
+                                <i class="bi bi-clock me-1"></i>
+                                {{ complaint.status }}
+                              </span>
+                            </td>
+                          </tr>
+
+                          <tr>
+                            <th>Date</th>
+
+                            <td>
+                              {{ complaint.date_submitted.strftime('%d %b %Y')
+                              }} {{ complaint.date_submitted.strftime('%I:%M
+                              %p') }}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <!-- Description -->
+
+                    <div class="mt-4">
+                      <h6 class="fw-bold mb-2">
+                        <i class="bi bi-chat-left-text me-2"></i>
+
+                        Complaint Description
+                      </h6>
+
+                      <div class="card bg-light border">
+                        <div class="card-body">{{ complaint.description }}</div>
+                      </div>
+                    </div>
+
+                    <!-- Divider -->
+
+                    <hr class="my-4" />
+
+                    <!-- ============================= -->
+                    <!-- REJECTION FEEDBACK -->
+                    <!-- ============================= -->
+
+                    <form
+                        method="POST"
+                        action="{{ url_for('reject_complaint', complaint_id=complaint.id) }}"
+                        onsubmit="prepareRejectEditor('{{ complaint.id }}')"
+                    >
+
+                        <h5 class="fw-bold mb-3">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Rejection Reason / Feedback
+                        </h5>
+
+                        <!-- Simple Text Editor -->
+
+                        <div class="card border">
+
+                            <div
+                                id="solveEditorreject{{ complaint.id }}"
+                                class="rich-text-editor"
+                                contenteditable="true"
+                                spellcheck="true"
+                                data-placeholder="Type rejection reason / feedback here..."
+                            ></div>
+
+                        </div>
+
+                        <!-- Hidden field -->
+
+                        <textarea
+                            id="rejectHidden{{ complaint.id }}"
+                            name="solution_{{ complaint.id }}"
+                            hidden
+                        ></textarea>
+
+                        <!-- Buttons -->
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+
+                            <button
+                                type="button"
+                                class="btn btn-secondary"
+                                data-bs-dismiss="modal"
+                            >
+                                Cancel
+                            </button>
+
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-x-lg me-1"></i>
+                                Reject Complaint
+                            </button>
+
+                        </div>
+
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% endif %} {% endfor %} {% else %}
+
+      <!-- Empty Queue -->
+
+      <div class="text-center py-5">
+        <div class="fs-1">📭</div>
+
+        <h5 class="mt-3">No Complaints Available</h5>
+
+        <p class="text-muted mb-0">
+          There are currently no complaints in the queue.
+        </p>
+      </div>
+
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ============================= -->
+  <!-- GROUPED COMPLAINTS -->
+  <!-- ============================= -->
+
+  <div class="card border-0 shadow-sm">
+    <!-- Header -->
+
+    <div class="card-header bg-white border-bottom py-3">
+      <h5 class="fw-bold mb-1">
+        <i class="bi bi-collection me-2"></i>
+        Grouped Complaints
+      </h5>
+
+      <p class="text-muted small mb-0">
+        Manage complaints that have been grouped together.
+      </p>
+    </div>
+
+    <div class="card-body">
+      {% if groups %} {% for group_id, complaints_in_group in groups.items() %}
+
+      <div class="card border mb-4">
+        <!-- Group Header -->
+
+        <div class="card-header bg-light">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="fw-bold mb-0">Group #{{ group_id }}</h6>
+
+              <small class="text-muted">
+                {{ complaints_in_group|length }} complaints
+              </small>
+            </div>
+
+            <!-- Group Status -->
+
+            {% if complaints_in_group[0].status == "Pending" %}
+
+            <span class="badge text-bg-warning"> Pending </span>
+
+            {% elif complaints_in_group[0].status == "Forwarded" %}
+
+            <span class="badge text-bg-info"> Forwarded </span>
+
+            {% elif complaints_in_group[0].status == "Solved" %}
+
+            <span class="badge text-bg-success"> Solved </span>
+
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Group Table -->
+
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-3">Complaint ID</th>
+
+                <th>Category</th>
+
+                <th>Directed Against</th>
+
+                <th>Urgency</th>
+
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for complaint in complaints_in_group %}
+
+              <tr>
+                <!-- ID -->
+
+                <td class="ps-3">
+                  <strong> #{{ complaint.id }} </strong>
+                </td>
+
+                <!-- Category -->
+
+                <td>{{ complaint.category }}</td>
+
+                <!-- Directed Against -->
+
+                <td>{{ complaint.directed_against }}</td>
+
+                <!-- Urgency -->
+
+                <td>
+                  {% if complaint.urgency_level == "Emergency" %}
+
+                  <span class="badge text-bg-danger"> Emergency </span>
+
+                  {% else %}
+
+                  <span class="badge text-bg-secondary">
+                    {{ complaint.urgency_level }}
+                  </span>
+
+                  {% endif %}
+                </td>
+
+                <!-- Status -->
+
+                <td>
+                  {% if complaint.status == "Pending" %}
+
+                  <span class="badge text-bg-warning"> Pending </span>
+
+                  {% elif complaint.status == "Forwarded" %}
+
+                  <span class="badge text-bg-info"> Forwarded </span>
+
+                  {% elif complaint.status == "Solved" %}
+
+                  <span class="badge text-bg-success"> Solved </span>
+
+                  {% else %}
+
+                  <span class="badge text-bg-secondary">
+                    {{ complaint.status }}
+                  </span>
+
+                  {% endif %}
+                </td>
+              </tr>
+
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ============================= -->
+        <!-- GROUP ACTIONS -->
+        <!-- ============================= -->
+
+        <div class="card-footer bg-white">
+          {% if complaints_in_group[0].status == "Pending" %}
+
+          <div class="d-flex flex-wrap gap-2">
+            <!-- Solve Group -->
+
+            <form
+              method="POST"
+              action="{{ url_for('solve_group', group_id=group_id) }}"
+            >
+              <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle me-1"></i>
+                Solve Group
+              </button>
+            </form>
+
+            <!-- Forward Group -->
+
+            <form
+              method="POST"
+              action="{{ url_for('forward_group_to_hod', group_id=group_id) }}"
+            >
+              <button type="submit" class="btn btn-outline-primary">
+                <i class="bi bi-send me-1"></i>
+                Forward to HOD
+              </button>
+            </form>
+
+            <!-- Undo Group -->
+
+            <form
+              method="POST"
+              action="{{ url_for('undo_group', group_id=group_id) }}"
+            >
+              <button type="submit" class="btn btn-outline-danger">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>
+                Undo Group
+              </button>
+            </form>
+          </div>
+
+          {% else %}
+
+          <span class="text-muted">
+            <i class="bi bi-check2-circle me-1"></i>
+
+            Group already processed.
+          </span>
+
+          {% endif %}
+        </div>
+      </div>
+
+      {% endfor %} {% else %}
+
+      <!-- Empty Groups -->
+
+      <div class="text-center py-5">
+        <div class="fs-1">📂</div>
+
+        <h5 class="mt-3">No Grouped Complaints</h5>
+
+        <p class="text-muted mb-0">
+          Select compatible pending complaints from the queue to create a group.
+        </p>
+      </div>
+
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %} {% block scripts %}
+
+<script>
+
+    /* =========================================================
+       DESCRIPTION TOGGLE
+       ========================================================= */
+
+    function toggleDescription(element) {
+
+        const fullTextElement =
+            element.nextElementSibling;
+
+        const fullText =
+            fullTextElement.textContent.trim();
+
+        const shortText =
+            fullText.substring(0, 60) + "...";
+
+
+        if (element.dataset.expanded === "true") {
+
+            element.textContent = shortText;
+
+            element.dataset.expanded = "false";
+
+        } else {
+
+            element.textContent = fullText;
+
+            element.dataset.expanded = "true";
+
+        }
+    }
+
+
+    /* =========================================================
+       RICH TEXT EDITOR
+       ========================================================= */
+
+
+    /*
+       Har editor ki selection separately save hogi.
+
+       Example:
+
+       solveEditor1
+       rejectEditor1
+       solveEditor2
+       rejectEditor2
+
+       Is se ek complaint ke editor ki selection
+       doosre editor ke saath mix nahi hogi.
+    */
+
+    const editorSelections = {};
+
+
+    /* =========================================================
+       GET EDITOR
+       ========================================================= */
+
+    function getEditor(editorId) {
+
+        /*
+           Solve editor
+           Example: solveEditor5
+        */
+
+        let editor =
+            document.getElementById(
+                "solveEditor" + editorId
+            );
+
+        if (editor) {
+            return editor;
+        }
+
+
+        /*
+           Reject editor
+           Example: solveEditorreject5
+        */
+
+        editor =
+            document.getElementById(
+                "solveEditorreject" + editorId
+            );
+
+        return editor;
+    }
+
+
+    /* =========================================================
+       SAVE SELECTION
+       ========================================================= */
+
+    function saveSelection(editorId) {
+
+        const editor =
+            getEditor(editorId);
+
+        if (!editor) {
+            return;
+        }
+
+
+        const selection =
+            window.getSelection();
+
+        if (
+            !selection ||
+            selection.rangeCount === 0
+        ) {
+            return;
+        }
+
+
+        const range =
+            selection.getRangeAt(0);
+
+
+        /*
+           Check karein ke selected text
+           isi editor ke andar hai.
+        */
+
+        let node =
+            range.commonAncestorContainer;
+
+
+        if (
+            node.nodeType === Node.TEXT_NODE
+        ) {
+            node = node.parentNode;
+        }
+
+
+        if (
+            node &&
+            editor.contains(node)
+        ) {
+
+            editorSelections[editorId] =
+                range.cloneRange();
+
+        }
+    }
+
+
+    /* =========================================================
+       RESTORE SELECTION
+       ========================================================= */
+
+    function restoreSelection(editorId) {
+
+        const savedRange =
+            editorSelections[editorId];
+
+        if (!savedRange) {
+            return;
+        }
+
+
+        const selection =
+            window.getSelection();
+
+
+        selection.removeAllRanges();
+
+
+        selection.addRange(
+            savedRange
+        );
+    }
+
+
+    /* =========================================================
+       FORMAT TEXT
+       ========================================================= */
+
+    function formatEditor(
+        command,
+        editorId
+    ) {
+
+        const editor =
+            getEditor(editorId);
+
+        if (!editor) {
+            return;
+        }
+
+
+        /*
+           Editor ko focus karein.
+        */
+
+        editor.focus();
+
+
+        /*
+           User ka previous selected text
+           restore karein.
+        */
+
+        restoreSelection(editorId);
+
+
+        /*
+           Bold / Italic / Underline
+        */
+
+        document.execCommand(
+            command,
+            false,
+            null
+        );
+
+
+        /*
+           Formatting ke baad selection save karein.
+        */
+
+        saveSelection(editorId);
+
+
+        /*
+           Cursor editor mein rakhein.
+        */
+
+        editor.focus();
+    }
+
+
+    /* =========================================================
+       FONT SIZE
+       ========================================================= */
+
+    function changeFontSize(
+        size,
+        editorId
+    ) {
+
+        if (!size) {
+            return;
+        }
+
+
+        const editor =
+            getEditor(editorId);
+
+        if (!editor) {
+            return;
+        }
+
+
+        editor.focus();
+
+
+        /*
+           Selected text restore karein.
+        */
+
+        restoreSelection(editorId);
+
+
+        /*
+           Font size apply karein.
+
+           1 = Very Small
+           2 = Small
+           3 = Normal
+           4 = Large
+           5 = Very Large
+        */
+
+        document.execCommand(
+            "fontSize",
+            false,
+            size
+        );
+
+
+        /*
+           New selection save karein.
+        */
+
+        saveSelection(editorId);
+
+
+        editor.focus();
+    }
+
+
+    /* =========================================================
+       HIGHLIGHT TEXT
+       ========================================================= */
+
+    function highlightEditor(
+        editorId
+    ) {
+
+        const editor =
+            getEditor(editorId);
+
+        if (!editor) {
+            return;
+        }
+
+
+        editor.focus();
+
+
+        /*
+           Selected text restore karein.
+        */
+
+        restoreSelection(editorId);
+
+
+        /*
+           Highlight apply karein.
+        */
+
+        document.execCommand(
+            "backColor",
+            false,
+            "#fff3cd"
+        );
+
+
+        /*
+           Selection save karein.
+        */
+
+        saveSelection(editorId);
+
+
+        editor.focus();
+    }
+
+
+    /* =========================================================
+       SELECTION CHANGE
+       ========================================================= */
+
+    document.addEventListener(
+        "selectionchange",
+        function () {
+
+            /*
+               Solve editors check karein.
+            */
+
+            document
+                .querySelectorAll(
+                    ".rich-text-editor"
+                )
+                .forEach(function(editor) {
+
+                    const selection =
+                        window.getSelection();
+
+                    if (
+                        !selection ||
+                        selection.rangeCount === 0
+                    ) {
+                        return;
+                    }
+
+
+                    const range =
+                        selection.getRangeAt(0);
+
+                    let node =
+                        range.commonAncestorContainer;
+
+
+                    if (
+                        node.nodeType ===
+                        Node.TEXT_NODE
+                    ) {
+                        node = node.parentNode;
+                    }
+
+
+                    /*
+                       Agar selection is editor
+                       ke andar hai to save karein.
+                    */
+
+                    if (
+                        node &&
+                        editor.contains(node)
+                    ) {
+
+                        let editorId = "";
+
+
+                        /*
+                           Solve editor ID
+                           Example:
+
+                           solveEditor5
+
+                           -> 5
+                        */
+
+                        if (
+                            editor.id.startsWith(
+                                "solveEditorreject"
+                            )
+                        ) {
+
+                            editorId =
+                                editor.id.replace(
+                                    "solveEditorreject",
+                                    ""
+                                );
+
+                        } else {
+
+                            editorId =
+                                editor.id.replace(
+                                    "solveEditor",
+                                    ""
+                                );
+                        }
+
+
+                        if (editorId) {
+
+                            editorSelections[
+                                editorId
+                            ] =
+                                range.cloneRange();
+
+                        }
+
+                    }
+
+                });
+
+        }
+    );
+
+
+    /* =========================================================
+       PREPARE SOLUTION BEFORE SUBMIT
+       ========================================================= */
+
+    function prepareEditor(
+        complaintId
+    ) {
+
+        const editor =
+            document.getElementById(
+                "solveEditor" + complaintId
+            );
+
+
+        const hiddenField =
+            document.getElementById(
+                "solveHidden" + complaintId
+            );
+
+
+        if (
+            editor &&
+            hiddenField
+        ) {
+
+            hiddenField.value =
+                editor.innerHTML;
+
+        }
+    }
+
+
+    /* =========================================================
+       PREPARE REJECTION BEFORE SUBMIT
+       ========================================================= */
+
+    function prepareRejectEditor(
+        complaintId
+    ) {
+
+        const editor =
+            document.getElementById(
+                "solveEditorreject" +
+                complaintId
+            );
+
+
+        const hiddenField =
+            document.getElementById(
+                "rejectHidden" +
+                complaintId
+            );
+
+
+        if (
+            editor &&
+            hiddenField
+        ) {
+
+            hiddenField.value =
+                editor.innerHTML;
+
+        }
+    }
+
+
+    /* =========================================================
+       EDITOR PLACEHOLDER
+       ========================================================= */
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            document
+                .querySelectorAll(
+                    ".rich-text-editor"
+                )
+                .forEach(function(editor) {
+
+                    /*
+                       Ensure editor is editable.
+                    */
+
+                    editor.setAttribute(
+                        "contenteditable",
+                        "true"
+                    );
+
+
+                    /*
+                       Spell checking enable.
+                    */
+
+                    editor.setAttribute(
+                        "spellcheck",
+                        "true"
+                    );
+
+                });
+
+        }
+    );
+
+</script>
+
+{% endblock %}
+</file>
+
+<file path="app.py">
+# ============================================================
+# IMPORTS
+# ============================================================
+
+# Flask modules
+from flask import Flask, render_template, request, redirect, url_for, session
+
+# Database object
+from extensions import db
+
+# Database models
+from models import (
+    User,
+    Complaint,
+    ComplaintComment,
+    ComplaintHistory,
+    Notification
+)
+
+# Password verification
+from werkzeug.security import check_password_hash
+
+# Used for creating custom decorators
+from functools import wraps
+
+# Used for date and monthly complaint quota
+from datetime import datetime
+
+# Used for custom complaint sorting and filtering
+from sqlalchemy import case, or_
+
+
+# ============================================================
+# FLASK APPLICATION CONFIGURATION
+# ============================================================
+
+# Create the Flask application
+app = Flask(__name__)
+
+# Configure SQLite database
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///complaints.db"
+
+# Disable unnecessary SQLAlchemy tracking
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# Secret key used for Flask sessions
+app.secret_key = "dev-secret-key"
+
+# Connect SQLAlchemy database with Flask application
+db.init_app(app)
+
+# ============================================================
+# COMPLAINT HISTORY HELPER
+# ============================================================
+
+def add_complaint_history(
+    complaint,
+    user_id,
+    action,
+    old_status=None,
+    new_status=None,
+    description=None
+):
+    """
+    Complaint ki history mein ek new record create karta hai.
+    """
+
+    history = ComplaintHistory(
+        complaint_id=complaint.id,
+        user_id=user_id,
+        action=action,
+        old_status=old_status,
+        new_status=new_status,
+        description=description
+    )
+
+    db.session.add(history)
+
+# ============================================================
+# HOME ROUTE
+# ============================================================
+
+@app.route("/")
+def home():
+    # Redirect the user to the login page
+    return redirect(url_for("login"))
+
+
+# ============================================================
+# ROLE-BASED ACCESS CONTROL DECORATOR
+# ============================================================
+
+def role_required(required_role):
+    """
+    Restrict a route so that only users with the required role
+    can access it.
+
+    Example:
+        @role_required("student")
+    """
+
+    def decorator(function):
+
+        @wraps(function)
+        def wrapper(*args, **kwargs):
+
+            # Check whether the user is logged in
+            if "user_id" not in session:
+                return redirect(url_for("login"))
+
+            # Check whether the logged-in user has the required role
+            if session.get("role") != required_role:
+                return "Access Denied", 403
+
+            # Allow access to the original route
+            return function(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+# ============================================================
+# LOGIN
+# ============================================================
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+
+    # Run this code when the login form is submitted
+    if request.method == "POST":
+
+        # Get username and password from the form
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        # Find the user in the database using the username
+        user = User.query.filter_by(username=username).first()
+
+        # Check:
+        # 1. User exists
+        # 2. Entered password matches the stored hashed password
+        if user and check_password_hash(
+            user.password_hash,
+            password
+        ):
+
+            # Store logged-in user information in the session
+            session["user_id"] = user.id
+            session["username"] = user.username
+            session["role"] = user.role
+
+            # Redirect the user according to their role
+            if user.role == "student":
+                return redirect(url_for("student_dashboard"))
+
+            elif user.role == "admin":
+                return redirect(url_for("admin_dashboard"))
+
+            elif user.role == "hod":
+                return redirect(url_for("hod_dashboard"))
+
+        # Show an error if login credentials are incorrect
+        return "Invalid username or password"
+
+    # Show the login page for GET requests
+    return render_template("login.html")
+
+
+# ============================================================
+# STUDENT DASHBOARD
+# ============================================================
+
+@app.route("/student/dashboard")
+@role_required("student")
+def student_dashboard():
+
+    # Get the currently logged-in student's ID
+    student_id = session.get("user_id")
+
+    # Get all complaints submitted by this student
+    # Newest complaints are shown first
+    complaints = Complaint.query.filter_by(
+        student_id=student_id
+    ).order_by(
+        Complaint.date_submitted.desc()
+    ).all()
+
+    # --------------------------------------------------------
+    # MONTHLY COMPLAINT DISPLAY
+    # --------------------------------------------------------
+
+    # Total complaints currently fetched for the student
+    complaints_used = len(complaints)
+
+    # Remaining complaints from the limit of 5
+    complaints_remaining = 5 - complaints_used
+
+    # --------------------------------------------------------
+    # EMERGENCY COMPLAINT COUNTER
+    # --------------------------------------------------------
+
+    # Count Emergency complaints submitted by this student
+    emergency_count = sum(
+        1
+        for complaint in complaints
+        if complaint.urgency_level == "Emergency"
+    )
+
+    # Emergency complaint limit is 2 per month
+    emergency_remaining = 2 - emergency_count
+
+    # Prevent negative value
+    if emergency_remaining < 0:
+        emergency_remaining = 0
+
+    # --------------------------------------------------------
+    # COMPLAINT STATUS COUNTS
+    # --------------------------------------------------------
+
+    # Count Pending complaints
+    pending_count = sum(
+        1
+        for complaint in complaints
+        if complaint.status == "Pending"
+    )
+
+    # Count Forwarded complaints
+    forwarded_count = sum(
+        1
+        for complaint in complaints
+        if complaint.status == "Forwarded"
+    )
+
+    # Count Solved complaints
+    solved_count = sum(
+        1
+        for complaint in complaints
+        if complaint.status == "Solved"
+    )
+
+    # Send all required data to the student dashboard
+    return render_template(
+        "student_dashboard.html",
+        username=session.get("username"),
+        complaints=complaints,
+        complaints_used=complaints_used,
+        complaints_remaining=complaints_remaining,
+        emergency_count=emergency_count,
+        emergency_remaining=emergency_remaining,
+        pending_count=pending_count,
+        forwarded_count=forwarded_count,
+        solved_count=solved_count
+    )
+
+
+
+
+# ============================================================
+# STUDENT COMPLAINT SUBMISSION
+# ============================================================
+
+@app.route("/complaint/new", methods=["GET", "POST"])
+@role_required("student")
+def submit_complaint():
+
+    # Get the currently logged-in student's ID
+    student_id = session["user_id"]
+
+    # ========================================================
+    # GET CURRENT MONTH
+    # ========================================================
+
+    # Get the current date and time
+    now = datetime.now()
+
+    # Create the first date of the current month
+    month_start = datetime(
+        now.year,
+        now.month,
+        1
+    )
+
+    # ========================================================
+    # POST - SUBMIT COMPLAINT
+    # ========================================================
+
+    if request.method == "POST":
+
+        # Get complaint information from the form
+        category = request.form.get("category")
+        directed_against = request.form.get("directed_against")
+        description = request.form.get("description")
+
+        # Get custom target when "Other" is selected
+        custom_target = request.form.get("custom_target")
+
+        # Get emergency checkbox value
+        is_emergency = request.form.get("is_emergency")
+
+        # ====================================================
+        # BASIC BACKEND VALIDATION
+        # ====================================================
+
+        # Check category
+        if not category or not category.strip():
+            return "Complaint category is required."
+
+        # Check directed against
+        if not directed_against or not directed_against.strip():
+            return "Directed Against is required."
+
+        # Check description
+        if not description or not description.strip():
+            return "Complaint description is required."
+
+        # ====================================================
+        # CUSTOM TARGET VALIDATION
+        # ====================================================
+
+        # If "Other" is selected, custom target is required
+        if directed_against == "Other":
+
+            if not custom_target or not custom_target.strip():
+                return "Please specify the person or department."
+
+            # Remove unnecessary spaces
+            custom_target = custom_target.strip()
+
+        else:
+
+            # No custom target for predefined options
+            custom_target = None
+
+        # ====================================================
+        # MONTHLY COMPLAINT LIMIT
+        # ====================================================
+
+        # Count all complaints submitted by this student
+        # during the current month
+        monthly_count = Complaint.query.filter(
+            Complaint.student_id == student_id,
+            Complaint.date_submitted >= month_start
+        ).count()
+
+        # Maximum 5 complaints per month
+        if monthly_count >= 5:
+            return "Monthly complaint limit reached (5/5)."
+
+        # ====================================================
+        # EMERGENCY COMPLAINT LIMIT
+        # ====================================================
+
+        # Default urgency
+        urgency_level = "Medium"
+
+        # If student selected Emergency
+        if is_emergency == "1":
+
+            # Count Emergency complaints submitted by this
+            # student during the current month
+            emergency_count = Complaint.query.filter(
+                Complaint.student_id == student_id,
+                Complaint.urgency_level == "Emergency",
+                Complaint.date_submitted >= month_start
+            ).count()
+
+            # Maximum 2 Emergency complaints per month
+            if emergency_count >= 2:
+                return "Emergency complaint limit reached."
+
+            # Set urgency as Emergency
+            urgency_level = "Emergency"
+
+        # ====================================================
+        # CREATE NEW COMPLAINT
+        # ====================================================
+
+        complaint = Complaint(
+            student_id=student_id,
+            category=category.strip(),
+            directed_against=directed_against.strip(),
+            custom_target=custom_target,
+            description=description.strip(),
+            urgency_level=urgency_level,
+            status="Pending"
+        )
+
+        # ========================================================
+        # SAVE COMPLAINT
+        # ========================================================
+
+        db.session.add(complaint)
+
+        # Commit first so complaint gets its database ID
+        db.session.commit()
+
+
+        # ========================================================
+        # CREATE COMPLAINT HISTORY
+        # ========================================================
+
+        add_complaint_history(
+            complaint=complaint,
+            user_id=student_id,
+            action="Complaint Submitted",
+            old_status=None,
+            new_status="Pending",
+            description="Complaint submitted by student."
+        )
+
+        # Save history record
+        db.session.commit()
+
+
+        # ========================================================
+        # RETURN TO STUDENT DASHBOARD
+        # ========================================================
+
+        return redirect(
+            url_for("student_dashboard")
+        )
+
+# ========================================================
+    # GET - SHOW COMPLAINT FORM
+    # ========================================================
+
+    # Count Emergency complaints for this student
+    # during the current month
+    emergency_count = Complaint.query.filter(
+        Complaint.student_id == student_id,
+        Complaint.urgency_level == "Emergency",
+        Complaint.date_submitted >= month_start
+    ).count()
+
+    # Show complaint form
+    return render_template(
+        "submit_complaint.html",
+        emergency_count=emergency_count
+    )
+
+
+# ============================================================
+# COMPLAINT DETAILS
+# ============================================================
+
+@app.route("/complaint/<int:complaint_id>/details")
+@role_required("student")
+def complaint_details(complaint_id):
+
+    # --------------------------------------------------------
+    # Get complaint
+    # --------------------------------------------------------
+
+    complaint = Complaint.query.get_or_404(complaint_id)
+
+    # --------------------------------------------------------
+    # Security Check
+    # --------------------------------------------------------
+    # Student can only view their own complaint.
+    # --------------------------------------------------------
+
+    if complaint.student_id != session["user_id"]:
+        return "Access Denied", 403
+
+    # --------------------------------------------------------
+    # Get comments
+    # --------------------------------------------------------
+
+    comments = ComplaintComment.query.filter_by(
+        complaint_id=complaint.id
+    ).order_by(
+        ComplaintComment.created_at.asc()
+    ).all()
+
+    # --------------------------------------------------------
+    # Get complaint history
+    # --------------------------------------------------------
+
+    history = ComplaintHistory.query.filter_by(
+        complaint_id=complaint.id
+    ).order_by(
+        ComplaintHistory.created_at.asc()
+    ).all()
+
+    # --------------------------------------------------------
+    # Display complaint details
+    # --------------------------------------------------------
+
+    return render_template(
+        "complaint_details.html",
+        complaint=complaint,
+        comments=comments,
+        history=history
+    )
+
+# ============================================================
+# ADD COMPLAINT COMMENT
+# ============================================================
+
+@app.route(
+    "/complaint/<int:complaint_id>/comment",
+    methods=["POST"]
+)
+@role_required("student")
+def add_complaint_comment(complaint_id):
+
+    # --------------------------------------------------------
+    # Get complaint
+    # --------------------------------------------------------
+
+    complaint = Complaint.query.get_or_404(complaint_id)
+
+    # --------------------------------------------------------
+    # Security Check
+    # --------------------------------------------------------
+    # Student can only comment on their own complaint.
+    # --------------------------------------------------------
+
+    if complaint.student_id != session["user_id"]:
+        return "Access Denied", 403
+
+    # --------------------------------------------------------
+    # Get comment
+    # --------------------------------------------------------
+
+    comment_text = request.form.get("comment")
+
+    if comment_text:
+        comment_text = comment_text.strip()
+
+    # --------------------------------------------------------
+    # Validate comment
+    # --------------------------------------------------------
+
+    if not comment_text:
+        return """
+        <h3>Comment Required</h3>
+        <p>Please enter a comment or feedback.</p>
+        <a href="/complaint/{}/details">
+            Back to Complaint
+        </a>
+        """.format(complaint.id), 400
+
+    # --------------------------------------------------------
+    # Create comment
+    # --------------------------------------------------------
+
+    comment = ComplaintComment(
+        complaint_id=complaint.id,
+        user_id=session["user_id"],
+        comment=comment_text
+    )
+
+    db.session.add(comment)
+
+    # --------------------------------------------------------
+    # Save comment
+    # --------------------------------------------------------
+
+    db.session.commit()
+
+    # --------------------------------------------------------
+    # Return to complaint details
+    # --------------------------------------------------------
+
+    return redirect(
+        url_for(
+            "complaint_details",
+            complaint_id=complaint.id
+        )
+    )
+
+
+
+
+
+
+# ============================================================
+# ADMIN DASHBOARD
+# ============================================================
+
+@app.route("/admin/dashboard")
+@role_required("admin")
+def admin_dashboard():
+
+    # ========================================================
+    # NORMAL COMPLAINT QUEUE
+    # ========================================================
+    # Show complaints that:
+    # 1. Are not part of any group
+    # 2. Are not directed against Admin
+    #
+    # Complaints directed against Admin are handled by HOD.
+    # ========================================================
+
+    complaints = Complaint.query.filter(
+        Complaint.group_id == None,
+        Complaint.directed_against != "Admin"
+    ).order_by(
+
+        # ----------------------------------------------------
+        # PRIORITY SORTING
+        # ----------------------------------------------------
+        # Priority order:
+        # 1. Emergency + Pending
+        # 2. Normal Pending
+        # 3. Forwarded
+        # 4. Solved
+        # 5. Anything else
+        # ----------------------------------------------------
+
+        case(
+            # Priority 1:
+            # Emergency complaints that are still Pending
+            (
+                (Complaint.urgency_level == "Emergency") &
+                (Complaint.status == "Pending"),
+                1
+            ),
+
+            # Priority 2:
+            # All normal Pending complaints
+            (
+                Complaint.status == "Pending",
+                2
+            ),
+
+            # Priority 3:
+            # Complaints forwarded to HOD
+            (
+                Complaint.status == "Forwarded",
+                3
+            ),
+
+            # Priority 4:
+            # Solved complaints
+            (
+                Complaint.status == "Solved",
+                4
+            ),
+            # Priority 5:
+            # Rejected complaints
+            (
+                Complaint.status == "Rejected",
+                5
+            ),
+
+            # Priority 6:
+            # Any other status
+            else_=6
+        ),
+
+        # Within the same priority,
+        # show the newest complaints first
+        Complaint.date_submitted.desc()
+
+    ).all()
+
+
+    # ========================================================
+    # GROUPED COMPLAINTS
+    # ========================================================
+    # Get all complaints that belong to a group.
+    # ========================================================
+
+    grouped_complaints = Complaint.query.filter(
+        Complaint.group_id != None
+    ).all()
+
+
+    # Dictionary to store complaints according to their Group ID
+    #
+    # Example:
+    # {
+    #     5: [complaint1, complaint2],
+    #     10: [complaint3, complaint4]
+    # }
+    groups = {}
+
+
+    # Organize grouped complaints by their group_id
+    for complaint in grouped_complaints:
+
+        # Create a new list if this Group ID does not exist
+        if complaint.group_id not in groups:
+            groups[complaint.group_id] = []
+
+        # Add the complaint to its corresponding group
+        groups[complaint.group_id].append(complaint)
+
+
+    # ========================================================
+    # SEND DATA TO ADMIN DASHBOARD
+    # ========================================================
+
+    return render_template(
+        "admin_dashboard.html",
+        username=session.get("username"),
+        complaints=complaints,
+        groups=groups
+    )
+
+
+# ============================================================
+# SOLVE SINGLE COMPLAINT
+# ============================================================
+
+@app.route(
+    "/complaint/<int:complaint_id>/solve",
+    methods=["POST"]
+)
+@role_required("admin")
+def solve_complaint(complaint_id):
+
+    # ========================================================
+    # GET COMPLAINT
+    # ========================================================
+
+    complaint = Complaint.query.get_or_404(complaint_id)
+
+
+    # ========================================================
+    # SECURITY CHECK
+    # ========================================================
+    # Admin cannot solve complaints directed against Admin.
+    # These complaints are handled by HOD.
+
+    if complaint.directed_against == "Admin":
+        return "Access Denied", 403
+
+
+    # ========================================================
+    # GET SOLUTION / FEEDBACK
+    # ========================================================
+
+    solution = request.form.get(
+        f"solution_{complaint_id}"
+    )
+
+
+    # Remove unnecessary spaces
+    if solution:
+        solution = solution.strip()
+
+
+    # ========================================================
+    # SOLUTION IS REQUIRED
+    # ========================================================
+
+    if not solution:
+
+        return """
+        <h3>Solution / Feedback Required</h3>
+
+        <p>
+            Please enter a solution or feedback before solving
+            the complaint.
+        </p>
+
+        <a href="/admin/dashboard">
+            Back to Admin Dashboard
+        </a>
+        """, 400
+
+
+    # ========================================================
+    # CHECK IF COMPLAINT BELONGS TO A GROUP
+    # ========================================================
+
+    if complaint.group_id is not None:
+
+        # Get all complaints in this group
+        grouped_complaints = Complaint.query.filter_by(
+            group_id=complaint.group_id
+        ).all()
+
+
+        # ====================================================
+        # SOLVE ALL GROUP COMPLAINTS
+        # ====================================================
+
+        for grouped_complaint in grouped_complaints:
+
+            old_status = grouped_complaint.status
+
+            grouped_complaint.status = "Solved"
+
+
+            # Add history for every complaint
+            add_complaint_history(
+                complaint=grouped_complaint,
+                user_id=session["user_id"],
+                action="Complaint Solved",
+                old_status=old_status,
+                new_status="Solved",
+                description=solution
+            )
+
+
+    else:
+
+        # ====================================================
+        # SINGLE COMPLAINT
+        # ====================================================
+
+        old_status = complaint.status
+
+        complaint.status = "Solved"
+
+
+        # ====================================================
+        # ADD HISTORY
+        # ====================================================
+
+        add_complaint_history(
+            complaint=complaint,
+            user_id=session["user_id"],
+            action="Complaint Solved",
+            old_status=old_status,
+            new_status="Solved",
+            description=solution
+        )
+
+
+    # ========================================================
+    # SAVE CHANGES
+    # ========================================================
+
+    db.session.commit()
+
+
+    # ========================================================
+    # RETURN TO ADMIN DASHBOARD
+    # ========================================================
+
+    return redirect(
+        url_for("admin_dashboard")
+    )
+
+@app.route(
+    "/complaint/<int:complaint_id>/reject",
+    methods=["POST"]
+)
+@role_required("admin")
+def reject_complaint(complaint_id):
+
+    complaint = Complaint.query.get_or_404(complaint_id)
+
+    # Admin cannot reject complaints directed against Admin
+    if complaint.directed_against == "Admin":
+        return "Access Denied", 403
+
+    # Get feedback/rejection reason from the same textarea
+    feedback = request.form.get(
+        f"solution_{complaint_id}"
+    )
+
+    if feedback:
+        feedback = feedback.strip()
+
+    # Feedback is required before rejecting
+    if not feedback:
+        return """
+        <h3>Rejection Feedback Required</h3>
+
+        <p>
+            Please enter a rejection reason or feedback
+            before rejecting the complaint.
+        </p>
+
+        <a href="/admin/dashboard">
+            Back to Admin Dashboard
+        </a>
+        """, 400
+
+    # Save old status for history
+    old_status = complaint.status
+
+    # Change complaint status
+    complaint.status = "Rejected"
+
+    # Add complaint history
+    add_complaint_history(
+        complaint=complaint,
+        user_id=session["user_id"],
+        action="Complaint Rejected",
+        old_status=old_status,
+        new_status="Rejected",
+        description=feedback
+    )
+
+    db.session.commit()
+
+    return redirect(url_for("admin_dashboard"))
+
+
+# ============================================================
+# FORWARD SINGLE COMPLAINT TO HOD
+# ============================================================
+
+@app.route(
+    "/complaint/<int:complaint_id>/forward",
+    methods=["POST"]
+)
+@role_required("admin")
+def forward_to_hod(complaint_id):
+
+    # ========================================================
+    # GET COMPLAINT
+    # ========================================================
+
+    complaint = Complaint.query.get_or_404(complaint_id)
+
+    # ========================================================
+    # SECURITY CHECK
+    # ========================================================
+    # Admin cannot forward complaints directed against Admin.
+    # Those complaints are handled directly by HOD.
+
+    if complaint.directed_against == "Admin":
+        return "Access Denied", 403
+
+    # ========================================================
+    # SAVE OLD STATUS
+    # ========================================================
+
+    old_status = complaint.status
+
+    # ========================================================
+    # CHANGE STATUS
+    # ========================================================
+
+    complaint.status = "Forwarded"
+
+    # ========================================================
+    # CREATE HISTORY RECORD
+    # ========================================================
+
+    add_complaint_history(
+        complaint=complaint,
+        user_id=session["user_id"],
+        action="Forwarded to HOD",
+        old_status=old_status,
+        new_status="Forwarded",
+        description="Complaint forwarded to HOD by Admin."
+    )
+
+    # ========================================================
+    # SAVE CHANGES
+    # ========================================================
+
+    db.session.commit()
+
+    # ========================================================
+    # RETURN TO ADMIN DASHBOARD
+    # ========================================================
+
+    return redirect(
+        url_for("admin_dashboard")
+    )
+
+
+# ============================================================
+# COMPLAINT GROUPING
+# ============================================================
+
+@app.route("/complaints/group", methods=["POST"])
+@role_required("admin")
+def group_complaints():
+
+    # Get selected complaint IDs from the form
+    complaint_ids = request.form.getlist("complaint_ids")
+
+    print("Selected Complaint IDs:", complaint_ids)
+
+    # At least 2 complaints are required to create a group
+    if len(complaint_ids) < 2:
+        return "Please select at least 2 complaints to create a group."
+
+    # Convert complaint IDs from strings to integers
+    complaint_ids = [
+        int(complaint_id)
+        for complaint_id in complaint_ids
+    ]
+
+    # ========================================================
+    # GET VALID COMPLAINTS
+    # ========================================================
+    # Selected complaints must:
+    # 1. Be Pending
+    # 2. Not be directed against Admin
+    # 3. Not already belong to another group
+    # ========================================================
+
+    complaints = Complaint.query.filter(
+        Complaint.id.in_(complaint_ids),
+        Complaint.status == "Pending",
+        Complaint.directed_against != "Admin",
+        Complaint.group_id == None
+    ).all()
+
+    print(
+        "Found Complaints:",
+        [
+            (
+                complaint.id,
+                complaint.category,
+                complaint.directed_against
+            )
+            for complaint in complaints
+        ]
+    )
+
+    # Make sure every selected complaint is valid
+    if len(complaints) != len(complaint_ids):
+        return (
+            "Some selected complaints are invalid, already grouped, "
+            "not pending, or cannot be grouped."
+        )
+
+    # Double-check that at least 2 valid complaints exist
+    if len(complaints) < 2:
+        return "Please select at least 2 valid complaints."
+
+    # ========================================================
+    # CHECK DIRECTED AGAINST VALUE
+    # ========================================================
+    # All selected complaints must have the same
+    # "Directed Against" value.
+    # ========================================================
+
+    first_complaint = complaints[0]
+
+    for complaint in complaints:
+
+        if (
+            complaint.directed_against
+            != first_complaint.directed_against
+        ):
+            return f"""
+                <h3>Complaints cannot be grouped!</h3>
+
+                <p>
+                    All selected complaints must have the same
+                    Directed Against value.
+                </p>
+
+                <p>
+                    Selected first value:
+                    {first_complaint.directed_against}
+                </p>
+
+                <a href="/admin/dashboard">
+                    Back to Admin Dashboard
+                </a>
+            """
+
+    # ========================================================
+    # CREATE THE GROUP
+    # ========================================================
+
+    # Use the first complaint's ID as the Group ID
+    group_id = first_complaint.id
+
+    # Assign the same Group ID to every selected complaint
+    for complaint in complaints:
+        complaint.group_id = group_id
+
+    # Save changes to the database
+    db.session.commit()
+
+    # Show grouping result
+    return f"""
+        <h2>Complaints Grouped Successfully!</h2>
+
+        <p>Selected Complaints: {complaint_ids}</p>
+
+        <p>Group ID: {group_id}</p>
+
+        <p>
+            Directed Against:
+            {first_complaint.directed_against}
+        </p>
+
+        <p>
+            Total Complaints in Group:
+            {len(complaints)}
+        </p>
+
+        <a href="/admin/dashboard">
+            Back to Admin Dashboard
+        </a>
+    """
+
+
+# ============================================================
+# SOLVE GROUPED COMPLAINTS
+# ============================================================
+
+@app.route("/group/<int:group_id>/solve", methods=["POST"])
+@role_required("admin")
+def solve_group(group_id):
+
+    # Get all complaints belonging to this group
+    complaints = Complaint.query.filter_by(
+        group_id=group_id
+    ).all()
+
+    # Return error if the group does not exist
+    if not complaints:
+        return "Group not found", 404
+
+    # Solve every complaint in the group
+    for complaint in complaints:
+
+        # Change complaint status
+        complaint.status = "Solved"
+
+        # Remove the complaint from the group
+        complaint.group_id = None
+
+    # Save all changes
+    db.session.commit()
+
+    # Return to Admin Dashboard
+    return redirect(url_for("admin_dashboard"))
+
+
+# ============================================================
+# FORWARD GROUPED COMPLAINTS TO HOD
+# ============================================================
+
+@app.route("/group/<int:group_id>/forward", methods=["POST"])
+@role_required("admin")
+def forward_group_to_hod(group_id):
+
+    # Get all complaints belonging to this group
+    complaints = Complaint.query.filter_by(
+        group_id=group_id
+    ).all()
+
+    # Return error if the group does not exist
+    if not complaints:
+        return "Group not found", 404
+
+    # Forward every complaint in the group
+    for complaint in complaints:
+
+        # Change complaint status
+        complaint.status = "Forwarded"
+
+        # Remove the complaint from the group
+        complaint.group_id = None
+
+    # Save all changes
+    db.session.commit()
+
+    # Return to Admin Dashboard
+    return redirect(url_for("admin_dashboard"))
+
+
+# ============================================================
+# UNDO COMPLAINT GROUP
+# ============================================================
+
+@app.route("/group/<int:group_id>/undo", methods=["POST"])
+@role_required("admin")
+def undo_group(group_id):
+
+    # Print Group ID for debugging
+    print("Undo requested for Group ID:", group_id)
+
+    # Get all complaints belonging to this group
+    complaints = Complaint.query.filter(
+        Complaint.group_id == group_id
+    ).all()
+
+    # Print found complaints for debugging
+    print(
+        "Complaints found:",
+        [
+            (complaint.id, complaint.group_id)
+            for complaint in complaints
+        ]
+    )
+
+    # Return error if the group does not exist
+    if len(complaints) == 0:
+        return f"Group {group_id} not found", 404
+
+    # ========================================================
+    # CHECK GROUP STATUS
+    # ========================================================
+    # Only groups containing Pending complaints can be undone.
+    # ========================================================
+
+    for complaint in complaints:
+        if complaint.status != "Pending":
+            return "Only Pending groups can be undone."
+
+    # Remove the Group ID from every complaint
+    for complaint in complaints:
+        complaint.group_id = None
+
+    # Save changes
+    db.session.commit()
+
+    print("Group undone successfully:", group_id)
+
+    # Return to Admin Dashboard
+    return redirect(url_for("admin_dashboard"))
+
+
+# ============================================================
+# HOD DASHBOARD
+# ============================================================
+
+@app.route("/hod/dashboard")
+@role_required("hod")
+def hod_dashboard():
+
+    # ========================================================
+    # GET COMPLAINTS FOR HOD
+    # ========================================================
+    # HOD can see:
+    # 1. Complaints directed against Admin
+    # 2. Complaints forwarded by Admin
+    # 3. Complaints previously solved by HOD
+    # ========================================================
+
+    complaints = Complaint.query.filter(
+        or_(
+            Complaint.directed_against == "Admin",
+
+            Complaint.status == "Forwarded",
+
+            Complaint.id.in_(
+                db.session.query(ComplaintHistory.complaint_id)
+                .filter(
+                    ComplaintHistory.user_id == session["user_id"],
+                    ComplaintHistory.action == "Complaint Solved"
+                )
+            )
+        )
+    ).order_by(
+
+        case(
+
+            # Priority 1:
+            # Active Emergency complaints
+            (
+                (Complaint.urgency_level == "Emergency") &
+                (Complaint.status != "Solved"),
+                1
+            ),
+
+            # Priority 2:
+            # Pending complaints
+            (
+                Complaint.status == "Pending",
+                2
+            ),
+
+            # Priority 3:
+            # Forwarded complaints
+            (
+                Complaint.status == "Forwarded",
+                3
+            ),
+
+            # Priority 4:
+            # Solved complaints
+            (
+                Complaint.status == "Solved",
+                4
+            ),
+
+            else_=5
+        ),
+
+        Complaint.date_submitted.desc()
+
+    ).all()
+
+
+    # ========================================================
+    # COUNT ACTIVE EMERGENCY COMPLAINTS
+    # ========================================================
+
+    emergency_count = sum(
+        1
+        for complaint in complaints
+        if (
+            complaint.urgency_level == "Emergency"
+            and complaint.status != "Solved"
+        )
+    )
+
+
+    # ========================================================
+    # SEND DATA TO HOD DASHBOARD
+    # ========================================================
+
+    return render_template(
+        "hod_dashboard.html",
+        username=session.get("username"),
+        complaints=complaints,
+        emergency_count=emergency_count
+    )
+
+# ============================================================
+# HOD SOLVE COMPLAINT
+# ============================================================
+
+@app.route(
+    "/hod/complaint/<int:complaint_id>/solve",
+    methods=["POST"]
+)
+@role_required("hod")
+def hod_solve_complaint(complaint_id):
+
+    # ========================================================
+    # GET COMPLAINT
+    # ========================================================
+
+    complaint = Complaint.query.get_or_404(complaint_id)
+
+
+    # ========================================================
+    # SECURITY CHECK
+    # ========================================================
+    # HOD can only solve:
+    #
+    # 1. Complaints directed against Admin
+    # OR
+    # 2. Complaints forwarded by Admin
+    # ========================================================
+
+    if (
+        complaint.directed_against != "Admin"
+        and complaint.status != "Forwarded"
+    ):
+        return "Access Denied", 403
+
+
+    # ========================================================
+    # GET SOLUTION / FEEDBACK
+    # ========================================================
+
+    solution = request.form.get("solution")
+
+
+    # Remove unnecessary spaces
+    if solution:
+        solution = solution.strip()
+
+
+    # ========================================================
+    # SOLUTION IS REQUIRED
+    # ========================================================
+
+    if not solution:
+
+        return """
+        <h3>Solution / Feedback Required</h3>
+
+        <p>
+            Please enter a solution or feedback before solving
+            the complaint.
+        </p>
+
+        <a href="/hod/dashboard">
+            Back to HOD Dashboard
+        </a>
+        """, 400
+
+
+    # ========================================================
+    # SAVE OLD STATUS
+    # ========================================================
+
+    old_status = complaint.status
+
+
+    # ========================================================
+    # CHANGE STATUS
+    # ========================================================
+
+    complaint.status = "Solved"
+
+
+    # ========================================================
+    # CREATE HISTORY
+    # ========================================================
+
+    add_complaint_history(
+        complaint=complaint,
+        user_id=session["user_id"],
+        action="Complaint Solved",
+        old_status=old_status,
+        new_status="Solved",
+        description=solution
+    )
+
+
+    # ========================================================
+    # SAVE CHANGES
+    # ========================================================
+
+    db.session.commit()
+
+
+    # ========================================================
+    # RETURN TO HOD DASHBOARD
+    # ========================================================
+
+    return redirect(
+        url_for("hod_dashboard")
+    )
+
+
+# ============================================================
+# LOGOUT
+# ============================================================
+
+@app.route("/logout")
+def logout():
+
+    # Remove all logged-in user information from the session
+    session.clear()
+
+    # Redirect the user back to the login page
+    return redirect(url_for("login"))
+
+
+# ============================================================
+# RUN APPLICATION
+# ============================================================
+
+if __name__ == "__main__":
+
+    # Create all database tables if they do not already exist
+    with app.app_context():
+        db.create_all()
+
+    # Start the Flask development server
+    app.run(debug=True)
+</file>
+
+</files>

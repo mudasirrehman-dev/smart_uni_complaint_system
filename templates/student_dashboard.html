@@ -360,6 +360,12 @@ Student Dashboard | Smart University Complaint System
                                     Solved
                                 </span>
 
+                                {% elif complaint.status == "Rejected" %}
+
+                                <span class="badge text-bg-danger">
+                                    Rejected
+                                </span>
+
                                 {% else %}
 
                                 <span class="badge text-bg-secondary">

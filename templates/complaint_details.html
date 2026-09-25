@@ -161,6 +161,12 @@ Complaint Details | Smart University Complaint System
                         Solved
                     </span>
 
+                    {% elif complaint.status == "Rejected" %}
+
+                    <span class="badge text-bg-danger">
+                        Rejected
+                    </span>
+
                     {% else %}
 
                     <span class="badge text-bg-secondary">
@@ -233,9 +239,25 @@ Complaint Details | Smart University Complaint System
 
         <h5 class="fw-bold mb-4">
 
-            <i class="bi bi-chat-square-text me-1"></i>
+            {% if complaint.status == "Rejected" %}
 
-            Solution / Feedback
+                <i class="bi bi-x-circle me-1 text-danger"></i>
+
+                Rejection Feedback
+
+            {% elif complaint.status == "Solved" %}
+
+                <i class="bi bi-check-circle me-1 text-success"></i>
+
+                Solution / Feedback
+
+            {% else %}
+
+                <i class="bi bi-chat-square-text me-1"></i>
+
+                Solution / Feedback
+
+            {% endif %}
 
         </h5>
 
@@ -245,7 +267,11 @@ Complaint Details | Smart University Complaint System
         <!-- ================================================= -->
 
         {% set solutions = history
-            | selectattr("action", "equalto", "Complaint Solved")
+            | selectattr(
+                "action",
+                "in",
+                ["Complaint Solved", "Complaint Rejected"]
+            )
             | list
         %}
 
@@ -267,7 +293,11 @@ Complaint Details | Smart University Complaint System
                 >
 
                     <strong>
-                        Solution Provided
+                        {% if solution.action == "Complaint Rejected" %}
+                            <i class="text-danger" >Rejection Feedback</i>
+                        {% else %}
+                            <i class="text-success">Solution Provided</i>
+                        {% endif %}
                     </strong>
 
 

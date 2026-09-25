@@ -639,10 +639,16 @@ def admin_dashboard():
                 Complaint.status == "Solved",
                 4
             ),
-
             # Priority 5:
+            # Rejected complaints
+            (
+                Complaint.status == "Rejected",
+                5
+            ),
+
+            # Priority 6:
             # Any other status
-            else_=5
+            else_=6
         ),
 
         # Within the same priority,
@@ -831,6 +837,62 @@ def solve_complaint(complaint_id):
     return redirect(
         url_for("admin_dashboard")
     )
+
+@app.route(
+    "/complaint/<int:complaint_id>/reject",
+    methods=["POST"]
+)
+@role_required("admin")
+def reject_complaint(complaint_id):
+
+    complaint = Complaint.query.get_or_404(complaint_id)
+
+    # Admin cannot reject complaints directed against Admin
+    if complaint.directed_against == "Admin":
+        return "Access Denied", 403
+
+    # Get feedback/rejection reason from the same textarea
+    feedback = request.form.get(
+        f"solution_{complaint_id}"
+    )
+
+    if feedback:
+        feedback = feedback.strip()
+
+    # Feedback is required before rejecting
+    if not feedback:
+        return """
+        <h3>Rejection Feedback Required</h3>
+
+        <p>
+            Please enter a rejection reason or feedback
+            before rejecting the complaint.
+        </p>
+
+        <a href="/admin/dashboard">
+            Back to Admin Dashboard
+        </a>
+        """, 400
+
+    # Save old status for history
+    old_status = complaint.status
+
+    # Change complaint status
+    complaint.status = "Rejected"
+
+    # Add complaint history
+    add_complaint_history(
+        complaint=complaint,
+        user_id=session["user_id"],
+        action="Complaint Rejected",
+        old_status=old_status,
+        new_status="Rejected",
+        description=feedback
+    )
+
+    db.session.commit()
+
+    return redirect(url_for("admin_dashboard"))
 
 
 # ============================================================
