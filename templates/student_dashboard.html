@@ -286,36 +286,22 @@ Student Dashboard | Smart University Complaint System
 
 
                           
+                            
                             <!-- ============================= -->
-                            <!-- DESCRIPTION WITH READ MORE -->
+                            <!-- DESCRIPTION -->
                             <!-- ============================= -->
 
-                            <td style="max-width: 250px;">
-
-                                {% if complaint.description|length > 60 %}
-
-                                <details class="description-details">
-
-                                    <summary>
-                                        <span class="short-description">
-                                            {{ complaint.description[:60] }}...
-                                        </span>
-
-                                        <span class="full-description">
-                                            {{ complaint.description }}
-                                        </span>
-                                    </summary>
-
-                                </details>
-
-                                {% else %}
-
-                                <span>
-                                    {{ complaint.description }}
-                                </span>
-
-                                {% endif %}
-
+                            <td style="max-width: 250px">
+                            <button
+                                type="button"
+                                class="btn btn-link p-0 text-start text-decoration-none"
+                                data-bs-toggle="modal"
+                                data-bs-target="#viewComplaintModal{{ complaint.id }}"
+                            >
+                                {% if complaint.description|length > 60 %} {{
+                                complaint.description[:60] }}... {% else %} {{
+                                complaint.description }} {% endif %}
+                            </button>
                             </td>
 
 
@@ -594,5 +580,560 @@ Student Dashboard | Smart University Complaint System
 
 
 </div>
+<!-- ========================================================= -->
+<!-- STUDENT VIEW COMPLAINT MODALS -->
+<!-- ========================================================= -->
 
+{% for complaint in complaints %}
+
+<div
+    class="modal fade"
+    id="viewComplaintModal{{ complaint.id }}"
+    tabindex="-1"
+    aria-labelledby="viewComplaintModalLabel{{ complaint.id }}"
+    aria-hidden="true"
+>
+
+
+    <!-- =======================================================
+         LARGER POPUP
+         ======================================================= -->
+
+    <div
+        class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+    >
+
+        <div class="modal-content">
+
+
+            <!-- =================================================
+                 MODAL HEADER
+                 ================================================= -->
+
+            <div class="modal-header">
+
+                <h4
+                    class="modal-title fw-bold"
+                    id="viewComplaintModalLabel{{ complaint.id }}"
+                >
+
+                    <i class="bi bi-file-earmark-text me-2"></i>
+
+                    Complaint Details #{{ complaint.id }}
+
+                </h4>
+
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+
+            </div>
+
+
+            <!-- =================================================
+                 MODAL BODY
+                 ================================================= -->
+
+            <div class="modal-body bg-light">
+
+
+                <div class="card border-0 shadow-sm">
+
+                    <div class="card-body p-4">
+
+
+                        <!-- =========================================
+                             SECTION TITLE
+                             ========================================= -->
+
+                        <h5 class="fw-bold mb-4">
+
+                            <i class="bi bi-file-earmark-text me-2"></i>
+
+                            Complaint Information
+
+                        </h5>
+
+
+                        <!-- =========================================
+                             DATE - TOP
+                             ========================================= -->
+
+                        <div class="table-responsive">
+
+                            <table
+                                class="table table-bordered align-middle mb-0"
+                            >
+
+                                <tbody>
+
+                                    <tr>
+
+                                        <th
+                                            style="width: 180px;"
+                                            class="table-light"
+                                        >
+
+                                            <i
+                                                class="bi bi-calendar3 me-2"
+                                            ></i>
+
+                                            Date Submitted
+
+                                        </th>
+
+
+                                        <td>
+
+                                            <strong>
+
+                                                {{
+                                                    complaint.date_submitted.strftime(
+                                                        '%d %b %Y'
+                                                    )
+                                                }}
+
+                                                at
+
+                                                {{
+                                                    complaint.date_submitted.strftime(
+                                                        '%I:%M %p'
+                                                    )
+                                                }}
+
+                                            </strong>
+
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+
+                        <!-- =========================================
+                             BASIC COMPLAINT INFORMATION
+                             ========================================= -->
+
+                        <div class="table-responsive mt-3">
+
+                            <table
+                                class="table table-bordered align-middle mb-0"
+                                style="min-width: 900px;"
+                            >
+
+                                <thead class="table-light">
+
+                                    <tr>
+
+                                        <th>
+                                            ID
+                                        </th>
+
+                                        <th>
+                                            Student
+                                        </th>
+
+                                        <th>
+                                            Category
+                                        </th>
+
+                                        <th>
+                                            Directed Against
+                                        </th>
+
+                                        <th>
+                                            Urgency
+                                        </th>
+
+                                        <th>
+                                            Status
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+                                    <tr>
+
+
+                                        <!-- =================================
+                                             ID
+                                             ================================= -->
+
+                                        <td>
+
+                                            <strong>
+                                                #{{ complaint.id }}
+                                            </strong>
+
+                                        </td>
+
+
+                                        <!-- =================================
+                                             STUDENT
+                                             ================================= -->
+
+                                        <td>
+
+                                            Student {{ complaint.student_id }}
+
+                                        </td>
+
+
+                                        <!-- =================================
+                                             CATEGORY
+                                             ================================= -->
+
+                                        <td>
+
+                                            <span class="fw-semibold">
+
+                                                {{ complaint.category }}
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <!-- =================================
+                                             DIRECTED AGAINST
+                                             ================================= -->
+
+                                        <td>
+
+                                            {% if complaint.directed_against == "Other" %}
+
+                                                <span class="badge text-bg-dark">
+
+                                                    Other
+
+                                                </span>
+
+
+                                                {% if complaint.custom_target %}
+
+                                                <div
+                                                    class="text-muted small mt-1"
+                                                >
+
+                                                    {{ complaint.custom_target }}
+
+                                                </div>
+
+                                                {% endif %}
+
+                                            {% else %}
+
+                                                <span class="badge text-bg-dark">
+
+                                                    {{ complaint.directed_against }}
+
+                                                </span>
+
+                                            {% endif %}
+
+                                        </td>
+
+
+                                        <!-- =================================
+                                             URGENCY
+                                             ================================= -->
+
+                                        <td>
+
+                                            {% if complaint.urgency_level == "Emergency" %}
+
+                                                <span
+                                                    class="badge text-bg-danger"
+                                                >
+
+                                                    <i
+                                                        class="bi bi-exclamation-triangle-fill me-1"
+                                                    ></i>
+
+                                                    Emergency
+
+                                                </span>
+
+                                            {% else %}
+
+                                                <span
+                                                    class="badge text-bg-secondary"
+                                                >
+
+                                                    {{ complaint.urgency_level }}
+
+                                                </span>
+
+                                            {% endif %}
+
+                                        </td>
+
+
+                                        <!-- =================================
+                                             STATUS
+                                             ================================= -->
+
+                                        <td>
+
+                                            {% if complaint.status == "Pending" %}
+
+                                                <span
+                                                    class="badge text-bg-warning"
+                                                >
+
+                                                    <i
+                                                        class="bi bi-clock me-1"
+                                                    ></i>
+
+                                                    Pending
+
+                                                </span>
+
+
+                                            {% elif complaint.status == "In Progress" %}
+
+                                                <span
+                                                    class="badge text-bg-info"
+                                                >
+
+                                                    <i
+                                                        class="bi bi-arrow-repeat me-1"
+                                                    ></i>
+
+                                                    In Progress
+
+                                                </span>
+
+
+                                            {% elif complaint.status == "Forwarded" %}
+
+                                                <span
+                                                    class="badge text-bg-primary"
+                                                >
+
+                                                    <i
+                                                        class="bi bi-send me-1"
+                                                    ></i>
+
+                                                    Forwarded
+
+                                                </span>
+
+
+                                            {% elif complaint.status == "Solved" %}
+
+                                                <span
+                                                    class="badge text-bg-success"
+                                                >
+
+                                                    <i
+                                                        class="bi bi-check-circle me-1"
+                                                    ></i>
+
+                                                    Solved
+
+                                                </span>
+
+
+                                            {% elif complaint.status == "Rejected" %}
+
+                                                <span
+                                                    class="badge text-bg-danger"
+                                                >
+
+                                                    <i
+                                                        class="bi bi-x-circle me-1"
+                                                    ></i>
+
+                                                    Rejected
+
+                                                </span>
+
+
+                                            {% else %}
+
+                                                <span
+                                                    class="badge text-bg-secondary"
+                                                >
+
+                                                    {{ complaint.status }}
+
+                                                </span>
+
+                                            {% endif %}
+
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+
+                        <!-- =========================================
+                             COMPLAINT DESCRIPTION
+                             ========================================= -->
+
+                        <div class="mt-4">
+
+                            <h6 class="fw-bold mb-2">
+
+                                <i
+                                    class="bi bi-chat-left-text me-2"
+                                ></i>
+
+                                Complaint Description
+
+                            </h6>
+
+
+                            <div class="card bg-light border">
+
+                            <div class="card-body">
+
+                                {{ complaint.description }}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- =========================================
+                             FEEDBACK / SOLUTION / REJECTION
+                             ========================================= -->
+
+                        {% if complaint.status == "Solved" or complaint.status == "Rejected" %}
+
+                        <hr class="my-4 border-3 opacity-50">
+
+
+                        <div class="mt-4">
+
+
+                            <!-- =====================================
+                                 SOLVED
+                                 ===================================== -->
+
+                            {% if complaint.status == "Solved" %}
+
+                            <h6 class="fw-bold mb-2">
+
+                                <i
+                                    class="bi bi-check-circle text-success me-2"
+                                ></i>
+
+                                Admin / HOD Solution & Feedback
+
+                            </h6>
+
+                            {% endif %}
+
+
+                            <!-- =====================================
+                                 REJECTED
+                                 ===================================== -->
+
+                            {% if complaint.status == "Rejected" %}
+
+                            <h6 class="fw-bold mb-2">
+
+                                <i
+                                    class="bi bi-x-circle text-danger me-2"
+                                ></i>
+
+                                Rejection Reason / Feedback
+
+                            </h6>
+
+                            {% endif %}
+
+
+                            <div class="card border">
+
+                                <div class="card-body bg-light">
+
+                                    {% if complaint.solution %}
+
+                                        <p
+                                            class="mb-0"
+                                            style="
+                                                white-space: pre-wrap;
+                                                word-break: break-word;
+                                                line-height: 1.7;
+                                            "
+                                        >
+
+                                            {{ complaint.solution }}
+
+                                        </p>
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+
+                                            No feedback available.
+
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        {% endif %}
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 MODAL FOOTER
+                 ================================================= -->
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+
+                    <i class="bi bi-x-lg me-1"></i>
+
+                    Close
+
+                </button>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endfor %}
 {% endblock %}

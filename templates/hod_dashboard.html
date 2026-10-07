@@ -5,6 +5,71 @@
 HOD Dashboard | Smart University Complaint System
 {% endblock %}
 
+{% block extra_css %}
+
+<!-- =========================================================
+     Solution / Feedback Editor
+     ========================================================= -->
+
+<style>
+  .rich-text-editor {
+    min-height: 220px;
+    max-height: 350px;
+
+    padding: 18px 20px;
+
+    background-color: #ffffff;
+
+    border: none;
+    outline: none;
+
+    font-size: 16px;
+    line-height: 1.6;
+
+    cursor: text;
+
+    overflow-y: auto;
+
+    white-space: normal;
+  }
+
+  /* Placeholder */
+
+  .rich-text-editor:empty::before {
+    content: attr(data-placeholder);
+
+    color: #6c757d;
+
+    pointer-events: none;
+  }
+
+  /* Editor focus */
+
+  .rich-text-editor:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  /* Selected text */
+
+  .rich-text-editor ::selection {
+    background-color: #b6d7ff;
+  }
+
+  /* Text inside editor */
+
+  .rich-text-editor p {
+    margin-bottom: 8px;
+  }
+
+  /* Highlighted text */
+
+  .rich-text-editor span {
+    line-height: inherit;
+  }
+</style>
+
+{% endblock %}
 
 {% block content %}
 
@@ -387,36 +452,21 @@ HOD Dashboard | Smart University Complaint System
 
                             </td>
                             
-                            <!-- Description -->
+                            <!-- ============================= -->
+                            <!-- DESCRIPTION -->
+                            <!-- ============================= -->
 
-                            <td style="max-width: 250px;">
-
-                                {% if complaint.description|length > 60 %}
-
-                                <details class="description-details">
-
-                                    <summary>
-
-                                        <span class="short-description">
-                                            {{ complaint.description[:60] }}...
-                                        </span>
-
-                                        <span class="full-description">
-                                            {{ complaint.description }}
-                                        </span>
-
-                                    </summary>
-
-                                </details>
-
-                                {% else %}
-
-                                <span>
-                                    {{ complaint.description }}
-                                </span>
-
-                                {% endif %}
-
+                            <td style="max-width: 250px">
+                            <button
+                                type="button"
+                                class="btn btn-link p-0 text-start text-decoration-none"
+                                data-bs-toggle="modal"
+                                data-bs-target="#viewComplaintModal{{ complaint.id }}"
+                            >
+                                {% if complaint.description|length > 60 %} {{
+                                complaint.description[:60] }}... {% else %} {{
+                                complaint.description }} {% endif %}
+                            </button>
                             </td>
 
                             <!-- URGENCY -->
@@ -521,52 +571,52 @@ HOD Dashboard | Smart University Complaint System
 
                             <!-- Actions -->
 
-                            <td class="text-end pe-4">
+                            <!-- ACTIONS -->
 
-                                {% if complaint.status != "Solved" %}
+<!-- ACTIONS -->
 
-                                    <form
-                                        method="POST"
-                                        action="{{ url_for('hod_solve_complaint', complaint_id=complaint.id) }}"
-                                    >
+<td class="text-end pe-4">
 
-                                        <!-- Solution / Feedback -->
+    {% if complaint.status == "Forwarded" %}
 
-                                        <textarea
-                                            name="solution"
-                                            class="form-control form-control-sm mb-2"
-                                            rows="3"
-                                            placeholder="Enter solution / feedback before solving..."
-                                            required
-                                        ></textarea>
+        <div class="d-flex gap-2">
+
+            <!-- SOLVE -->
+            <button
+                type="button"
+                class="btn btn-sm btn-success"
+                data-bs-toggle="modal"
+                data-bs-target="#hodSolveModal{{ complaint.id }}"
+            >
+                <i class="bi bi-check-lg"></i>
+                Solve
+            </button>
 
 
-                                        <!-- Solve Button -->
+            <!-- REJECT -->
+            <button
+                type="button"
+                class="btn btn-sm btn-outline-danger"
+                data-bs-toggle="modal"
+                data-bs-target="#rejectModal{{ complaint.id }}"
+            >
+                <i class="bi bi-x-lg"></i>
+                Reject
+            </button>
 
-                                        <button
-                                            type="submit"
-                                            class="btn btn-success"
-                                            onclick="return confirm('Are you sure you want to mark this complaint as solved?')"
-                                        >
-                                            <i class="bi bi-check-lg"></i>
-                                            Solve
-                                        </button>
+        </div>
 
-                                    </form>
+    {% else %}
 
-                                {% else %}
+        <span class="text-muted small">
+            <i class="bi bi-check-circle"></i>
+            No action required
+        </span>
 
-                                    <span class="text-muted small">
+    {% endif %}
 
-                                        <i class="bi bi-check-circle"></i>
+</td>
 
-                                        No action required
-
-                                    </span>
-
-                                {% endif %}
-
-                            </td>
 
 
                         </tr>
@@ -614,14 +664,1644 @@ HOD Dashboard | Smart University Complaint System
             </div>
 
 
-            {% endif %}
+                    {% endif %}
+      </div>
+    </div>
+</div>
 
+
+<!-- ========================================================= -->
+<!-- VIEW COMPLAINT MODALS -->
+<!-- ========================================================= -->
+
+{% for complaint in complaints %}
+
+<div
+  class="modal fade"
+  id="viewComplaintModal{{ complaint.id }}"
+  tabindex="-1"
+  aria-labelledby="viewComplaintModalLabel{{ complaint.id }}"
+  aria-hidden="true"
+>
+  <div
+    class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+  >
+    <div class="modal-content">
+
+      <!-- MODAL HEADER -->
+      <div class="modal-header">
+        <h4
+          class="modal-title fw-bold"
+          id="viewComplaintModalLabel{{ complaint.id }}"
+        >
+          <i class="bi bi-file-earmark-text me-2"></i>
+          Complaint Details #{{ complaint.id }}
+        </h4>
+
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+
+
+      <!-- MODAL BODY -->
+      <div class="modal-body bg-light">
+
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-4">
+
+            <h5 class="fw-bold mb-4">
+              <i class="bi bi-file-earmark-text me-2"></i>
+              Complaint Information
+            </h5>
+
+
+            <!-- DATE -->
+            <div class="table-responsive">
+              <table class="table table-bordered align-middle mb-0">
+                <tbody>
+                  <tr>
+                    <th
+                      style="width: 180px;"
+                      class="table-light"
+                    >
+                      Date Submitted
+                    </th>
+
+                    <td>
+                      <strong>
+                        {{ complaint.date_submitted.strftime('%d %b %Y') }}
+                        at
+                        {{ complaint.date_submitted.strftime('%I:%M %p') }}
+                      </strong>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+
+            <!-- BASIC INFORMATION -->
+            <div class="table-responsive mt-3">
+
+              <table
+                class="table table-bordered align-middle mb-0"
+                style="min-width: 900px;"
+              >
+
+                <thead class="table-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Student</th>
+                    <th>Category</th>
+                    <th>Directed Against</th>
+                    <th>Urgency</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr>
+
+                    <!-- ID -->
+                    <td>
+                      <strong>#{{ complaint.id }}</strong>
+                    </td>
+
+
+                    <!-- STUDENT -->
+                    <td>
+                      Student {{ complaint.student_id }}
+                    </td>
+
+
+                    <!-- CATEGORY -->
+                    <td>
+                      <span class="fw-semibold">
+                        {{ complaint.category }}
+                      </span>
+                    </td>
+
+
+                    <!-- DIRECTED AGAINST -->
+                    <td>
+                      <span class="badge text-bg-dark">
+                        {{ complaint.directed_against }}
+                      </span>
+
+                      {% if complaint.custom_target %}
+                      <div class="text-muted small mt-1">
+                        {{ complaint.custom_target }}
+                      </div>
+                      {% endif %}
+                    </td>
+
+
+                    <!-- URGENCY -->
+                    <td>
+                      {% if complaint.urgency_level == "Emergency" %}
+
+                      <span class="badge text-bg-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        Emergency
+                      </span>
+
+                      {% else %}
+
+                      <span class="badge text-bg-secondary">
+                        Standard
+                      </span>
+
+                      {% endif %}
+                    </td>
+
+
+                    <!-- STATUS -->
+                    <td>
+
+                      {% if complaint.status == "Pending" %}
+
+                      <span class="badge text-bg-warning">
+                        Pending
+                      </span>
+
+                      {% elif complaint.status == "In Progress" %}
+
+                      <span class="badge text-bg-primary">
+                        In Progress
+                      </span>
+
+                      {% elif complaint.status == "Forwarded" %}
+
+                      <span class="badge text-bg-info">
+                        Forwarded
+                      </span>
+
+                      {% elif complaint.status == "Solved" %}
+
+                      <span class="badge text-bg-success">
+                        Solved
+                      </span>
+
+                      {% elif complaint.status == "Rejected" %}
+
+                      <span class="badge text-bg-danger">
+                        Rejected
+                      </span>
+
+                      {% else %}
+
+                      <span class="badge text-bg-secondary">
+                        {{ complaint.status }}
+                      </span>
+
+                      {% endif %}
+
+                    </td>
+
+                  </tr>
+                </tbody>
+
+              </table>
+
+            </div>
+
+
+            <!-- DESCRIPTION -->
+            <div class="mt-4">
+
+              <h6 class="fw-bold mb-2">
+                <i class="bi bi-chat-left-text me-2"></i>
+                Complaint Description
+              </h6>
+
+              <div class="card bg-light border">
+
+                <div class="card-body">
+                    {{ complaint.description }}
+                  
+                </div>
+
+              </div>
+
+            </div>
+
+
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- MODAL FOOTER -->
+      <div class="modal-footer">
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+        >
+          <i class="bi bi-x-lg me-1"></i>
+          Close
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endfor %}
+<!-- ========================================================= -->
+<!-- HOD SOLVE COMPLAINT MODALS -->
+<!-- ========================================================= -->
+
+<!-- =========================================================
+     HOD SOLVE COMPLAINT MODALS
+     ========================================================= -->
+
+{% for complaint in complaints %}
+
+  {% if complaint.status == "Forwarded" %}
+
+  <!-- =========================================================
+       SOLVE COMPLAINT MODAL
+       ========================================================= -->
+
+  <div
+    class="modal fade"
+    id="hodSolveModal{{ complaint.id }}"
+    tabindex="-1"
+    aria-labelledby="hodSolveModalLabel{{ complaint.id }}"
+    aria-hidden="true"
+  >
+
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+
+      <div class="modal-content">
+
+
+        <!-- =================================================
+             SOLVE MODAL HEADER
+             ================================================= -->
+
+        <div class="modal-header">
+
+          <h4
+            class="modal-title fw-bold"
+            id="hodSolveModalLabel{{ complaint.id }}"
+          >
+
+            <i class="bi bi-check-circle text-success me-2"></i>
+
+            Solve Complaint
+
+          </h4>
+
+
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
 
         </div>
 
+
+        <!-- =================================================
+             MODAL BODY
+             ================================================= -->
+
+        <div class="modal-body bg-light">
+
+          <div class="container-fluid">
+
+            <div class="card border-0 shadow-sm">
+
+              <div class="card-body p-4">
+
+
+                <!-- =================================================
+                     COMPLAINT DETAILS
+                     ================================================= -->
+
+                <h5 class="fw-bold mb-4">
+
+                  <i class="bi bi-file-earmark-text me-2"></i>
+
+                  Complaint Details
+
+                </h5>
+
+
+                <!-- =================================================
+                     DATE
+                     ================================================= -->
+
+                <div class="table-responsive mb-4">
+
+                  <table class="table table-bordered align-middle mb-0">
+
+                    <tbody>
+
+                      <tr>
+
+                        <th
+                          class="bg-light"
+                          style="width: 180px;"
+                        >
+
+                          <i class="bi bi-calendar3 me-2"></i>
+
+                          Date
+
+                        </th>
+
+                        <td>
+
+                          {{ complaint.date_submitted.strftime('%d %b %Y at %I:%M %p') }}
+
+                        </td>
+
+                      </tr>
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+
+                <!-- =================================================
+                     BASIC COMPLAINT INFORMATION
+                     ================================================= -->
+
+                <div class="table-responsive mb-4">
+
+                  <table
+                    class="table table-bordered align-middle mb-0"
+                    style="min-width: 950px;"
+                  >
+
+                    <thead class="table-light">
+
+                      <tr>
+
+                        <th>
+                          ID
+                        </th>
+
+                        <th>
+                          Student
+                        </th>
+
+                        <th>
+                          Category
+                        </th>
+
+                        <th>
+                          Directed Against
+                        </th>
+
+                        <th>
+                          Urgency
+                        </th>
+
+                        <th>
+                          Status
+                        </th>
+
+                      </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                      <tr>
+
+
+                        <!-- ID -->
+
+                        <td class="fw-semibold">
+
+                          #{{ complaint.id }}
+
+                        </td>
+
+
+                        <!-- STUDENT -->
+
+                        <td>
+
+                          Student {{ complaint.student_id }}
+
+                        </td>
+
+
+                        <!-- CATEGORY -->
+
+                        <td>
+
+                          {{ complaint.category }}
+
+                        </td>
+
+
+                        <!-- DIRECTED AGAINST -->
+
+                        <td>
+
+                          <span class="badge text-bg-dark">
+
+                            {{ complaint.directed_against }}
+
+                          </span>
+
+
+                          {% if complaint.custom_target %}
+
+                          <div class="text-muted small mt-1">
+
+                            {{ complaint.custom_target }}
+
+                          </div>
+
+                          {% endif %}
+
+                        </td>
+
+
+                        <!-- URGENCY -->
+
+                        <td>
+
+                          {% if complaint.urgency_level == "Emergency" %}
+
+                            <span class="badge bg-danger">
+
+                              <i class="bi bi-exclamation-triangle me-1"></i>
+
+                              Emergency
+
+                            </span>
+
+                          {% else %}
+
+                            <span class="badge bg-secondary">
+
+                              {{ complaint.urgency_level }}
+
+                            </span>
+
+                          {% endif %}
+
+                        </td>
+
+
+                        <!-- STATUS -->
+
+                        <td>
+
+                          {% if complaint.status == "Pending" %}
+
+                            <span class="badge bg-warning text-dark">
+
+                              Pending
+
+                            </span>
+
+                          {% elif complaint.status == "In Progress" %}
+
+                            <span class="badge bg-info text-dark">
+
+                              In Progress
+
+                            </span>
+
+                          {% elif complaint.status == "Forwarded" %}
+
+                            <span class="badge bg-primary">
+
+                              Forwarded
+
+                            </span>
+
+                          {% elif complaint.status == "Solved" %}
+
+                            <span class="badge bg-success">
+
+                              Solved
+
+                            </span>
+
+                          {% elif complaint.status == "Rejected" %}
+
+                            <span class="badge bg-danger">
+
+                              Rejected
+
+                            </span>
+
+                          {% else %}
+
+                            <span class="badge bg-secondary">
+
+                              {{ complaint.status }}
+
+                            </span>
+
+                          {% endif %}
+
+                        </td>
+
+                      </tr>
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+
+                <!-- =================================================
+                     COMPLAINT DESCRIPTION
+                     ================================================= -->
+
+                <div class="mt-4">
+
+                  <h6 class="fw-bold mb-2">
+
+                    <i class="bi bi-chat-left-text me-2"></i>
+
+                    Complaint Description
+
+                  </h6>
+
+
+                  <div class="card bg-light border">
+
+                    <div class="card-body">
+
+                      {{ complaint.description }}
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     SEPARATOR
+                     ================================================= -->
+
+                <hr class="my-4 border-3 opacity-50" />
+
+
+                <!-- =================================================
+                     SOLUTION / FEEDBACK FORM
+                     ================================================= -->
+
+                <form
+                  method="POST"
+                  action="{{ url_for('solve_complaint', complaint_id=complaint.id) }}"
+                  onsubmit="return prepareEditor('{{ complaint.id }}')"
+                >
+
+
+                  <!-- =================================================
+                       SOLUTION / FEEDBACK HEADING
+                       ================================================= -->
+
+                  <h5 class="fw-bold mb-3">
+
+                    <i class="bi bi-pencil-square me-2"></i>
+
+                    Solution / Feedback
+
+                  </h5>
+
+
+                  <!-- =================================================
+                       RICH TEXT EDITOR
+                       ================================================= -->
+
+                  <div class="card border">
+
+                    <div
+                      id="solveEditor{{ complaint.id }}"
+                      class="rich-text-editor"
+                      contenteditable="true"
+                      spellcheck="true"
+                      data-placeholder="Type solution / feedback here..."
+                      oninput="
+                        document.getElementById(
+                          'solveHidden{{ complaint.id }}'
+                        ).value = this.innerHTML;
+                      "
+                      onmouseup="saveSelection('{{ complaint.id }}')"
+                      onkeyup="saveSelection('{{ complaint.id }}')"
+                    ></div>
+
+                  </div>
+
+
+                  <!-- =================================================
+                       HIDDEN FIELD
+                       ================================================= -->
+
+                  <textarea
+                    id="solveHidden{{ complaint.id }}"
+                    name="solution_{{ complaint.id }}"
+                    hidden
+                  ></textarea>
+
+
+                  <!-- =================================================
+                       ACTION BUTTONS
+                       ================================================= -->
+
+                  <div class="d-flex justify-content-end gap-2 mt-4">
+
+
+                    <!-- CANCEL -->
+
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      data-bs-dismiss="modal"
+                    >
+
+                      <i class="bi bi-x-lg me-1"></i>
+
+                      Cancel
+
+                    </button>
+
+
+                    <!-- SOLVE -->
+
+                    <button
+                      type="submit"
+                      class="btn btn-success"
+                    >
+
+                      <i class="bi bi-check-lg me-1"></i>
+
+                      Solve Complaint
+
+                    </button>
+
+
+                  </div>
+
+
+                </form>
+
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+      </div>
+
     </div>
 
+  </div>
 
-</div>
+  {% endif %}
+
+{% endfor %}
+
+<!-- ========================================================= -->
+<!-- HOD SOLVE COMPLAINT MODALS -->
+<!-- ========================================================= -->
+
+<!-- =========================================================
+     HOD SOLVE COMPLAINT MODALS
+     ========================================================= -->
+
+{% for complaint in complaints %}
+
+  {% if complaint.status == "Forwarded" %}
+
+  <!-- =========================================================
+       SOLVE COMPLAINT MODAL
+       ========================================================= -->
+
+  <div
+    class="modal fade"
+    id="hodSolveModal{{ complaint.id }}"
+    tabindex="-1"
+    aria-labelledby="hodSolveModalLabel{{ complaint.id }}"
+    aria-hidden="true"
+  >
+
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+
+      <div class="modal-content">
+
+
+        <!-- =================================================
+             SOLVE MODAL HEADER
+             ================================================= -->
+
+        <div class="modal-header">
+
+          <h4
+            class="modal-title fw-bold"
+            id="hodSolveModalLabel{{ complaint.id }}"
+          >
+
+            <i class="bi bi-check-circle text-success me-2"></i>
+
+            Solve Complaint
+
+          </h4>
+
+
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+
+        </div>
+
+
+        <!-- =================================================
+             MODAL BODY
+             ================================================= -->
+
+        <div class="modal-body bg-light">
+
+          <div class="container-fluid">
+
+            <div class="card border-0 shadow-sm">
+
+              <div class="card-body p-4">
+
+
+                <!-- =================================================
+                     COMPLAINT DETAILS
+                     ================================================= -->
+
+                <h5 class="fw-bold mb-4">
+
+                  <i class="bi bi-file-earmark-text me-2"></i>
+
+                  Complaint Details
+
+                </h5>
+
+
+                <!-- =================================================
+                     DATE
+                     ================================================= -->
+
+                <div class="table-responsive mb-4">
+
+                  <table class="table table-bordered align-middle mb-0">
+
+                    <tbody>
+
+                      <tr>
+
+                        <th
+                          class="bg-light"
+                          style="width: 180px;"
+                        >
+
+                          <i class="bi bi-calendar3 me-2"></i>
+
+                          Date
+
+                        </th>
+
+                        <td>
+
+                          {{ complaint.date_submitted.strftime('%d %b %Y at %I:%M %p') }}
+
+                        </td>
+
+                      </tr>
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+
+                <!-- =================================================
+                     BASIC COMPLAINT INFORMATION
+                     ================================================= -->
+
+                <div class="table-responsive mb-4">
+
+                  <table
+                    class="table table-bordered align-middle mb-0"
+                    style="min-width: 950px;"
+                  >
+
+                    <thead class="table-light">
+
+                      <tr>
+
+                        <th>
+                          ID
+                        </th>
+
+                        <th>
+                          Student
+                        </th>
+
+                        <th>
+                          Category
+                        </th>
+
+                        <th>
+                          Directed Against
+                        </th>
+
+                        <th>
+                          Urgency
+                        </th>
+
+                        <th>
+                          Status
+                        </th>
+
+                      </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                      <tr>
+
+
+                        <!-- ID -->
+
+                        <td class="fw-semibold">
+
+                          #{{ complaint.id }}
+
+                        </td>
+
+
+                        <!-- STUDENT -->
+
+                        <td>
+
+                          Student {{ complaint.student_id }}
+
+                        </td>
+
+
+                        <!-- CATEGORY -->
+
+                        <td>
+
+                          {{ complaint.category }}
+
+                        </td>
+
+
+                        <!-- DIRECTED AGAINST -->
+
+                        <td>
+
+                          <span class="badge text-bg-dark">
+
+                            {{ complaint.directed_against }}
+
+                          </span>
+
+
+                          {% if complaint.custom_target %}
+
+                          <div class="text-muted small mt-1">
+
+                            {{ complaint.custom_target }}
+
+                          </div>
+
+                          {% endif %}
+
+                        </td>
+
+
+                        <!-- URGENCY -->
+
+                        <td>
+
+                          {% if complaint.urgency_level == "Emergency" %}
+
+                            <span class="badge bg-danger">
+
+                              <i class="bi bi-exclamation-triangle me-1"></i>
+
+                              Emergency
+
+                            </span>
+
+                          {% else %}
+
+                            <span class="badge bg-secondary">
+
+                              {{ complaint.urgency_level }}
+
+                            </span>
+
+                          {% endif %}
+
+                        </td>
+
+
+                        <!-- STATUS -->
+
+                        <td>
+
+                          {% if complaint.status == "Pending" %}
+
+                            <span class="badge bg-warning text-dark">
+
+                              Pending
+
+                            </span>
+
+                          {% elif complaint.status == "In Progress" %}
+
+                            <span class="badge bg-info text-dark">
+
+                              In Progress
+
+                            </span>
+
+                          {% elif complaint.status == "Forwarded" %}
+
+                            <span class="badge bg-primary">
+
+                              Forwarded
+
+                            </span>
+
+                          {% elif complaint.status == "Solved" %}
+
+                            <span class="badge bg-success">
+
+                              Solved
+
+                            </span>
+
+                          {% elif complaint.status == "Rejected" %}
+
+                            <span class="badge bg-danger">
+
+                              Rejected
+
+                            </span>
+
+                          {% else %}
+
+                            <span class="badge bg-secondary">
+
+                              {{ complaint.status }}
+
+                            </span>
+
+                          {% endif %}
+
+                        </td>
+
+                      </tr>
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+
+                <!-- =================================================
+                     COMPLAINT DESCRIPTION
+                     ================================================= -->
+
+                <div class="mt-4">
+
+                  <h6 class="fw-bold mb-2">
+
+                    <i class="bi bi-chat-left-text me-2"></i>
+
+                    Complaint Description
+
+                  </h6>
+
+
+                  <div class="card bg-light border">
+
+                    <div class="card-body">
+
+                      {{ complaint.description }}
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     SEPARATOR
+                     ================================================= -->
+
+                <hr class="my-4 border-3 opacity-50" />
+
+
+                <!-- =================================================
+                     SOLUTION / FEEDBACK FORM
+                     ================================================= -->
+
+                <form
+                  method="POST"
+                  action="{{ url_for('solve_complaint', complaint_id=complaint.id) }}"
+                  onsubmit="return prepareEditor('{{ complaint.id }}')"
+                >
+
+
+                  <!-- =================================================
+                       SOLUTION / FEEDBACK HEADING
+                       ================================================= -->
+
+                  <h5 class="fw-bold mb-3">
+
+                    <i class="bi bi-pencil-square me-2"></i>
+
+                    Solution / Feedback
+
+                  </h5>
+
+
+                  <!-- =================================================
+                       RICH TEXT EDITOR
+                       ================================================= -->
+
+                  <div class="card border">
+
+                    <div
+                      id="solveEditor{{ complaint.id }}"
+                      class="rich-text-editor"
+                      contenteditable="true"
+                      spellcheck="true"
+                      data-placeholder="Type solution / feedback here..."
+                      oninput="
+                        document.getElementById(
+                          'solveHidden{{ complaint.id }}'
+                        ).value = this.innerHTML;
+                      "
+                      onmouseup="saveSelection('{{ complaint.id }}')"
+                      onkeyup="saveSelection('{{ complaint.id }}')"
+                    ></div>
+
+                  </div>
+
+
+                  <!-- =================================================
+                       HIDDEN FIELD
+                       ================================================= -->
+
+                  <textarea
+                    id="solveHidden{{ complaint.id }}"
+                    name="solution_{{ complaint.id }}"
+                    hidden
+                  ></textarea>
+
+
+                  <!-- =================================================
+                       ACTION BUTTONS
+                       ================================================= -->
+
+                  <div class="d-flex justify-content-end gap-2 mt-4">
+
+
+                    <!-- CANCEL -->
+
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      data-bs-dismiss="modal"
+                    >
+
+                      <i class="bi bi-x-lg me-1"></i>
+
+                      Cancel
+
+                    </button>
+
+
+                    <!-- SOLVE -->
+
+                    <button
+                      type="submit"
+                      class="btn btn-success"
+                    >
+
+                      <i class="bi bi-check-lg me-1"></i>
+
+                      Solve Complaint
+
+                    </button>
+
+
+                  </div>
+
+
+                </form>
+
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+      </div>
+
+    </div>
+
+  </div>
+
+  {% endif %}
+
+{% endfor %}
+
+<!-- ========================================================= -->
+<!-- HOD REJECT COMPLAINT MODALS -->
+<!-- ========================================================= -->
+
+{% for complaint in complaints %}
+
+  {% if complaint.status == "Forwarded" %}
+
+  <!-- =========================================================
+       REJECT COMPLAINT MODAL
+       ========================================================= -->
+
+  <div
+    class="modal fade"
+    id="rejectModal{{ complaint.id }}"
+    tabindex="-1"
+    aria-labelledby="rejectModalLabel{{ complaint.id }}"
+    aria-hidden="true"
+  >
+
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+
+      <div class="modal-content">
+
+
+        <!-- =================================================
+             MODAL HEADER
+             ================================================= -->
+
+        <div class="modal-header">
+
+          <h4
+            class="modal-title fw-bold"
+            id="rejectModalLabel{{ complaint.id }}"
+          >
+
+            <i class="bi bi-x-circle text-danger me-2"></i>
+
+            Reject Complaint
+
+          </h4>
+
+
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+
+        </div>
+
+
+        <!-- =================================================
+             MODAL BODY
+             ================================================= -->
+
+        <div class="modal-body bg-light">
+
+          <div class="container-fluid">
+
+            <div class="card border-0 shadow-sm">
+
+              <div class="card-body p-4">
+
+
+                <!-- =================================================
+                     COMPLAINT DETAILS
+                     ================================================= -->
+
+                <h5 class="fw-bold mb-4">
+
+                  <i class="bi bi-file-earmark-text me-2"></i>
+
+                  Complaint Details
+
+                </h5>
+
+
+                <!-- =================================================
+                     DATE
+                     ================================================= -->
+
+                <div class="table-responsive mb-4">
+
+                  <table class="table table-bordered align-middle mb-0">
+
+                    <tbody>
+
+                      <tr>
+
+                        <th
+                          class="bg-light"
+                          style="width: 180px;"
+                        >
+
+                          <i class="bi bi-calendar3 me-2"></i>
+
+                          Date
+
+                        </th>
+
+                        <td>
+
+                          {{ complaint.date_submitted.strftime('%d %b %Y at %I:%M %p') }}
+
+                        </td>
+
+                      </tr>
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+
+                <!-- =================================================
+                     BASIC COMPLAINT INFORMATION
+                     ================================================= -->
+
+                <div class="table-responsive mb-4">
+
+                  <table
+                    class="table table-bordered align-middle mb-0"
+                    style="min-width: 950px;"
+                  >
+
+                    <thead class="table-light">
+
+                      <tr>
+
+                        <th>ID</th>
+
+                        <th>Student</th>
+
+                        <th>Category</th>
+
+                        <th>Directed Against</th>
+
+                        <th>Urgency</th>
+
+                        <th>Status</th>
+
+                      </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                      <tr>
+
+
+                        <!-- ID -->
+
+                        <td class="fw-semibold">
+
+                          #{{ complaint.id }}
+
+                        </td>
+
+
+                        <!-- STUDENT -->
+
+                        <td>
+
+                          Student {{ complaint.student_id }}
+
+                        </td>
+
+
+                        <!-- CATEGORY -->
+
+                        <td>
+
+                          {{ complaint.category }}
+
+                        </td>
+
+
+                        <!-- DIRECTED AGAINST -->
+
+                        <td>
+
+                          <span class="badge text-bg-dark">
+
+                            {{ complaint.directed_against }}
+
+                          </span>
+
+
+                          {% if complaint.custom_target %}
+
+                          <div class="text-muted small mt-1">
+
+                            {{ complaint.custom_target }}
+
+                          </div>
+
+                          {% endif %}
+
+                        </td>
+
+
+                        <!-- URGENCY -->
+
+                        <td>
+
+                          {% if complaint.urgency_level == "Emergency" %}
+
+                            <span class="badge bg-danger">
+
+                              <i class="bi bi-exclamation-triangle me-1"></i>
+
+                              Emergency
+
+                            </span>
+
+                          {% else %}
+
+                            <span class="badge bg-secondary">
+
+                              {{ complaint.urgency_level }}
+
+                            </span>
+
+                          {% endif %}
+
+                        </td>
+
+
+                        <!-- STATUS -->
+
+                        <td>
+
+                          {% if complaint.status == "Pending" %}
+
+                            <span class="badge bg-warning text-dark">
+
+                              Pending
+
+                            </span>
+
+                          {% elif complaint.status == "In Progress" %}
+
+                            <span class="badge bg-info text-dark">
+
+                              In Progress
+
+                            </span>
+
+                          {% elif complaint.status == "Forwarded" %}
+
+                            <span class="badge bg-primary">
+
+                              Forwarded
+
+                            </span>
+
+                          {% elif complaint.status == "Solved" %}
+
+                            <span class="badge bg-success">
+
+                              Solved
+
+                            </span>
+
+                          {% elif complaint.status == "Rejected" %}
+
+                            <span class="badge bg-danger">
+
+                              Rejected
+
+                            </span>
+
+                          {% else %}
+
+                            <span class="badge bg-secondary">
+
+                              {{ complaint.status }}
+
+                            </span>
+
+                          {% endif %}
+
+                        </td>
+
+
+                      </tr>
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+
+                <!-- =================================================
+                     COMPLAINT DESCRIPTION
+                     ================================================= -->
+
+                <div class="mt-4">
+
+                  <h6 class="fw-bold mb-2">
+
+                    <i class="bi bi-chat-left-text me-2"></i>
+
+                    Complaint Description
+
+                  </h6>
+
+
+                  <div class="card bg-light border">
+
+                    <div class="card-body">
+
+                      {{ complaint.description }}
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     SEPARATOR
+                     ================================================= -->
+
+                <hr class="my-4 border-3 opacity-50" />
+
+
+                <!-- =================================================
+                     REJECTION REASON / FEEDBACK
+                     ================================================= -->
+
+                <form
+                  method="POST"
+                  action="{{ url_for('reject_complaint', complaint_id=complaint.id) }}"
+                  onsubmit="return prepareRejectEditor('{{ complaint.id }}')"
+                >
+
+
+                  <!-- =================================================
+                       REJECTION REASON HEADING
+                       ================================================= -->
+
+                  <h5 class="fw-bold mb-3">
+
+                    <i class="bi bi-pencil-square me-2"></i>
+
+                    Rejection Reason / Feedback
+
+                  </h5>
+
+
+                  <!-- =================================================
+                       RICH TEXT EDITOR
+                       ================================================= -->
+
+                  <div class="card border">
+
+                    <div
+                      id="rejectEditor{{ complaint.id }}"
+                      class="rich-text-editor"
+                      contenteditable="true"
+                      spellcheck="true"
+                      data-placeholder="Enter reason for rejecting this complaint..."
+                      oninput="
+                        document.getElementById(
+                          'rejectHidden{{ complaint.id }}'
+                        ).value = this.innerHTML;
+                      "
+                      onmouseup="saveSelection('{{ complaint.id }}')"
+                      onkeyup="saveSelection('{{ complaint.id }}')"
+                    ></div>
+
+                  </div>
+
+
+                  <!-- =================================================
+                       HIDDEN FIELD
+                       ================================================= -->
+
+                  <textarea
+                    id="rejectHidden{{ complaint.id }}"
+                    name="reason_{{ complaint.id }}"
+                    hidden
+                  ></textarea>
+
+
+                  <!-- =================================================
+                       ACTION BUTTONS
+                       ================================================= -->
+
+                  <div class="d-flex justify-content-end gap-2 mt-4">
+
+
+                    <!-- CANCEL -->
+
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      data-bs-dismiss="modal"
+                    >
+
+                      <i class="bi bi-x-lg me-1"></i>
+
+                      Cancel
+
+                    </button>
+
+
+                    <!-- REJECT -->
+
+                    <button
+                      type="submit"
+                      class="btn btn-danger"
+                    >
+
+                      <i class="bi bi-x-lg me-1"></i>
+
+                      Reject Complaint
+
+                    </button>
+
+
+                  </div>
+
+
+                </form>
+
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+      </div>
+
+    </div>
+
+  </div>
+
+  {% endif %}
+
+{% endfor %}
 
 {% endblock %}
