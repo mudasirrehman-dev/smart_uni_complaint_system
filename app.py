@@ -689,6 +689,29 @@ def admin_dashboard():
         # Add the complaint to its corresponding group
         groups[complaint.group_id].append(complaint)
 
+    # ========================================================
+    # COMPLAINT FEEDBACK / HISTORY
+    # ========================================================
+    # Har complaint ka latest Solve ya Reject feedback nikalna
+    # ========================================================
+
+    complaint_feedback = {}
+
+    for complaint in complaints:
+
+        history = ComplaintHistory.query.filter(
+            ComplaintHistory.complaint_id == complaint.id,
+            ComplaintHistory.action.in_([
+                "Complaint Solved",
+                "Complaint Rejected"
+            ])
+        ).order_by(
+            ComplaintHistory.created_at.desc()
+        ).first()
+
+        if history:
+            complaint_feedback[complaint.id] = history.description
+
 
     # ========================================================
     # SEND DATA TO ADMIN DASHBOARD
@@ -698,7 +721,8 @@ def admin_dashboard():
         "admin_dashboard.html",
         username=session.get("username"),
         complaints=complaints,
-        groups=groups
+        groups=groups,
+        complaint_feedback=complaint_feedback
     )
 
 
@@ -786,6 +810,9 @@ def solve_complaint(complaint_id):
 
             grouped_complaint.status = "Solved"
 
+            # Remove group connection after solving
+            grouped_complaint.group_id = None
+
 
             # Add history for every complaint
             add_complaint_history(
@@ -838,6 +865,11 @@ def solve_complaint(complaint_id):
         url_for("admin_dashboard")
     )
 
+
+# ============================================================
+# REJECT SINGLE OR GROUPED COMPLAINT
+# ============================================================
+
 @app.route(
     "/complaint/<int:complaint_id>/reject",
     methods=["POST"]
@@ -845,13 +877,14 @@ def solve_complaint(complaint_id):
 @role_required("admin")
 def reject_complaint(complaint_id):
 
+    # Get the selected complaint
     complaint = Complaint.query.get_or_404(complaint_id)
 
     # Admin cannot reject complaints directed against Admin
     if complaint.directed_against == "Admin":
         return "Access Denied", 403
 
-    # Get feedback/rejection reason from the same textarea
+    # Get rejection feedback
     feedback = request.form.get(
         f"solution_{complaint_id}"
     )
@@ -859,42 +892,45 @@ def reject_complaint(complaint_id):
     if feedback:
         feedback = feedback.strip()
 
-    # Feedback is required before rejecting
+    # Feedback is required
     if not feedback:
         return """
         <h3>Rejection Feedback Required</h3>
-
-        <p>
-            Please enter a rejection reason or feedback
-            before rejecting the complaint.
-        </p>
-
-        <a href="/admin/dashboard">
-            Back to Admin Dashboard
-        </a>
+        <p>Please enter a rejection reason or feedback.</p>
+        <a href="/admin/dashboard">Back to Admin Dashboard</a>
         """, 400
 
-    # Save old status for history
-    old_status = complaint.status
+    # Get all group members before clearing group IDs
+    if complaint.group_id is not None:
+        complaints_to_reject = Complaint.query.filter_by(
+            group_id=complaint.group_id
+        ).all()
+    else:
+        complaints_to_reject = [complaint]
 
-    # Change complaint status
-    complaint.status = "Rejected"
+    # Reject each complaint and preserve its history
+    for member in complaints_to_reject:
 
-    # Add complaint history
-    add_complaint_history(
-        complaint=complaint,
-        user_id=session["user_id"],
-        action="Complaint Rejected",
-        old_status=old_status,
-        new_status="Rejected",
-        description=feedback
-    )
+        old_status = member.status
 
+        member.status = "Rejected"
+
+        # Remove group connection after rejection
+        member.group_id = None
+
+        add_complaint_history(
+            complaint=member,
+            user_id=session["user_id"],
+            action="Complaint Rejected",
+            old_status=old_status,
+            new_status="Rejected",
+            description=feedback
+        )
+
+    # Save all changes together
     db.session.commit()
 
     return redirect(url_for("admin_dashboard"))
-
-
 # ============================================================
 # FORWARD SINGLE COMPLAINT TO HOD
 # ============================================================
@@ -1235,6 +1271,8 @@ def hod_dashboard():
 
             Complaint.status == "Forwarded",
 
+            Complaint.status == "Rejected",
+
             Complaint.id.in_(
                 db.session.query(ComplaintHistory.complaint_id)
                 .filter(
@@ -1251,7 +1289,7 @@ def hod_dashboard():
             # Active Emergency complaints
             (
                 (Complaint.urgency_level == "Emergency") &
-                (Complaint.status != "Solved"),
+                (~Complaint.status.in_(["Solved", "Rejected"])),
                 1
             ),
 
@@ -1275,8 +1313,14 @@ def hod_dashboard():
                 Complaint.status == "Solved",
                 4
             ),
+            # Priority 5:
+            # Rejected complaints
+            (
+                Complaint.status == "Rejected",
+                5
+            ),
 
-            else_=5
+            else_=6
         ),
 
         Complaint.date_submitted.desc()
@@ -1297,6 +1341,36 @@ def hod_dashboard():
         )
     )
 
+    # ========================================================
+    # COUNT PENDING COMPLAINTS WITH ADMIN
+    # ========================================================
+
+    admin_pending_count = Complaint.query.filter(
+        Complaint.status == "Pending"
+    ).count()
+
+    # ========================================================
+    # HOD COMPLAINT FEEDBACK / HISTORY
+    # ========================================================
+
+    complaint_feedback = {}
+
+    for complaint in complaints:
+
+        history = ComplaintHistory.query.filter(
+            ComplaintHistory.complaint_id == complaint.id,
+            ComplaintHistory.user_id == session["user_id"],
+            ComplaintHistory.action.in_([
+                "Complaint Solved",
+                "Complaint Rejected"
+            ])
+        ).order_by(
+            ComplaintHistory.created_at.desc()
+        ).first()
+
+        if history and history.description:
+            complaint_feedback[complaint.id] = history.description
+
 
     # ========================================================
     # SEND DATA TO HOD DASHBOARD
@@ -1306,7 +1380,9 @@ def hod_dashboard():
         "hod_dashboard.html",
         username=session.get("username"),
         complaints=complaints,
-        emergency_count=emergency_count
+        emergency_count=emergency_count,
+        admin_pending_count=admin_pending_count,
+        complaint_feedback=complaint_feedback
     )
 
 # ============================================================
@@ -1419,6 +1495,68 @@ def hod_solve_complaint(complaint_id):
         url_for("hod_dashboard")
     )
 
+# ============================================================
+# HOD REJECT COMPLAINT
+# ============================================================
+
+@app.route(
+    "/hod/complaint/<int:complaint_id>/reject",
+    methods=["POST"]
+)
+@role_required("hod")
+def hod_reject_complaint(complaint_id):
+
+    complaint = Complaint.query.get_or_404(complaint_id)
+
+    # HOD can reject Forwarded complaints
+    if (
+        complaint.directed_against != "Admin"
+        and complaint.status != "Forwarded"
+    ):
+        return "Access Denied", 403
+
+    # Get rejection feedback/reason
+    feedback = request.form.get("reason")
+
+    if feedback:
+        feedback = feedback.strip()
+
+    # Feedback is required before rejecting
+    if not feedback:
+        return """
+        <h3>Rejection Feedback Required</h3>
+
+        <p>
+            Please enter a rejection reason or feedback
+            before rejecting the complaint.
+        </p>
+
+        <a href="/hod/dashboard">
+            Back to HOD Dashboard
+        </a>
+        """, 400
+
+    # Save old status for history
+    old_status = complaint.status
+
+    # Change complaint status
+    complaint.status = "Rejected"
+
+    # Add complaint history
+    add_complaint_history(
+        complaint=complaint,
+        user_id=session["user_id"],
+        action="Complaint Rejected",
+        old_status=old_status,
+        new_status="Rejected",
+        description=feedback
+    )
+
+    db.session.commit()
+
+    return redirect(
+        url_for("hod_dashboard")
+    )
 
 # ============================================================
 # LOGOUT

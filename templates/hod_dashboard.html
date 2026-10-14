@@ -121,7 +121,7 @@ HOD Dashboard | Smart University Complaint System
 
         <!-- Total Sensitive Complaints -->
 
-        <div class="col-lg-4 col-md-6">
+        <div class="col-lg-3 col-md-6">
 
             <div
                 class="card dashboard-card border-0 shadow-sm h-100"
@@ -165,7 +165,7 @@ HOD Dashboard | Smart University Complaint System
 
         <!-- Pending Complaints -->
 
-        <div class="col-lg-4 col-md-6">
+        <div class="col-lg-3 col-md-6">
 
             <div
                 class="card dashboard-card border-0 shadow-sm h-100"
@@ -216,7 +216,7 @@ HOD Dashboard | Smart University Complaint System
 
         <!-- Emergency Complaints -->
 
-        <div class="col-lg-4 col-md-6">
+        <div class="col-lg-3 col-md-6">
 
             <div
                 class="card dashboard-card border-0 shadow-sm h-100"
@@ -263,6 +263,46 @@ HOD Dashboard | Smart University Complaint System
 
                             <i class="bi bi-exclamation-triangle"></i>
 
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Pending with Admin -->
+
+        <div class="col-lg-3 col-md-6">
+
+            <div
+                class="card dashboard-card border-0 shadow-sm h-100"
+            >
+
+                <div class="card-body">
+
+                    <div
+                        class="d-flex justify-content-between align-items-center"
+                    >
+
+                        <div>
+
+                            <p class="text-muted mb-1">
+                                Admin Pending Complaints
+                            </p>
+
+                            <h2 class="fw-bold mb-0">
+                                {{ admin_pending_count }}
+                            </h2>
+
+                        </div>
+
+                        <div
+                            class="stat-icon bg-info-subtle text-info"
+                        >
+                            <i class="bi bi-person-workspace"></i>
                         </div>
 
                     </div>
@@ -538,6 +578,18 @@ HOD Dashboard | Smart University Complaint System
                                     Solved
 
                                 </span>
+
+                                {% elif complaint.status == "Rejected" %}
+
+                                <span class="badge text-bg-danger">
+
+                                    <i class="bi bi-check-circle"></i>
+
+                                    Rejected
+
+                                </span>
+
+
 
 
                                 {% else %}
@@ -1255,6 +1307,61 @@ HOD Dashboard | Smart University Complaint System
 
                 </div>
 
+                <!-- =========================================
+                  HOD FEEDBACK / REASON
+                  ========================================= -->
+
+              {% if complaint.status == "Solved" or complaint.status == "Rejected" %}
+
+              <div class="mt-4">
+
+                {% if complaint.status == "Solved" %}
+
+                <h6 class="fw-bold mb-2">
+
+                  <i class="bi bi-check-circle text-success me-2"></i>
+
+                  HOD Solution / Feedback
+
+                </h6>
+
+                {% elif complaint.status == "Rejected" %}
+
+                <h6 class="fw-bold mb-2">
+
+                  <i class="bi bi-x-circle text-danger me-2"></i>
+
+                  HOD Rejection Reason / Feedback
+
+                </h6>
+
+                {% endif %}
+
+
+                <div class="card border">
+
+                  <div class="card-body bg-light">
+
+                    {% if complaint_feedback.get(complaint.id) %}
+
+                      {{ complaint_feedback.get(complaint.id) }}
+
+                    {% else %}
+
+                      <span class="text-muted">
+                        No feedback available.
+                      </span>
+
+                    {% endif %}
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              {% endif %}
+
 
                 <!-- =================================================
                      SEPARATOR
@@ -1269,7 +1376,7 @@ HOD Dashboard | Smart University Complaint System
 
                 <form
                   method="POST"
-                  action="{{ url_for('solve_complaint', complaint_id=complaint.id) }}"
+                  action="{{ url_for('hod_solve_complaint', complaint_id=complaint.id) }}"
                   onsubmit="return prepareEditor('{{ complaint.id }}')"
                 >
 
@@ -1317,7 +1424,7 @@ HOD Dashboard | Smart University Complaint System
 
                   <textarea
                     id="solveHidden{{ complaint.id }}"
-                    name="solution_{{ complaint.id }}"
+                    name="solution"
                     hidden
                   ></textarea>
 
@@ -2190,7 +2297,7 @@ HOD Dashboard | Smart University Complaint System
 
                 <form
                   method="POST"
-                  action="{{ url_for('reject_complaint', complaint_id=complaint.id) }}"
+                  action="{{ url_for('hod_reject_complaint', complaint_id=complaint.id) }}"
                   onsubmit="return prepareRejectEditor('{{ complaint.id }}')"
                 >
 
@@ -2238,7 +2345,7 @@ HOD Dashboard | Smart University Complaint System
 
                   <textarea
                     id="rejectHidden{{ complaint.id }}"
-                    name="reason_{{ complaint.id }}"
+                    name="reason"
                     hidden
                   ></textarea>
 
