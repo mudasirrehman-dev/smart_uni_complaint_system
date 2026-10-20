@@ -578,7 +578,7 @@ Complaint System {% endblock %} {% block extra_css %}
   <!-- VIEW COMPLAINT MODALS -->
   <!-- ========================================================= -->
 
-  {% for complaint in complaints %}
+  {% for complaint in all_complaints %}
 
   <div
     class="modal fade"
@@ -2029,7 +2029,7 @@ Complaint System {% endblock %} {% block extra_css %}
        GROUPED COMPLAINTS
        ========================================================= -->
   {% if groups %}
-  <div class="card border-0 shadow-sm"
+  <div class="card border-0 shadow-sm mb-4"
        style="order: 1;"
   >
     <!-- =====================================================
@@ -2059,51 +2059,96 @@ Complaint System {% endblock %} {% block extra_css %}
                GROUP CARD
                ================================================= -->
 
-      <div class="card border mb-4">
-        <!-- ===============================================
-                 GROUP HEADER
-                 =============================================== -->
+      <div class="card border mb-4 shadow-sm pb-4">
+        
+      <!-- ===============================================
+          GROUP HEADER WITH ACTION BUTTONS
+          =============================================== -->
 
-        <div class="card-header bg-light">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="fw-bold mb-0">Group #{{ group_id }}</h6>
+      <div class="card-header"
+        style="background-color: {{ ['#D6E8FF',  '#F8D7E8', '#FFE0B2', '#E2D5F8', '#BFEFF2', '#FFF3B0', '#FFD6D6', '#D9E7D0', '#D7D9FF'][(group_id|int) % 10] }} !important;">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
 
-              <small class="text-muted">
-                {{ complaints_in_group|length }} complaints
-              </small>
-            </div>
+          <!-- GROUP INFORMATION -->
+          <div>
+            <h6 class="fw-bold mb-1">
+              Group #{{ loop.index }}
+            </h6>
 
-            <!-- ===========================================
-                     GROUP STATUS
-                     =========================================== -->
-
-            {% if complaints_in_group[0].status == "Pending" %}
-
-            <span class="badge text-bg-warning"> Pending </span>
-
-            {% elif complaints_in_group[0].status == "Forwarded" %}
-
-            <span class="badge text-bg-info"> Forwarded </span>
-
-            {% elif complaints_in_group[0].status == "Solved" %}
-
-            <span class="badge text-bg-success"> Solved </span>
-
-            {% elif complaints_in_group[0].status == "Rejected" %}
-
-            <span class="badge text-bg-danger"> Rejected </span>
-
-            {% endif %}
+            <small class="text-muted">
+              {{ complaints_in_group|length }} complaints
+            </small>
           </div>
+
+          <!-- GROUP ACTION BUTTONS -->
+          {% if complaints_in_group[0].status == "Pending" %}
+
+          <div class="d-flex flex-wrap gap-2">
+
+            <!-- 1. UNDO GROUP -->
+            <form
+              method="POST"
+              action="{{ url_for('undo_group', group_id=group_id) }}"
+              onsubmit="return confirm('Are you sure you want to undo this group? All complaints will be separated.');"
+            >
+              <button type="submit" class="btn btn-outline-danger">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>
+                Undo Group
+              </button>
+            </form>
+
+            <!-- 2. FORWARD TO HOD -->
+            <form
+              method="POST"
+              action="{{ url_for('forward_group_to_hod', group_id=group_id) }}"
+              onsubmit="return confirm('Are you sure you want to forward this group to HOD?');"
+            >
+              <button type="submit" class="btn btn-outline-primary ">
+                <i class="bi bi-send me-1"></i>
+                Forward to HOD
+              </button>
+            </form>
+
+            <!-- 3. SOLVE GROUP -->
+            <form
+              method="POST"
+              action="{{ url_for('solve_group', group_id=group_id) }}"
+              onsubmit="return confirm('Are you sure you want to solve all complaints in this group?');"
+            >
+              <button type="submit" class="btn btn-success ">
+                <i class="bi bi-check-circle me-1"></i>
+                Solve Group
+              </button>
+            </form>
+
+          </div>
+
+          {% else %}
+
+          <!-- STATUS FOR NON-PENDING GROUPS -->
+          {% if complaints_in_group[0].status == "Forwarded" %}
+            <span class="badge text-bg-info">Forwarded</span>
+
+          {% elif complaints_in_group[0].status == "Solved" %}
+            <span class="badge text-bg-success">Solved</span>
+
+          {% elif complaints_in_group[0].status == "Rejected" %}
+            <span class="badge text-bg-danger">Rejected</span>
+
+          {% endif %}
+
+          {% endif %}
+
         </div>
+      </div>
+
 
         <!-- ===============================================
                  GROUP TABLE
                  =============================================== -->
 
         <div class="table-responsive">
-          <table class="table table-sm align-middle mb-0">
+          <table class="table table-sm align-middle mb-0 w-100">
             <thead class="table-light">
               <tr>
                 <th class="ps-3">Complaint ID</th>
@@ -2111,6 +2156,8 @@ Complaint System {% endblock %} {% block extra_css %}
                 <th>Category</th>
 
                 <th>Directed Against</th>
+
+                <th>Description</th>
 
                 <th>Urgency</th>
 
@@ -2141,6 +2188,23 @@ Complaint System {% endblock %} {% block extra_css %}
                            ===================================== -->
 
                 <td>{{ complaint.directed_against }}</td>
+
+                <!-- ============================= -->
+                <!-- DESCRIPTION -->
+                <!-- ============================= -->
+
+                <td style="max-width: 200px">
+                  <button
+                    type="button"
+                    class="btn btn-link p-0 text-start text-decoration-none"
+                    data-bs-toggle="modal"
+                    data-bs-target="#viewComplaintModal{{ complaint.id }}"
+                  >
+                    {% if complaint.description|length > 60 %} {{
+                    complaint.description[:60] }}... {% else %} {{
+                    complaint.description }} {% endif %}
+                  </button>
+                </td>
 
                 <!-- =====================================
                            URGENCY
@@ -2196,70 +2260,7 @@ Complaint System {% endblock %} {% block extra_css %}
           </table>
         </div>
 
-        <!-- =================================================
-                 GROUP ACTIONS
-                 ================================================= -->
-
-        <div class="card-footer bg-white">
-          {% if complaints_in_group[0].status == "Pending" %}
-
-          <div class="d-flex flex-wrap gap-2">
-            <!-- =========================================
-                       SOLVE GROUP
-                       ========================================= -->
-
-            <form
-              method="POST"
-              action="{{ url_for('solve_group', group_id=group_id) }}"
-            >
-              <button type="submit" class="btn btn-success">
-                <i class="bi bi-check-circle me-1"></i>
-
-                Solve Group
-              </button>
-            </form>
-
-            <!-- =========================================
-                       FORWARD GROUP
-                       ========================================= -->
-
-            <form
-              method="POST"
-              action="{{ url_for('forward_group_to_hod', group_id=group_id) }}"
-            >
-              <button type="submit" class="btn btn-outline-primary">
-                <i class="bi bi-send me-1"></i>
-
-                Forward to HOD
-              </button>
-            </form>
-
-            <!-- =========================================
-                       UNDO GROUP
-                       ========================================= -->
-
-            <form
-              method="POST"
-              action="{{ url_for('undo_group', group_id=group_id) }}"
-            >
-              <button type="submit" class="btn btn-outline-danger">
-                <i class="bi bi-arrow-counterclockwise me-1"></i>
-
-                Undo Group
-              </button>
-            </form>
-          </div>
-
-          {% else %}
-
-          <span class="text-muted">
-            <i class="bi bi-check2-circle me-1"></i>
-
-            Group already processed.
-          </span>
-
-          {% endif %}
-        </div>
+        
       </div>
 
       {% endfor %} {% else %}
@@ -2302,6 +2303,8 @@ Complaint System {% endblock %} {% block extra_css %}
       </div>
     </div>
 {% endif %}
+
+
 {% endblock %}
 
 <!-- =========================================================

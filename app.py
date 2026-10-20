@@ -3,7 +3,7 @@
 # ============================================================
 
 # Flask modules
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 
 # Database object
 from extensions import db
@@ -668,6 +668,12 @@ def admin_dashboard():
         Complaint.group_id != None
     ).all()
 
+    # ========================================================
+    # ALL COMPLAINTS FOR VIEW MODALS
+    # ========================================================
+
+    all_complaints = Complaint.query.all()
+
 
     # Dictionary to store complaints according to their Group ID
     #
@@ -722,7 +728,8 @@ def admin_dashboard():
         username=session.get("username"),
         complaints=complaints,
         groups=groups,
-        complaint_feedback=complaint_feedback
+        complaint_feedback=complaint_feedback,
+        all_complaints=all_complaints
     )
 
 
@@ -799,7 +806,7 @@ def solve_complaint(complaint_id):
             group_id=complaint.group_id
         ).all()
 
-
+        
         # ====================================================
         # SOLVE ALL GROUP COMPLAINTS
         # ====================================================
@@ -1106,28 +1113,10 @@ def group_complaints():
     # Save changes to the database
     db.session.commit()
 
-    # Show grouping result
-    return f"""
-        <h2>Complaints Grouped Successfully!</h2>
+    # Show success message and refresh Admin Dashboard
+    flash("Complaints grouped successfully!", "success")
 
-        <p>Selected Complaints: {complaint_ids}</p>
-
-        <p>Group ID: {group_id}</p>
-
-        <p>
-            Directed Against:
-            {first_complaint.directed_against}
-        </p>
-
-        <p>
-            Total Complaints in Group:
-            {len(complaints)}
-        </p>
-
-        <a href="/admin/dashboard">
-            Back to Admin Dashboard
-        </a>
-    """
+    return redirect(url_for("admin_dashboard"))
 
 
 # ============================================================
