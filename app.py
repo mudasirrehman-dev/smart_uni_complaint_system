@@ -1119,6 +1119,7 @@ def group_complaints():
     return redirect(url_for("admin_dashboard"))
 
 
+
 # ============================================================
 # SOLVE GROUPED COMPLAINTS
 # ============================================================
@@ -1132,21 +1133,57 @@ def solve_group(group_id):
         group_id=group_id
     ).all()
 
-    # Return error if the group does not exist
+    # Check whether the group exists
     if not complaints:
         return "Group not found", 404
 
-    # Solve every complaint in the group
+    # Get solution submitted by Admin
+    solution = request.form.get(
+        "group_solution", ""
+    ).strip()
+
+    # Prevent solving without a solution
+    if not solution:
+        flash(
+            "Please provide a solution before solving the group.",
+            "danger"
+        )
+        return redirect(url_for("admin_dashboard"))
+
+    # Solve every complaint and save the same solution
     for complaint in complaints:
 
-        # Change complaint status
+        # Store previous status for complaint history
+        old_status = complaint.status
+
+        # Update complaint status
         complaint.status = "Solved"
 
-        # Remove the complaint from the group
+        # Save common group solution
+        complaint.solution = solution
+
+        # Remove complaint from the group
         complaint.group_id = None
 
-    # Save all changes
+        # Record complaint history if helper is available
+        add_complaint_history(
+            complaint=complaint,
+            user_id=session["user_id"],
+            action="Complaint Solved",
+            old_status=old_status,
+            new_status="Solved",
+            description="Group complaint solved. Solution: " + solution
+        )
+
+    # Save all complaints and their solutions
     db.session.commit()
+
+    # Show success message
+    flash(
+        f"Group #{group_id} solved successfully. "
+        f"Solution applied to all {len(complaints)} complaints.",
+        "success"
+    )
 
     # Return to Admin Dashboard
     return redirect(url_for("admin_dashboard"))
