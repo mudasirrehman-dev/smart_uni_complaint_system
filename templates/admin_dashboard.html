@@ -633,141 +633,142 @@ Complaint System {% endblock %} {% block extra_css %}
 
               
               
-<!-- ===================================================== -->
-<!-- COMPLAINT DETAILS + DESCRIPTION: VERTICAL LAYOUT -->
-<!-- ===================================================== -->
+            <!-- ===================================================== -->
+            <!-- COMPLAINT DETAILS + DESCRIPTION: VERTICAL LAYOUT -->
+            <!-- ===================================================== -->
 
-<div class="row g-3">
+            <div class="row g-3">
 
-  <!-- TOP: COMPLAINT DETAILS -->
-  <div class="col-12">
+              <!-- TOP: COMPLAINT DETAILS -->
+              <div class="col-12">
 
-    <div class="card border">
+                <div class="card border">
 
-      <div class="card-header bg-white py-3">
-        <h6 class="fw-bold mb-0">
-          <i class="bi bi-card-list me-2"></i>
-          Complaint Details
-        </h6>
-      </div>
+                  <div class="card-header bg-white py-3">
+                    <h6 class="fw-bold mb-0">
+                      <i class="bi bi-card-list me-2"></i>
+                      Complaint Details
+                    </h6>
+                  </div>
 
-      <div class="card-body p-0">
+                  <div class="card-body p-0">
 
-        <div class="table-responsive">
-          <table class="table table-bordered align-middle mb-0">
+                    <div class="table-responsive">
+                      <table class="table table-bordered align-middle mb-0">
 
-            <thead class="table-light">
-              <tr>
-                <th>ID</th>
-                <th>Student</th>
-                <th>Category</th>
-                <th>Directed Against</th>
-                <th>Urgency</th>
-                <th>Status</th>
-              </tr>
-            </thead>
+                        <thead class="table-light">
+                          <tr>
+                            <th>ID</th>
+                            <th>Student</th>
+                            <th>Category</th>
+                            <th>Directed Against</th>
+                            <th>Urgency</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
 
-            <tbody>
-              <tr>
+                        <tbody>
+                          <tr>
 
-                <!-- ID -->
-                <td>
-                  <strong>#{{ complaint.id }}</strong>
-                </td>
+                            <!-- ID -->
+                            <td>
+                              <strong>#{{ complaint.id }}</strong>
+                            </td>
 
-                <!-- STUDENT -->
-                <td>
-                  Student {{ complaint.student_id }}
-                </td>
+                            <!-- STUDENT -->
+                            <td>
+                              Student {{ complaint.student_id }}
+                            </td>
 
-                <!-- CATEGORY -->
-                <td>
-                  <span class="fw-semibold">
-                    {{ complaint.category }}
-                  </span>
-                </td>
+                            <!-- CATEGORY -->
+                            <td>
+                              <span class="fw-semibold">
+                                {{ complaint.category }}
+                              </span>
+                            </td>
 
-                <!-- DIRECTED AGAINST -->
-                <td>
-                  <span class="badge text-bg-dark">
-                    {{ complaint.directed_against }}
-                  </span>
+                            <!-- DIRECTED AGAINST -->
+                            <td>
+                              <span class="badge text-bg-dark">
+                                {{ complaint.directed_against }}
+                              </span>
 
-                  {% if complaint.custom_target %}
-                    <div class="text-muted small mt-1">
-                      {{ complaint.custom_target }}
+                              {% if complaint.custom_target %}
+                                <div class="text-muted small mt-1">
+                                  {{ complaint.custom_target }}
+                                </div>
+                              {% endif %}
+                            </td>
+
+                            <!-- URGENCY -->
+                            <td>
+                              {% if complaint.urgency_level == "Emergency" %}
+                                <span class="badge text-bg-danger">
+                                  <i class="bi bi-exclamation-triangle me-1"></i>
+                                  Emergency
+                                </span>
+                              {% else %}
+                                <span class="badge text-bg-secondary">
+                                  {{ complaint.urgency_level }}
+                                </span>
+                              {% endif %}
+                            </td>
+
+                            <!-- STATUS -->
+                            <td>
+                              {% if complaint.status == "Pending" %}
+                                <span class="badge text-bg-warning">Pending</span>
+                              {% elif complaint.status == "Forwarded" %}
+                                <span class="badge text-bg-info">Forwarded</span>
+                              {% elif complaint.status == "Solved" %}
+                                <span class="badge text-bg-success">Solved</span>
+                              {% elif complaint.status == "Rejected" %}
+                                <span class="badge text-bg-danger">Rejected</span>
+                              {% elif complaint.status == "In Progress" %}
+                                <span class="badge text-bg-primary">In Progress</span>
+                              {% else %}
+                                <span class="badge text-bg-secondary">
+                                  {{ complaint.status }}
+                                </span>
+                              {% endif %}
+                            </td>
+
+                          </tr>
+                        </tbody>
+
+                      </table>
                     </div>
-                  {% endif %}
-                </td>
 
-                <!-- URGENCY -->
-                <td>
-                  {% if complaint.urgency_level == "Emergency" %}
-                    <span class="badge text-bg-danger">
-                      <i class="bi bi-exclamation-triangle me-1"></i>
-                      Emergency
-                    </span>
-                  {% else %}
-                    <span class="badge text-bg-secondary">
-                      {{ complaint.urgency_level }}
-                    </span>
-                  {% endif %}
-                </td>
+                  </div>
+                </div>
 
-                <!-- STATUS -->
-                <td>
-                  {% if complaint.status == "Pending" %}
-                    <span class="badge text-bg-warning">Pending</span>
-                  {% elif complaint.status == "Forwarded" %}
-                    <span class="badge text-bg-info">Forwarded</span>
-                  {% elif complaint.status == "Solved" %}
-                    <span class="badge text-bg-success">Solved</span>
-                  {% elif complaint.status == "Rejected" %}
-                    <span class="badge text-bg-danger">Rejected</span>
-                  {% elif complaint.status == "In Progress" %}
-                    <span class="badge text-bg-primary">In Progress</span>
-                  {% else %}
-                    <span class="badge text-bg-secondary">
-                      {{ complaint.status }}
-                    </span>
-                  {% endif %}
-                </td>
+              </div>
 
-              </tr>
-            </tbody>
+              <!-- BOTTOM: FULL COMPLAINT DESCRIPTION -->
+              <div class="col-12">
 
-          </table>
-        </div>
+                <div class="card border">
 
-      </div>
-    </div>
+                  <div class="card-header bg-white py-3">
+                    <h6 class="fw-bold mb-0">
+                      <i class="bi bi-chat-left-text me-2"></i>
+                      Complaint Description
+                    </h6>
+                  </div>
 
-  </div>
+                  <div class="card-body">
 
-  <!-- BOTTOM: FULL COMPLAINT DESCRIPTION -->
-  <div class="col-12">
+                    <p class="text-break mb-0"
+                      style="white-space: pre-wrap;">{{ complaint.description or 'No description provided.' }}</p>
 
-    <div class="card border">
+                  </div>
 
-      <div class="card-header bg-white py-3">
-        <h6 class="fw-bold mb-0">
-          <i class="bi bi-chat-left-text me-2"></i>
-          Complaint Description
-        </h6>
-      </div>
+                </div>
 
-      <div class="card-body">
+              </div>
 
-        <p class="text-break mb-0"
-           style="white-space: pre-wrap;">{{ complaint.description or 'No description provided.' }}</p>
+            </div>
 
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
 
               <!-- =========================================
                   ADMIN FEEDBACK / REASON
@@ -868,6 +869,7 @@ Complaint System {% endblock %} {% block extra_css %}
 
   </div>
   <!-- END modal -->
+
 
   {% endfor %}
   <!-- =========================================================
@@ -1906,255 +1908,161 @@ Complaint System {% endblock %} {% block extra_css %}
      ===================================================== -->
 
 <div class="card-body">
-  {% if groups %}
-    {% for group_id, complaints_in_group in groups.items() %}
+  {% for group_id, complaints_in_group in groups.items() %}
 
-    <!-- GROUP CARD -->
-    <div class="card border shadow-sm mb-3">
+  <!-- GROUP CARD -->
+  <div class="card border shadow-sm mb-3">
 
-      <!-- GROUP HEADER -->
-      <div
-        class="card-header p-3"
-        style="background-color: {{ ['#D6E8FF', '#F8D7E8', '#FFE0B2', '#E2D5F8', '#BFEFF2', '#FFF3B0', '#FFD6D6', '#D9E7D0', '#D7D9FF'][(group_id|int) % 9] }} !important;"
-      >
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <!-- GROUP HEADER -->
+    <div
+      class="card-header p-3"
+      style="background-color: {{ ['#D6E8FF', '#F8D7E8', '#FFE0B2', '#E2D5F8', '#BFEFF2', '#FFF3B0', '#FFD6D6', '#D9E7D0', '#D7D9FF'][(group_id|int) % 9] }} !important;"
+    >
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
 
-          <!-- GROUP INFORMATION -->
-          <div>
-            <h6 class="fw-bold mb-1">
-              Group #{{ loop.index }}
-            </h6>
+        <div>
+          <h6 class="fw-bold mb-1">Group #{{ loop.index }}</h6>
+          <small class="text-muted">{{ complaints_in_group|length }} complaints</small>
+        </div>
 
-            <small class="text-muted">
-              {{ complaints_in_group|length }} complaints
-            </small>
-          </div>
+        {% if complaints_in_group[0].status == "Pending" %}
 
-          <!-- GROUP ACTIONS -->
-          {% if complaints_in_group[0].status == "Pending" %}
+        <div class="d-flex flex-wrap align-items-center gap-2">
 
-          <div class="d-flex flex-wrap align-items-center gap-2">
-
-            <!-- UNDO GROUP -->
-            <form
-              method="POST"
-              action="{{ url_for('undo_group', group_id=group_id) }}"
-              onsubmit="return confirm('Are you sure you want to undo this group? All complaints will be separated.');"
-              class="m-0"
-            >
-              <button type="submit" class="btn btn-outline-danger">
-                <i class="bi bi-arrow-counterclockwise me-1"></i>
-                Undo Group
-              </button>
-            </form>
-
-            <!-- FORWARD TO HOD -->
-            <form
-              method="POST"
-              action="{{ url_for('forward_group_to_hod', group_id=group_id) }}"
-              onsubmit="return confirm('Are you sure you want to forward this group to HOD?');"
-              class="m-0"
-            >
-              <button type="submit" class="btn btn-outline-primary">
-                <i class="bi bi-send me-1"></i>
-                Forward to HOD
-              </button>
-            </form>
-
-            <!-- SOLVE GROUP -->
-            <button
-              type="button"
-              class="btn btn-success"
-              data-bs-toggle="modal"
-              data-bs-target="#solveGroupModal{{ group_id }}"
-            >
-              <i class="bi bi-check-circle me-1"></i>
-              Solve Group
+          <form
+            method="POST"
+            action="{{ url_for('undo_group', group_id=group_id) }}"
+            onsubmit="return confirm('Are you sure you want to undo this group? All complaints will be separated.');"
+            class="m-0"
+          >
+            <button type="submit" class="btn btn-outline-danger">
+              <i class="bi bi-arrow-counterclockwise me-1"></i>
+              Undo Group
             </button>
+          </form>
 
-          </div>
+          <form
+            method="POST"
+            action="{{ url_for('forward_group_to_hod', group_id=group_id) }}"
+            onsubmit="return confirm('Are you sure you want to forward this group to HOD?');"
+            class="m-0"
+          >
+            <button type="submit" class="btn btn-outline-primary">
+              <i class="bi bi-send me-1"></i>
+              Forward to HOD
+            </button>
+          </form>
 
-          {% else %}
-
-          <!-- STATUS FOR NON-PENDING GROUPS -->
-          {% if complaints_in_group[0].status == "Forwarded" %}
-
-            <span class="badge text-bg-info px-3 py-2">
-              Forwarded
-            </span>
-
-          {% elif complaints_in_group[0].status == "Solved" %}
-
-            <span class="badge text-bg-success px-3 py-2">
-              Solved
-            </span>
-
-          {% elif complaints_in_group[0].status == "Rejected" %}
-
-            <span class="badge text-bg-danger px-3 py-2">
-              Rejected
-            </span>
-
-          {% endif %}
-          {% endif %}
+          <button
+            type="button"
+            class="btn btn-success"
+            data-bs-toggle="modal"
+            data-bs-target="#solveGroupModal{{ group_id }}"
+          >
+            <i class="bi bi-check-circle me-1"></i>
+            Solve Group
+          </button>
 
         </div>
-      </div>
 
-      <!-- GROUP TABLE -->
-      <div class="table-responsive p-3">
+        {% else %}
 
-        <table class="table table-sm align-middle mb-0 w-100">
+          {% if complaints_in_group[0].status == "Forwarded" %}
+            <span class="badge text-bg-info px-3 py-2">Forwarded</span>
+          {% elif complaints_in_group[0].status == "Solved" %}
+            <span class="badge text-bg-success px-3 py-2">Solved</span>
+          {% elif complaints_in_group[0].status == "Rejected" %}
+            <span class="badge text-bg-danger px-3 py-2">Rejected</span>
+          {% endif %}
 
-          <!-- TABLE HEADER -->
-          <thead class="table-light">
-            <tr>
-              <th class="ps-3 py-3">Complaint ID</th>
-              <th class="px-3 py-3">Category</th>
-              <th class="px-3 py-3">Directed Against</th>
-              <th class="px-3 py-3">Description</th>
-              <th class="px-3 py-3">Urgency</th>
-              <th class="px-3 py-3">Status</th>
-            </tr>
-          </thead>
-
-          <!-- TABLE BODY -->
-          <tbody>
-
-            {% for complaint in complaints_in_group %}
-
-            <tr>
-
-              <!-- COMPLAINT ID -->
-              <td class="ps-3 py-3">
-                <strong>#{{ complaint.id }}</strong>
-              </td>
-
-              <!-- CATEGORY -->
-              <td class="px-3 py-3">
-                {{ complaint.category }}
-              </td>
-
-              <!-- DIRECTED AGAINST -->
-              <td class="px-3 py-3">
-                {{ complaint.directed_against }}
-              </td>
-
-              <!-- DESCRIPTION -->
-              <td class="px-3 py-3" style="max-width: 200px;">
-
-                <button
-                  type="button"
-                  class="btn btn-link p-0 text-start text-decoration-none"
-                  data-bs-toggle="modal"
-                  data-bs-target="#viewComplaintModal{{ complaint.id }}"
-                >
-
-                  {% if complaint.description|length > 60 %}
-                    {{ complaint.description[:60] }}...
-                  {% else %}
-                    {{ complaint.description }}
-                  {% endif %}
-
-                </button>
-
-              </td>
-
-              <!-- URGENCY -->
-              <td class="px-3 py-3">
-
-                {% if complaint.urgency_level == "Emergency" %}
-
-                  <span class="badge text-bg-danger">
-                    Emergency
-                  </span>
-
-                {% else %}
-
-                  <span class="badge text-bg-secondary">
-                    {{ complaint.urgency_level }}
-                  </span>
-
-                {% endif %}
-
-              </td>
-
-              <!-- STATUS -->
-              <td class="px-3 py-3">
-
-                {% if complaint.status == "Pending" %}
-
-                  <span class="badge text-bg-warning">
-                    Pending
-                  </span>
-
-                {% elif complaint.status == "Forwarded" %}
-
-                  <span class="badge text-bg-info">
-                    Forwarded
-                  </span>
-
-                {% elif complaint.status == "Solved" %}
-
-                  <span class="badge text-bg-success">
-                    Solved
-                  </span>
-
-                {% elif complaint.status == "Rejected" %}
-
-                  <span class="badge text-bg-danger">
-                    Rejected
-                  </span>
-
-                {% else %}
-
-                  <span class="badge text-bg-secondary">
-                    {{ complaint.status }}
-                  </span>
-
-                {% endif %}
-
-              </td>
-
-            </tr>
-
-            {% endfor %}
-
-          </tbody>
-
-        </table>
+        {% endif %}
 
       </div>
-
     </div>
 
-    {% endfor %}
+    <!-- GROUP TABLE -->
+    <div class="table-responsive p-3">
+      <table class="table table-sm align-middle mb-0 w-100">
 
-  {% else %}
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3 py-3">Complaint ID</th>
+            <th class="px-3 py-3">Category</th>
+            <th class="px-3 py-3">Directed Against</th>
+            <th class="px-3 py-3">Description</th>
+            <th class="px-3 py-3">Urgency</th>
+            <th class="px-3 py-3">Status</th>
+          </tr>
+        </thead>
 
-    <!-- EMPTY GROUPS -->
-    <div class="text-center py-5">
+        <tbody>
+          {% for complaint in complaints_in_group %}
+          <tr>
+            <td class="ps-3 py-3"><strong>#{{ complaint.id }}</strong></td>
 
-      <div class="fs-1">📂</div>
+            <td class="px-3 py-3">{{ complaint.category }}</td>
 
-      <h5 class="mt-3">
-        No Grouped Complaints
-      </h5>
+            <td class="px-3 py-3">{{ complaint.directed_against }}</td>
 
-      <p class="text-muted mb-0">
-        Select compatible pending complaints from the queue to create a group.
-      </p>
+            <td class="px-3 py-3" style="max-width: 200px;">
+              <button
+                type="button"
+                class="btn btn-link p-0 text-start text-decoration-none"
+                data-bs-toggle="modal"
+                data-bs-target="#viewComplaintModal{{ complaint.id }}"
+              >
+                {% if complaint.description|length > 60 %}
+                  {{ complaint.description[:60] }}...
+                {% else %}
+                  {{ complaint.description }}
+                {% endif %}
+              </button>
+            </td>
 
+            <td class="px-3 py-3">
+              {% if complaint.urgency_level == "Emergency" %}
+                <span class="badge text-bg-danger">Emergency</span>
+              {% else %}
+                <span class="badge text-bg-secondary">{{ complaint.urgency_level }}</span>
+              {% endif %}
+            </td>
+
+            <td class="px-3 py-3">
+              {% if complaint.status == "Pending" %}
+                <span class="badge text-bg-warning">Pending</span>
+              {% elif complaint.status == "Forwarded" %}
+                <span class="badge text-bg-info">Forwarded</span>
+              {% elif complaint.status == "Solved" %}
+                <span class="badge text-bg-success">Solved</span>
+              {% elif complaint.status == "Rejected" %}
+                <span class="badge text-bg-danger">Rejected</span>
+              {% else %}
+                <span class="badge text-bg-secondary">{{ complaint.status }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
+      </table>
     </div>
 
-  {% endif %}
+  </div>
+  <!-- END GROUP CARD -->
+
+  {% endfor %}
 </div>
-{% for group_id, complaints_in_group in groups.items() %}
+<!-- END card-body -->
+
+</div>
+<!-- END GROUPED COMPLAINTS CARD -->
+
 
 <!-- =========================================================
-     GROUP SOLVE MODAL - SINGLE INSTANCE
+     GROUP SOLVE MODALS (outside the card)
      ========================================================= -->
 
+{% for group_id, complaints_in_group in groups.items() %}
 {% if complaints_in_group and complaints_in_group[0].status == "Pending" %}
 
 <div
@@ -2165,34 +2073,20 @@ Complaint System {% endblock %} {% block extra_css %}
   aria-hidden="true"
 >
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
-
     <div class="modal-content">
 
       <!-- HEADER -->
       <div class="modal-header">
-
-        <h4
-          class="modal-title fw-bold"
-          id="solveGroupModalLabel{{ group_id }}"
-        >
+        <h4 class="modal-title fw-bold" id="solveGroupModalLabel{{ group_id }}">
           <i class="bi bi-check-circle text-success me-2"></i>
           Solve Complaint Group #{{ loop.index }}
         </h4>
-
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
-
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
       <!-- BODY -->
       <div class="modal-body bg-light">
-
         <div class="container-fluid">
-
           <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
 
@@ -2228,152 +2122,120 @@ Complaint System {% endblock %} {% block extra_css %}
               <div class="card border mb-4">
 
                 <div class="card-header bg-white">
-                  <h6 class="fw-bold mb-0">
-                    Complaint #{{ complaint.id }}
-                  </h6>
+                  <h6 class="fw-bold mb-0">Complaint #{{ complaint.id }}</h6>
                 </div>
 
                 <div class="card-body">
+                  <div class="row g-3">
 
+                    <!-- TOP: DETAILS TABLE -->
+                    <div class="col-12">
+                      <div class="card border">
+                        <div class="card-header bg-white py-3">
+                          <h6 class="fw-bold mb-0">
+                            <i class="bi bi-card-list me-2"></i>
+                            Complaint Details
+                          </h6>
+                        </div>
 
-<!-- ===================================================== -->
-<!-- COMPLAINT DETAILS + DESCRIPTION: VERTICAL LAYOUT -->
-<!-- ===================================================== -->
+                        <div class="card-body p-0">
+                          <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0">
+                              <thead class="table-light">
+                                <tr>
+                                  <th>ID</th>
+                                  <th>Student</th>
+                                  <th>Category</th>
+                                  <th>Directed Against</th>
+                                  <th>Urgency</th>
+                                  <th>Status</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  <td><strong>#{{ complaint.id }}</strong></td>
 
-<div class="row g-3">
+                                  <td>Student {{ complaint.student_id }}</td>
 
-  <!-- TOP: COMPLAINT DETAILS -->
-  <div class="col-12">
+                                  <td>
+                                    <span class="fw-semibold">{{ complaint.category }}</span>
+                                  </td>
 
-    <div class="card border">
+                                  <td>
+                                    <span class="badge text-bg-dark">
+                                      {{ complaint.directed_against }}
+                                    </span>
+                                    {% if complaint.custom_target %}
+                                      <div class="text-muted small mt-1">
+                                        {{ complaint.custom_target }}
+                                      </div>
+                                    {% endif %}
+                                  </td>
 
-      <div class="card-header bg-white py-3">
-        <h6 class="fw-bold mb-0">
-          <i class="bi bi-card-list me-2"></i>
-          Complaint Details
-        </h6>
-      </div>
+                                  <td>
+                                    {% if complaint.urgency_level == "Emergency" %}
+                                      <span class="badge text-bg-danger">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        Emergency
+                                      </span>
+                                    {% else %}
+                                      <span class="badge text-bg-secondary">
+                                        {{ complaint.urgency_level }}
+                                      </span>
+                                    {% endif %}
+                                  </td>
 
-      <div class="card-body p-0">
-
-        <div class="table-responsive">
-          <table class="table table-bordered align-middle mb-0">
-
-            <thead class="table-light">
-              <tr>
-                <th>ID</th>
-                <th>Student</th>
-                <th>Category</th>
-                <th>Directed Against</th>
-                <th>Urgency</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr>
-
-                <!-- ID -->
-                <td>
-                  <strong>#{{ complaint.id }}</strong>
-                </td>
-
-                <!-- STUDENT -->
-                <td>
-                  Student {{ complaint.student_id }}
-                </td>
-
-                <!-- CATEGORY -->
-                <td>
-                  <span class="fw-semibold">
-                    {{ complaint.category }}
-                  </span>
-                </td>
-
-                <!-- DIRECTED AGAINST -->
-                <td>
-                  <span class="badge text-bg-dark">
-                    {{ complaint.directed_against }}
-                  </span>
-
-                  {% if complaint.custom_target %}
-                    <div class="text-muted small mt-1">
-                      {{ complaint.custom_target }}
+                                  <td>
+                                    {% if complaint.status == "Pending" %}
+                                      <span class="badge text-bg-warning">Pending</span>
+                                    {% elif complaint.status == "Forwarded" %}
+                                      <span class="badge text-bg-info">Forwarded</span>
+                                    {% elif complaint.status == "Solved" %}
+                                      <span class="badge text-bg-success">Solved</span>
+                                    {% elif complaint.status == "Rejected" %}
+                                      <span class="badge text-bg-danger">Rejected</span>
+                                    {% elif complaint.status == "In Progress" %}
+                                      <span class="badge text-bg-primary">In Progress</span>
+                                    {% else %}
+                                      <span class="badge text-bg-secondary">
+                                        {{ complaint.status }}
+                                      </span>
+                                    {% endif %}
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  {% endif %}
-                </td>
+                    <!-- END col-12 (details) -->
 
-                <!-- URGENCY -->
-                <td>
-                  {% if complaint.urgency_level == "Emergency" %}
-                    <span class="badge text-bg-danger">
-                      <i class="bi bi-exclamation-triangle me-1"></i>
-                      Emergency
-                    </span>
-                  {% else %}
-                    <span class="badge text-bg-secondary">
-                      {{ complaint.urgency_level }}
-                    </span>
-                  {% endif %}
-                </td>
+                    <!-- BOTTOM: DESCRIPTION -->
+                    <div class="col-12">
+                      <div class="card border">
+                        <div class="card-header bg-white py-3">
+                          <h6 class="fw-bold mb-0">
+                            <i class="bi bi-chat-left-text me-2"></i>
+                            Complaint Description
+                          </h6>
+                        </div>
 
-                <!-- STATUS -->
-                <td>
-                  {% if complaint.status == "Pending" %}
-                    <span class="badge text-bg-warning">Pending</span>
-                  {% elif complaint.status == "Forwarded" %}
-                    <span class="badge text-bg-info">Forwarded</span>
-                  {% elif complaint.status == "Solved" %}
-                    <span class="badge text-bg-success">Solved</span>
-                  {% elif complaint.status == "Rejected" %}
-                    <span class="badge text-bg-danger">Rejected</span>
-                  {% elif complaint.status == "In Progress" %}
-                    <span class="badge text-bg-primary">In Progress</span>
-                  {% else %}
-                    <span class="badge text-bg-secondary">
-                      {{ complaint.status }}
-                    </span>
-                  {% endif %}
-                </td>
+                        <div class="card-body">
+                          <p class="text-break mb-0"
+                             style="white-space: pre-wrap;">{{ complaint.description or 'No description provided.' }}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- END col-12 (description) -->
 
-              </tr>
-            </tbody>
+                  </div>
+                  <!-- END row g-3 -->
+                </div>
+                <!-- END card-body -->
 
-          </table>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-
-  <!-- BOTTOM: FULL COMPLAINT DESCRIPTION -->
-  <div class="col-12">
-
-    <div class="card border">
-
-      <div class="card-header bg-white py-3">
-        <h6 class="fw-bold mb-0">
-          <i class="bi bi-chat-left-text me-2"></i>
-          Complaint Description
-        </h6>
-      </div>
-
-      <div class="card-body">
-
-        <p class="text-break mb-0"
-           style="white-space: pre-wrap;">{{ complaint.description or 'No description provided.' }}</p>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
-                                    
-                  
+              </div>
+              <!-- END card border mb-4 -->
 
               {% endfor %}
 
@@ -2395,7 +2257,6 @@ Complaint System {% endblock %} {% block extra_css %}
                   This solution will be applied to all complaints in this group.
                 </p>
 
-                <!-- RICH TEXT EDITOR -->
                 <div class="card border">
                   <div
                     id="groupSolveEditor{{ group_id }}"
@@ -2406,21 +2267,14 @@ Complaint System {% endblock %} {% block extra_css %}
                   ></div>
                 </div>
 
-                <!-- HIDDEN FIELD -->
                 <textarea
                   id="groupSolutionHidden{{ group_id }}"
                   name="group_solution"
                   hidden
                 ></textarea>
 
-                <!-- BUTTONS -->
                 <div class="d-flex justify-content-end gap-2 mt-4">
-
-                  <button
-                    type="button"
-                    class="btn btn-secondary"
-                    data-bs-dismiss="modal"
-                  >
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     Cancel
                   </button>
 
@@ -2428,58 +2282,86 @@ Complaint System {% endblock %} {% block extra_css %}
                     <i class="bi bi-check-lg me-1"></i>
                     Confirm &amp; Solve All
                   </button>
-
                 </div>
 
               </form>
+            </div>  <!-- card-body p-4 -->
+          </div>    <!-- card -->
+        </div>      <!-- container-fluid -->
+      </div>        <!-- modal-body -->
 
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
+    </div>          <!-- modal-content -->
+  </div>            <!-- modal-dialog -->
+</div>              <!-- modal -->
 
 {% endif %}
 {% endfor %}
 
+{% else %}
+  <!-- No groups: keep the section at the bottom -->
+  <div class="card border-0 shadow-sm mt-4" style="order: 2;">
+    <div class="card-header bg-white border-bottom py-3">
+      <h5 class="fw-bold mb-1">
+        <i class="bi bi-collection me-2"></i>
+        Grouped Complaints
+      </h5>
+    </div>
+
+    <div class="card-body text-center py-4">
+      <div class="fs-1">📂</div>
+      <h5 class="mt-3">No Grouped Complaints</h5>
+      <p class="text-muted mb-0">
+        Grouped complaints will appear here when available.
+      </p>
     </div>
   </div>
-  {% else %}
-    <!-- No groups: keep the section at the bottom -->
-    <div class="card border-0 shadow-sm mt-4"
-         style="order: 2;"
-    >
-      <div class="card-header bg-white border-bottom py-3">
-        <h5 class="fw-bold mb-1">
-          <i class="bi bi-collection me-2"></i>
-          Grouped Complaints
-        </h5>
-      </div>
-
-      <div class="card-body text-center py-4">
-        <div class="fs-1">📂</div>
-        <h5 class="mt-3">No Grouped Complaints</h5>
-        <p class="text-muted mb-0">
-          Grouped complaints will appear here when available.
-        </p>
-      </div>
-    </div>
 {% endif %}
 
+</div>
+<!-- END container py-4 -->
 
 {% endblock %}
+
+
 
 <!-- =========================================================
      JAVASCRIPT
      ========================================================= -->
 
-{% block scripts %}
+{% block extra_js  %}
 
 <script>
+  /* =========================================================
+   PLAIN TEXT PASTE (Notepad jaisa)
+   Sab .rich-text-editor par apply hota hai
+   ========================================================= */
+document.addEventListener("paste", function (e) {
+  const editor = e.target.closest && e.target.closest(".rich-text-editor");
+  if (!editor) return;
+
+  e.preventDefault();
+
+  const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+
+  // Plain text insert karein
+  document.execCommand("insertText", false, text);
+});
+
+/* Drag & drop se HTML aane se bhi rokein */
+document.addEventListener("drop", function (e) {
+  const editor = e.target.closest && e.target.closest(".rich-text-editor");
+  if (!editor) return;
+
+  e.preventDefault();
+
+  const text = e.dataTransfer.getData("text/plain");
+  if (text) {
+    editor.focus();
+    document.execCommand("insertText", false, text);
+  }
+});
+
+
   /* =========================================================
    RICH TEXT EDITOR
    ========================================================= */
@@ -2771,34 +2653,42 @@ Complaint System {% endblock %} {% block extra_css %}
 
 
   
+const submittedGroups = {};
 
 function prepareGroupEditor(groupId) {
-  const editor = document.getElementById(
-    "groupSolveEditor" + groupId
-  );
+  // Double submit rokein
+  if (submittedGroups[groupId]) {
+    return false;
+  }
 
-  const hidden = document.getElementById(
-    "groupSolutionHidden" + groupId
-  );
+  const editor = document.getElementById("groupSolveEditor" + groupId);
+  const hidden = document.getElementById("groupSolutionHidden" + groupId);
 
   if (!editor || !hidden) {
     alert("Solution editor not found.");
     return false;
   }
 
-  if (!editor.innerText.trim()) {
-    alert("Please enter a solution.");
+  const plainText = editor.innerText.replace(/\u00a0/g, " ").trim();
+
+  if (!plainText) {
+    alert("Please enter a solution / feedback before solving the group.");
     editor.focus();
     return false;
   }
 
-  hidden.value = editor.innerHTML;
+  hidden.value = plainText;
+
+  submittedGroups[groupId] = true;
+
+  const submitBtn = editor.closest("form").querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = "Solving...";
+  }
+
   return true;
 }
-
-
-
-
 
 </script>
 

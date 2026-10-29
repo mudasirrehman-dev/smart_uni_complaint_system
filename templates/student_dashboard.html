@@ -1059,7 +1059,7 @@ Student Dashboard | Smart University Complaint System
 
                                 <div class="card-body bg-light">
 
-                                    {% if complaint.solution %}
+                                    {% if complaint_feedback.get(complaint.id) %}
 
                                         <p
                                             class="mb-0"
@@ -1068,22 +1068,15 @@ Student Dashboard | Smart University Complaint System
                                                 word-break: break-word;
                                                 line-height: 1.7;
                                             "
-                                        >
-
-                                            {{ complaint.solution }}
-
-                                        </p>
+                                        >{{ complaint_feedback.get(complaint.id) }}</p>
 
                                     {% else %}
 
                                         <span class="text-muted">
-
                                             No feedback available.
-
                                         </span>
 
                                     {% endif %}
-
                                 </div>
 
                             </div>

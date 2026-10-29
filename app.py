@@ -239,6 +239,29 @@ def student_dashboard():
         if complaint.status == "Solved"
     )
 
+        # --------------------------------------------------------
+    # COMPLAINT FEEDBACK (latest Solved / Rejected feedback)
+    # --------------------------------------------------------
+
+    complaint_feedback = {}
+
+    complaint_ids = [c.id for c in complaints]
+
+    if complaint_ids:
+        history_rows = ComplaintHistory.query.filter(
+            ComplaintHistory.complaint_id.in_(complaint_ids),
+            ComplaintHistory.action.in_([
+                "Complaint Solved",
+                "Complaint Rejected"
+            ])
+        ).order_by(
+            ComplaintHistory.created_at.asc()
+        ).all()
+
+        # Asc order mein loop karne se latest feedback aakhir mein overwrite hota hai
+        for row in history_rows:
+            complaint_feedback[row.complaint_id] = row.description
+
     # Send all required data to the student dashboard
     return render_template(
         "student_dashboard.html",
@@ -250,7 +273,8 @@ def student_dashboard():
         emergency_remaining=emergency_remaining,
         pending_count=pending_count,
         forwarded_count=forwarded_count,
-        solved_count=solved_count
+        solved_count=solved_count,
+        complaint_feedback=complaint_feedback
     )
 
 
@@ -1015,8 +1039,6 @@ def group_complaints():
     # Get selected complaint IDs from the form
     complaint_ids = request.form.getlist("complaint_ids")
 
-    print("Selected Complaint IDs:", complaint_ids)
-
     # At least 2 complaints are required to create a group
     if len(complaint_ids) < 2:
         return "Please select at least 2 complaints to create a group."
@@ -1043,18 +1065,7 @@ def group_complaints():
         Complaint.group_id == None
     ).all()
 
-    print(
-        "Found Complaints:",
-        [
-            (
-                complaint.id,
-                complaint.category,
-                complaint.directed_against
-            )
-            for complaint in complaints
-        ]
-    )
-
+    
     # Make sure every selected complaint is valid
     if len(complaints) != len(complaint_ids):
         return (
@@ -1120,74 +1131,64 @@ def group_complaints():
 
 
 
+
 # ============================================================
 # SOLVE GROUPED COMPLAINTS
 # ============================================================
-
 @app.route("/group/<int:group_id>/solve", methods=["POST"])
 @role_required("admin")
 def solve_group(group_id):
 
-    # Get all complaints belonging to this group
-    complaints = Complaint.query.filter_by(
-        group_id=group_id
-    ).all()
+    complaints = Complaint.query.filter_by(group_id=group_id).all()
 
-    # Check whether the group exists
     if not complaints:
-        return "Group not found", 404
-
-    # Get solution submitted by Admin
-    solution = request.form.get(
-        "group_solution", ""
-    ).strip()
-
-    # Prevent solving without a solution
-    if not solution:
-        flash(
-            "Please provide a solution before solving the group.",
-            "danger"
-        )
+        flash("This group was already solved or does not exist.", "warning")
         return redirect(url_for("admin_dashboard"))
 
-    # Solve every complaint and save the same solution
-    for complaint in complaints:
+    solution = request.form.get("group_solution", "").strip()
 
-        # Store previous status for complaint history
-        old_status = complaint.status
+    if not solution:
+        flash("Solution / feedback is required to solve a group.", "danger")
+        return redirect(url_for("admin_dashboard"))
 
-        # Update complaint status
-        complaint.status = "Solved"
+    try:
+        solved_count = 0
 
-        # Save common group solution
-        complaint.solution = solution
+        for complaint in complaints:
 
-        # Remove complaint from the group
-        complaint.group_id = None
+            # Sirf Pending complaint update hogi.
+            # Dusri duplicate request ko rowcount 0 milega,
+            # is liye history dobara nahi banegi.
+            updated = Complaint.query.filter_by(
+                id=complaint.id,
+                status="Pending"
+            ).update({
+                "status": "Solved",
+                "group_id": None
+            })
 
-        # Record complaint history if helper is available
-        add_complaint_history(
-            complaint=complaint,
-            user_id=session["user_id"],
-            action="Complaint Solved",
-            old_status=old_status,
-            new_status="Solved",
-            description="Group complaint solved. Solution: " + solution
-        )
+            if updated:
+                add_complaint_history(
+                    complaint=complaint,
+                    user_id=session["user_id"],
+                    action="Complaint Solved",
+                    old_status="Pending",
+                    new_status="Solved",
+                    description=solution   # sirf feedback text
+                )
+                solved_count += 1
 
-    # Save all complaints and their solutions
-    db.session.commit()
+        db.session.commit()
 
-    # Show success message
-    flash(
-        f"Group #{group_id} solved successfully. "
-        f"Solution applied to all {len(complaints)} complaints.",
-        "success"
-    )
+        if solved_count:
+            flash(f"{solved_count} complaints solved successfully.", "success")
 
-    # Return to Admin Dashboard
+    except Exception:
+        db.session.rollback()
+        app.logger.exception("Failed to solve complaint group.")
+        flash("The group could not be solved. Please try again.", "danger")
+
     return redirect(url_for("admin_dashboard"))
-
 
 # ============================================================
 # FORWARD GROUPED COMPLAINTS TO HOD
@@ -1230,23 +1231,12 @@ def forward_group_to_hod(group_id):
 @role_required("admin")
 def undo_group(group_id):
 
-    # Print Group ID for debugging
-    print("Undo requested for Group ID:", group_id)
-
     # Get all complaints belonging to this group
     complaints = Complaint.query.filter(
         Complaint.group_id == group_id
     ).all()
 
-    # Print found complaints for debugging
-    print(
-        "Complaints found:",
-        [
-            (complaint.id, complaint.group_id)
-            for complaint in complaints
-        ]
-    )
-
+    
     # Return error if the group does not exist
     if len(complaints) == 0:
         return f"Group {group_id} not found", 404
@@ -1267,8 +1257,6 @@ def undo_group(group_id):
 
     # Save changes
     db.session.commit()
-
-    print("Group undone successfully:", group_id)
 
     # Return to Admin Dashboard
     return redirect(url_for("admin_dashboard"))

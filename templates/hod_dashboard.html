@@ -2412,3 +2412,46 @@ HOD Dashboard | Smart University Complaint System
 {% endfor %}
 
 {% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("paste", function (e) {
+  const editor = e.target.closest && e.target.closest(".rich-text-editor");
+  if (!editor) return;
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+  document.execCommand("insertText", false, text);
+});
+
+document.addEventListener("drop", function (e) {
+  const editor = e.target.closest && e.target.closest(".rich-text-editor");
+  if (!editor) return;
+  e.preventDefault();
+  const text = e.dataTransfer.getData("text/plain");
+  if (text) {
+    editor.focus();
+    document.execCommand("insertText", false, text);
+  }
+});
+
+function prepareEditor(id) {
+  const editor = document.getElementById("solveEditor" + id);
+  const hidden = document.getElementById("solveHidden" + id);
+  const text = editor.innerText.replace(/\u00a0/g, " ").trim();
+  if (!text) { alert("Please enter solution / feedback."); editor.focus(); return false; }
+  hidden.value = text;
+  return true;
+}
+
+function prepareRejectEditor(id) {
+  const editor = document.getElementById("rejectEditor" + id);
+  const hidden = document.getElementById("rejectHidden" + id);
+  const text = editor.innerText.replace(/\u00a0/g, " ").trim();
+  if (!text) { alert("Please enter rejection reason."); editor.focus(); return false; }
+  hidden.value = text;
+  return true;
+}
+
+function saveSelection() {}
+</script>
+{% endblock %}
