@@ -106,7 +106,7 @@ Complaint System {% endblock %} {% block extra_css %}
             <div>
               <p class="text-muted mb-1">Total Complaints</p>
 
-              <h2 class="fw-bold mb-0">{{ complaints|length }}</h2>
+              <h2 class="fw-bold mb-0">{{ counts.all }}</h2>
             </div>
 
             <div class="stat-icon bg-primary-subtle text-primary">
@@ -129,9 +129,7 @@ Complaint System {% endblock %} {% block extra_css %}
               <p class="text-muted mb-1">Emergency</p>
 
               <h2 class="fw-bold mb-0">
-                {{ complaints | selectattr("urgency_level", "equalto",
-                "Emergency") | selectattr("status", "equalto", "Pending") | list
-                | length }}
+                {{ counts.emergency  }}
               </h2>
             </div>
 
@@ -155,8 +153,7 @@ Complaint System {% endblock %} {% block extra_css %}
               <p class="text-muted mb-1">Pending</p>
 
               <h2 class="fw-bold mb-0">
-                {{ complaints | selectattr("status", "equalto", "Pending") |
-                list | length }}
+                {{ counts.pending}}
               </h2>
             </div>
 
@@ -180,8 +177,7 @@ Complaint System {% endblock %} {% block extra_css %}
               <p class="text-muted mb-1">Solved</p>
 
               <h2 class="fw-bold mb-0">
-                {{ complaints | selectattr("status", "equalto", "Solved") | list
-                | length }}
+                {{ counts.solved }}
               </h2>
             </div>
 
@@ -193,6 +189,62 @@ Complaint System {% endblock %} {% block extra_css %}
       </div>
     </div>
   </div>
+
+  <div class="row g-4">
+
+  <!-- ================= SIDEBAR ================= -->
+  <div class="col-lg-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-3">
+        <h6 class="fw-bold mb-0">
+          <i class="bi bi-funnel me-2"></i>Complaints
+        </h6>
+      </div>
+
+      <div class="list-group list-group-flush">
+
+        <a href="{{ url_for('admin_dashboard', view='pending') }}"
+           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {{ 'active' if view == 'pending' }}">
+          <span><i class="bi bi-clock-history me-2"></i>Pending</span>
+          <span class="badge text-bg-warning rounded-pill">{{ counts.pending }}</span>
+        </a>
+
+        <a href="{{ url_for('admin_dashboard', view='emergency') }}"
+           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {{ 'active' if view == 'emergency' }}">
+          <span><i class="bi bi-exclamation-triangle me-2"></i>Emergency</span>
+          <span class="badge text-bg-danger rounded-pill">{{ counts.emergency }}</span>
+        </a>
+
+        <a href="{{ url_for('admin_dashboard', view='forwarded') }}"
+           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {{ 'active' if view == 'forwarded' }}">
+          <span><i class="bi bi-send me-2"></i>Forwarded</span>
+          <span class="badge text-bg-info rounded-pill">{{ counts.forwarded }}</span>
+        </a>
+
+        <a href="{{ url_for('admin_dashboard', view='solved') }}"
+           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {{ 'active' if view == 'solved' }}">
+          <span><i class="bi bi-check-circle me-2"></i>Resolved</span>
+          <span class="badge text-bg-success rounded-pill">{{ counts.solved }}</span>
+        </a>
+
+        <a href="{{ url_for('admin_dashboard', view='rejected') }}"
+           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {{ 'active' if view == 'rejected' }}">
+          <span><i class="bi bi-x-circle me-2"></i>Rejected</span>
+          <span class="badge text-bg-secondary rounded-pill">{{ counts.rejected }}</span>
+        </a>
+
+        <a href="{{ url_for('admin_dashboard', view='all') }}"
+           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {{ 'active' if view == 'all' }}">
+          <span><i class="bi bi-list-ul me-2"></i>All Complaints</span>
+          <span class="badge text-bg-primary rounded-pill">{{ counts.all }}</span>
+        </a>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MAIN CONTENT ================= -->
+  <div class="col-lg-9 d-flex flex-column">
 
   <!-- =========================================================
        PART 1 COMPLETE
@@ -216,7 +268,7 @@ Complaint System {% endblock %} {% block extra_css %}
           <h5 class="fw-bold mb-1">
             <i class="bi bi-inbox me-2"></i>
 
-            Complaint Queue
+            {{ view_title }}
           </h5>
 
           <p class="text-muted small mb-0">
@@ -2297,7 +2349,7 @@ Complaint System {% endblock %} {% block extra_css %}
 {% endif %}
 {% endfor %}
 
-{% else %}
+{% elif view == "pending" %}
   <!-- No groups: keep the section at the bottom -->
   <div class="card border-0 shadow-sm mt-4" style="order: 2;">
     <div class="card-header bg-white border-bottom py-3">
@@ -2316,7 +2368,8 @@ Complaint System {% endblock %} {% block extra_css %}
     </div>
   </div>
 {% endif %}
-
+  </div>  <!-- END col-lg-9 -->
+</div>    <!-- END row -->
 </div>
 <!-- END container py-4 -->
 

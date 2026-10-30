@@ -600,152 +600,114 @@ def add_complaint_comment(complaint_id):
 
 
 
-# ============================================================
-# ADMIN DASHBOARD
-# ============================================================
+ADMIN_VIEWS = {
+    "pending":   "Pending Complaints",
+    "emergency": "Emergency Complaints",
+    "solved":    "Resolved Complaints",
+    "forwarded": "Forwarded Complaints",
+    "rejected":  "Rejected Complaints",
+    "all":       "All Complaints",
+}
+
 
 @app.route("/admin/dashboard")
 @role_required("admin")
 def admin_dashboard():
 
-    # ========================================================
-    # NORMAL COMPLAINT QUEUE
-    # ========================================================
-    # Show complaints that:
-    # 1. Are not part of any group
-    # 2. Are not directed against Admin
-    #
-    # Complaints directed against Admin are handled by HOD.
-    # ========================================================
+    # --------------------------------------------------------
+    # SELECTED VIEW (default = pending)
+    # --------------------------------------------------------
+    view = request.args.get("view", "pending")
 
-    complaints = Complaint.query.filter(
-        Complaint.group_id == None,
-        Complaint.directed_against != "Admin"
-    ).order_by(
+    if view not in ADMIN_VIEWS:
+        view = "pending"
 
-        # ----------------------------------------------------
-        # PRIORITY SORTING
-        # ----------------------------------------------------
-        # Priority order:
-        # 1. Emergency + Pending
-        # 2. Normal Pending
-        # 3. Forwarded
-        # 4. Solved
-        # 5. Anything else
-        # ----------------------------------------------------
+    # Admin ke against wali complaints Admin ko nazar nahi aani chahiye
+    base = Complaint.query.filter(Complaint.directed_against != "Admin")
 
+    # --------------------------------------------------------
+    # SIDEBAR COUNTS
+    # --------------------------------------------------------
+    counts = {
+        "all":       base.count(),
+        "pending":   base.filter(Complaint.status == "Pending").count(),
+        "emergency": base.filter(
+            Complaint.status == "Pending",
+            Complaint.urgency_level == "Emergency"
+        ).count(),
+        "solved":    base.filter(Complaint.status == "Solved").count(),
+        "forwarded": base.filter(Complaint.status == "Forwarded").count(),
+        "rejected":  base.filter(Complaint.status == "Rejected").count(),
+    }
+
+    # --------------------------------------------------------
+    # FILTER ACCORDING TO SELECTED VIEW
+    # --------------------------------------------------------
+    query = base.filter(Complaint.group_id.is_(None))
+
+    if view == "pending":
+        query = query.filter(Complaint.status == "Pending")
+    elif view == "emergency":
+        query = query.filter(
+            Complaint.status == "Pending",
+            Complaint.urgency_level == "Emergency"
+        )
+    elif view == "solved":
+        query = query.filter(Complaint.status == "Solved")
+    elif view == "forwarded":
+        query = query.filter(Complaint.status == "Forwarded")
+    elif view == "rejected":
+        query = query.filter(Complaint.status == "Rejected")
+    # view == "all" -> koi extra filter nahi
+
+    complaints = query.order_by(
         case(
-            # Priority 1:
-            # Emergency complaints that are still Pending
-            (
-                (Complaint.urgency_level == "Emergency") &
-                (Complaint.status == "Pending"),
-                1
-            ),
-
-            # Priority 2:
-            # All normal Pending complaints
-            (
-                Complaint.status == "Pending",
-                2
-            ),
-
-            # Priority 3:
-            # Complaints forwarded to HOD
-            (
-                Complaint.status == "Forwarded",
-                3
-            ),
-
-            # Priority 4:
-            # Solved complaints
-            (
-                Complaint.status == "Solved",
-                4
-            ),
-            # Priority 5:
-            # Rejected complaints
-            (
-                Complaint.status == "Rejected",
-                5
-            ),
-
-            # Priority 6:
-            # Any other status
+            ((Complaint.urgency_level == "Emergency") &
+             (Complaint.status == "Pending"), 1),
+            (Complaint.status == "Pending", 2),
+            (Complaint.status == "Forwarded", 3),
+            (Complaint.status == "Solved", 4),
+            (Complaint.status == "Rejected", 5),
             else_=6
         ),
-
-        # Within the same priority,
-        # show the newest complaints first
         Complaint.date_submitted.desc()
-
     ).all()
 
-
-    # ========================================================
-    # GROUPED COMPLAINTS
-    # ========================================================
-    # Get all complaints that belong to a group.
-    # ========================================================
-
-    grouped_complaints = Complaint.query.filter(
-        Complaint.group_id != None
-    ).all()
-
-    # ========================================================
-    # ALL COMPLAINTS FOR VIEW MODALS
-    # ========================================================
-
-    all_complaints = Complaint.query.all()
-
-
-    # Dictionary to store complaints according to their Group ID
-    #
-    # Example:
-    # {
-    #     5: [complaint1, complaint2],
-    #     10: [complaint3, complaint4]
-    # }
+    # --------------------------------------------------------
+    # GROUPS (sirf Pending view mein dikhayein)
+    # --------------------------------------------------------
     groups = {}
 
+    if view == "pending":
+        grouped_complaints = base.filter(
+            Complaint.group_id.isnot(None)
+        ).all()
 
-    # Organize grouped complaints by their group_id
-    for complaint in grouped_complaints:
+        for complaint in grouped_complaints:
+            groups.setdefault(complaint.group_id, []).append(complaint)
 
-        # Create a new list if this Group ID does not exist
-        if complaint.group_id not in groups:
-            groups[complaint.group_id] = []
+    # --------------------------------------------------------
+    # VIEW MODALS (Admin-directed complaints exclude)
+    # --------------------------------------------------------
+    all_complaints = base.all()
 
-        # Add the complaint to its corresponding group
-        groups[complaint.group_id].append(complaint)
-
-    # ========================================================
-    # COMPLAINT FEEDBACK / HISTORY
-    # ========================================================
-    # Har complaint ka latest Solve ya Reject feedback nikalna
-    # ========================================================
-
+    # --------------------------------------------------------
+    # FEEDBACK (latest Solved / Rejected)
+    # --------------------------------------------------------
     complaint_feedback = {}
+    ids = [c.id for c in all_complaints]
 
-    for complaint in complaints:
-
-        history = ComplaintHistory.query.filter(
-            ComplaintHistory.complaint_id == complaint.id,
+    if ids:
+        rows = ComplaintHistory.query.filter(
+            ComplaintHistory.complaint_id.in_(ids),
             ComplaintHistory.action.in_([
                 "Complaint Solved",
                 "Complaint Rejected"
             ])
-        ).order_by(
-            ComplaintHistory.created_at.desc()
-        ).first()
+        ).order_by(ComplaintHistory.created_at.asc()).all()
 
-        if history:
-            complaint_feedback[complaint.id] = history.description
-
-
-    # ========================================================
-    # SEND DATA TO ADMIN DASHBOARD
-    # ========================================================
+        for row in rows:
+            complaint_feedback[row.complaint_id] = row.description
 
     return render_template(
         "admin_dashboard.html",
@@ -753,9 +715,11 @@ def admin_dashboard():
         complaints=complaints,
         groups=groups,
         complaint_feedback=complaint_feedback,
-        all_complaints=all_complaints
+        all_complaints=all_complaints,
+        counts=counts,
+        view=view,
+        view_title=ADMIN_VIEWS[view]
     )
-
 
 # ============================================================
 # SOLVE SINGLE COMPLAINT
