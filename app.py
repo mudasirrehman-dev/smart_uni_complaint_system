@@ -603,6 +603,7 @@ def add_complaint_comment(complaint_id):
 ADMIN_VIEWS = {
     "pending":   "Pending Complaints",
     "emergency": "Emergency Complaints",
+    "grouped":   "Grouped Complaints",
     "solved":    "Resolved Complaints",
     "forwarded": "Forwarded Complaints",
     "rejected":  "Rejected Complaints",
@@ -635,6 +636,9 @@ def admin_dashboard():
             Complaint.status == "Pending",
             Complaint.urgency_level == "Emergency"
         ).count(),
+        "grouped":   base.filter(
+            Complaint.group_id.isnot(None)
+        ).count(),
         "solved":    base.filter(Complaint.status == "Solved").count(),
         "forwarded": base.filter(Complaint.status == "Forwarded").count(),
         "rejected":  base.filter(Complaint.status == "Rejected").count(),
@@ -658,6 +662,8 @@ def admin_dashboard():
         query = query.filter(Complaint.status == "Forwarded")
     elif view == "rejected":
         query = query.filter(Complaint.status == "Rejected")
+    elif view == "grouped":
+        query = query.filter(Complaint.id == -1)   # queue khali
     # view == "all" -> koi extra filter nahi
 
     complaints = query.order_by(
@@ -666,8 +672,8 @@ def admin_dashboard():
              (Complaint.status == "Pending"), 1),
             (Complaint.status == "Pending", 2),
             (Complaint.status == "Forwarded", 3),
-            (Complaint.status == "Solved", 4),
-            (Complaint.status == "Rejected", 5),
+            (Complaint.status == "Rejected", 4),
+            (Complaint.status == "Solved", 5),
             else_=6
         ),
         Complaint.date_submitted.desc()
@@ -678,7 +684,7 @@ def admin_dashboard():
     # --------------------------------------------------------
     groups = {}
 
-    if view == "pending":
+    if view in ("pending", "all", "grouped"):
         grouped_complaints = base.filter(
             Complaint.group_id.isnot(None)
         ).all()
