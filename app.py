@@ -1232,140 +1232,130 @@ def undo_group(group_id):
     return redirect(url_for("admin_dashboard"))
 
 
-# ============================================================
-# HOD DASHBOARD
-# ============================================================
+HOD_VIEWS = {
+    "pending":   "Pending Complaints",
+    "emergency": "Emergency Complaints",
+    "forwarded": "Forwarded by Admin",
+    "rejected":  "Rejected Complaints",
+    "solved":    "Resolved Complaints",
+    "all":       "All Complaints",
+}
+
 
 @app.route("/hod/dashboard")
 @role_required("hod")
 def hod_dashboard():
 
-    # ========================================================
-    # GET COMPLAINTS FOR HOD
-    # ========================================================
-    # HOD can see:
-    # 1. Complaints directed against Admin
-    # 2. Complaints forwarded by Admin
-    # 3. Complaints previously solved by HOD
-    # ========================================================
+    # --------------------------------------------------------
+    # SELECTED VIEW (default = pending)
+    # --------------------------------------------------------
+    view = request.args.get("view", "pending")
 
-    complaints = Complaint.query.filter(
+    if view not in HOD_VIEWS:
+        view = "pending"
+
+    hod_id = session["user_id"]
+
+    # --------------------------------------------------------
+    # HOD KO KIN COMPLAINTS KA ACCESS HAI
+    # 1. Admin ke against complaints
+    # 2. Admin ki forward ki hui complaints
+    # 3. Woh complaints jo is HOD ne khud solve / reject ki hon
+    # --------------------------------------------------------
+    handled_ids = db.session.query(
+        ComplaintHistory.complaint_id
+    ).filter(
+        ComplaintHistory.user_id == hod_id,
+        ComplaintHistory.action.in_([
+            "Complaint Solved",
+            "Complaint Rejected"
+        ])
+    )
+
+    base = Complaint.query.filter(
         or_(
             Complaint.directed_against == "Admin",
-
             Complaint.status == "Forwarded",
-
-            Complaint.status == "Rejected",
-
-            Complaint.id.in_(
-                db.session.query(ComplaintHistory.complaint_id)
-                .filter(
-                    ComplaintHistory.user_id == session["user_id"],
-                    ComplaintHistory.action == "Complaint Solved"
-                )
-            )
-        )
-    ).order_by(
-
-        case(
-
-            # Priority 1:
-            # Active Emergency complaints
-            (
-                (Complaint.urgency_level == "Emergency") &
-                (~Complaint.status.in_(["Solved", "Rejected"])),
-                1
-            ),
-
-            # Priority 2:
-            # Pending complaints
-            (
-                Complaint.status == "Pending",
-                2
-            ),
-
-            # Priority 3:
-            # Forwarded complaints
-            (
-                Complaint.status == "Forwarded",
-                3
-            ),
-
-            # Priority 4:
-            # Solved complaints
-            (
-                Complaint.status == "Solved",
-                4
-            ),
-            # Priority 5:
-            # Rejected complaints
-            (
-                Complaint.status == "Rejected",
-                5
-            ),
-
-            else_=6
-        ),
-
-        Complaint.date_submitted.desc()
-
-    ).all()
-
-
-    # ========================================================
-    # COUNT ACTIVE EMERGENCY COMPLAINTS
-    # ========================================================
-
-    emergency_count = sum(
-        1
-        for complaint in complaints
-        if (
-            complaint.urgency_level == "Emergency"
-            and complaint.status != "Solved"
+            Complaint.id.in_(handled_ids)
         )
     )
 
-    # ========================================================
-    # COUNT PENDING COMPLAINTS WITH ADMIN
-    # ========================================================
+    active = ["Pending", "Forwarded"]   # HOD action ka intezar
 
-    admin_pending_count = Complaint.query.filter(
-        Complaint.status == "Pending"
-    ).count()
+    # --------------------------------------------------------
+    # SIDEBAR COUNTS
+    # --------------------------------------------------------
+    counts = {
+        "all":       base.count(),
+        "pending":   base.filter(Complaint.status.in_(active)).count(),
+        "emergency": base.filter(
+            Complaint.status.in_(active),
+            Complaint.urgency_level == "Emergency"
+        ).count(),
+        "forwarded": base.filter(Complaint.status == "Forwarded").count(),
+        "rejected":  base.filter(Complaint.status == "Rejected").count(),
+        "solved":    base.filter(Complaint.status == "Solved").count(),
+    }
 
-    # ========================================================
-    # HOD COMPLAINT FEEDBACK / HISTORY
-    # ========================================================
+    # --------------------------------------------------------
+    # FILTER ACCORDING TO VIEW
+    # --------------------------------------------------------
+    query = base
 
+    if view == "pending":
+        query = query.filter(Complaint.status.in_(active))
+    elif view == "emergency":
+        query = query.filter(
+            Complaint.status.in_(active),
+            Complaint.urgency_level == "Emergency"
+        )
+    elif view == "forwarded":
+        query = query.filter(Complaint.status == "Forwarded")
+    elif view == "rejected":
+        query = query.filter(Complaint.status == "Rejected")
+    elif view == "solved":
+        query = query.filter(Complaint.status == "Solved")
+    # view == "all" -> koi extra filter nahi
+
+    complaints = query.order_by(
+        case(
+            ((Complaint.urgency_level == "Emergency") &
+             (Complaint.status.in_(active)), 1),
+            (Complaint.status == "Pending", 2),
+            (Complaint.status == "Forwarded", 3),
+            (Complaint.status == "Rejected", 4),
+            (Complaint.status == "Solved", 5),
+            else_=6
+        ),
+        Complaint.date_submitted.desc()
+    ).all()
+
+    # --------------------------------------------------------
+    # FEEDBACK (latest Solved / Rejected), ek hi query mein
+    # --------------------------------------------------------
     complaint_feedback = {}
+    ids = [c.id for c in complaints]
 
-    for complaint in complaints:
-
-        history = ComplaintHistory.query.filter(
-            ComplaintHistory.complaint_id == complaint.id,
-            ComplaintHistory.user_id == session["user_id"],
+    if ids:
+        rows = ComplaintHistory.query.filter(
+            ComplaintHistory.complaint_id.in_(ids),
             ComplaintHistory.action.in_([
                 "Complaint Solved",
                 "Complaint Rejected"
             ])
-        ).order_by(
-            ComplaintHistory.created_at.desc()
-        ).first()
+        ).order_by(ComplaintHistory.created_at.asc()).all()
 
-        if history and history.description:
-            complaint_feedback[complaint.id] = history.description
-
-
-    # ========================================================
-    # SEND DATA TO HOD DASHBOARD
-    # ========================================================
+        for row in rows:
+            if row.description:
+                complaint_feedback[row.complaint_id] = row.description
 
     return render_template(
         "hod_dashboard.html",
         username=session.get("username"),
         complaints=complaints,
-        emergency_count=emergency_count,
-        admin_pending_count=admin_pending_count,
+        counts=counts,
+        view=view,
+        view_title=HOD_VIEWS[view],
         complaint_feedback=complaint_feedback
     )
 
@@ -1402,6 +1392,9 @@ def hod_solve_complaint(complaint_id):
         and complaint.status != "Forwarded"
     ):
         return "Access Denied", 403
+
+    if complaint.status not in ("Pending", "Forwarded"):
+        return "This complaint has already been closed.", 400
 
 
     # ========================================================
@@ -1498,6 +1491,9 @@ def hod_reject_complaint(complaint_id):
         and complaint.status != "Forwarded"
     ):
         return "Access Denied", 403
+
+    if complaint.status not in ("Pending", "Forwarded"):
+        return "This complaint has already been closed.", 400
 
     # Get rejection feedback/reason
     feedback = request.form.get("reason")
