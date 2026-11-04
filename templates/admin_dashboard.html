@@ -2201,9 +2201,62 @@ Complaint System {% endblock %} {% block extra_css %}
                       <th class="bg-light">Total Complaints</th>
                       <td>{{ complaints_in_group|length }}</td>
                     </tr>
+                    <tr>
+                      <th class="bg-light">Directed Against</th>
+                      <td>
+                        <span class="badge text-bg-dark">{{ complaints_in_group[0].directed_against  }}</span>
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
+              <hr class="my-4 border-3 opacity-50" />
+
+              <!-- COMMON SOLUTION FORM -->
+              <form
+                method="POST"
+                action="{{ url_for('solve_group', group_id=group_id) }}"
+                onsubmit="return prepareGroupEditor('{{ group_id }}')"
+              >
+
+                <h5 class="fw-bold mb-3">
+                  <i class="bi bi-pencil-square me-2"></i>
+                  Common Solution / Feedback
+                </h5>
+
+                <p class="text-muted">
+                  This solution will be applied to all complaints in this group.
+                </p>
+
+                <div class="card border">
+                  <div
+                    id="groupSolveEditor{{ group_id }}"
+                    class="rich-text-editor"
+                    contenteditable="true"
+                    spellcheck="true"
+                    data-placeholder="Type common solution / feedback here..."
+                  ></div>
+                </div>
+
+                <textarea
+                  id="groupSolutionHidden{{ group_id }}"
+                  name="group_solution"
+                  hidden
+                ></textarea>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancel
+                  </button>
+
+                  <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-lg me-1"></i>
+                    Confirm &amp; Solve All
+                  </button>
+                </div>
+
+              </form>
+              <hr class="my-4 border-3 opacity-50" />
 
               <!-- COMPLAINT DETAILS -->
               <h5 class="fw-bold mb-3">
@@ -2333,52 +2386,7 @@ Complaint System {% endblock %} {% block extra_css %}
 
               {% endfor %}
 
-              <hr class="my-4 border-3 opacity-50" />
-
-              <!-- COMMON SOLUTION FORM -->
-              <form
-                method="POST"
-                action="{{ url_for('solve_group', group_id=group_id) }}"
-                onsubmit="return prepareGroupEditor('{{ group_id }}')"
-              >
-
-                <h5 class="fw-bold mb-3">
-                  <i class="bi bi-pencil-square me-2"></i>
-                  Common Solution / Feedback
-                </h5>
-
-                <p class="text-muted">
-                  This solution will be applied to all complaints in this group.
-                </p>
-
-                <div class="card border">
-                  <div
-                    id="groupSolveEditor{{ group_id }}"
-                    class="rich-text-editor"
-                    contenteditable="true"
-                    spellcheck="true"
-                    data-placeholder="Type common solution / feedback here..."
-                  ></div>
-                </div>
-
-                <textarea
-                  id="groupSolutionHidden{{ group_id }}"
-                  name="group_solution"
-                  hidden
-                ></textarea>
-
-                <div class="d-flex justify-content-end gap-2 mt-4">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    Cancel
-                  </button>
-
-                  <button type="submit" class="btn btn-success">
-                    <i class="bi bi-check-lg me-1"></i>
-                    Confirm &amp; Solve All
-                  </button>
-                </div>
-
-              </form>
+              
             </div>  <!-- card-body p-4 -->
           </div>    <!-- card -->
         </div>      <!-- container-fluid -->

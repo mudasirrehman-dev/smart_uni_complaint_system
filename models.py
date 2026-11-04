@@ -99,6 +99,9 @@ class Complaint(db.Model):
         nullable=True
     )
 
+    # Student ka naam dikhane ke liye
+    student = db.relationship("User", foreign_keys=[student_id])
+
     # HOD ki grouping (Admin ke group_id se alag)
     hod_group_id = db.Column(
         db.Integer,
