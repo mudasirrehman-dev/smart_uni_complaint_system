@@ -99,6 +99,12 @@ class Complaint(db.Model):
         nullable=True
     )
 
+    # HOD ki grouping (Admin ke group_id se alag)
+    hod_group_id = db.Column(
+        db.Integer,
+        nullable=True
+    )
+
 
 # ============================================================
 # COMPLAINT COMMENT MODEL

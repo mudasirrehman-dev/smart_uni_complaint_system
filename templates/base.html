@@ -152,6 +152,18 @@
     <main class="flex-grow-1 {% block main_class %}py-4{% endblock %}">
 
         <div class="{% block container_class %}container{% endblock %}">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="px-3 pt-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show mb-2" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+                </div>
+            {% endif %}
+            {% endwith %}
 
             {% block content %}
             {% endblock %}

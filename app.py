@@ -1235,6 +1235,7 @@ def undo_group(group_id):
 HOD_VIEWS = {
     "pending":   "Pending Complaints",
     "emergency": "Emergency Complaints",
+    "grouped":   "Grouped Complaints",
     "forwarded": "Forwarded by Admin",
     "rejected":  "Rejected Complaints",
     "solved":    "Resolved Complaints",
@@ -1292,6 +1293,7 @@ def hod_dashboard():
             Complaint.status.in_(active),
             Complaint.urgency_level == "Emergency"
         ).count(),
+        "grouped":   base.filter(Complaint.hod_group_id.isnot(None)).count(),
         "forwarded": base.filter(Complaint.status == "Forwarded").count(),
         "rejected":  base.filter(Complaint.status == "Rejected").count(),
         "solved":    base.filter(Complaint.status == "Solved").count(),
@@ -1300,7 +1302,7 @@ def hod_dashboard():
     # --------------------------------------------------------
     # FILTER ACCORDING TO VIEW
     # --------------------------------------------------------
-    query = base
+    query = base.filter(Complaint.hod_group_id.is_(None))
 
     if view == "pending":
         query = query.filter(Complaint.status.in_(active))
@@ -1315,6 +1317,8 @@ def hod_dashboard():
         query = query.filter(Complaint.status == "Rejected")
     elif view == "solved":
         query = query.filter(Complaint.status == "Solved")
+    elif view == "grouped":
+        query = query.filter(Complaint.id == -1)   # queue khali
     # view == "all" -> koi extra filter nahi
 
     complaints = query.order_by(
@@ -1329,6 +1333,15 @@ def hod_dashboard():
         ),
         Complaint.date_submitted.desc()
     ).all()
+
+    # --------------------------------------------------------
+    # HOD GROUPS (pending, grouped aur all view mein)
+    # --------------------------------------------------------
+    hod_groups = {}
+
+    if view in ("pending", "all", "grouped"):
+        for c in base.filter(Complaint.hod_group_id.isnot(None)).all():
+            hod_groups.setdefault(c.hod_group_id, []).append(c)
 
     # --------------------------------------------------------
     # FEEDBACK (latest Solved / Rejected), ek hi query mein
@@ -1349,6 +1362,8 @@ def hod_dashboard():
             if row.description:
                 complaint_feedback[row.complaint_id] = row.description
 
+    all_visible = complaints + [c for items in hod_groups.values() for c in items]
+
     return render_template(
         "hod_dashboard.html",
         username=session.get("username"),
@@ -1356,7 +1371,9 @@ def hod_dashboard():
         counts=counts,
         view=view,
         view_title=HOD_VIEWS[view],
-        complaint_feedback=complaint_feedback
+        complaint_feedback=complaint_feedback,
+        hod_groups=hod_groups,
+        all_visible=all_visible
     )
 
 # ============================================================
@@ -1537,6 +1554,147 @@ def hod_reject_complaint(complaint_id):
     return redirect(
         url_for("hod_dashboard")
     )
+
+# ============================================================
+# HOD GROUPING
+# ============================================================
+
+HOD_ACTIVE = ["Pending", "Forwarded"]
+
+
+@app.route("/hod/complaints/group", methods=["POST"])
+@role_required("hod")
+def hod_group_complaints():
+
+    ids = set(request.form.getlist("complaint_ids", type=int))
+
+    if len(ids) < 2:
+        flash("Please select at least 2 complaints to create a group.", "warning")
+        return redirect(url_for("hod_dashboard"))
+
+    complaints = Complaint.query.filter(
+        Complaint.id.in_(ids),
+        Complaint.status.in_(HOD_ACTIVE),
+        Complaint.hod_group_id.is_(None),
+        or_(
+            Complaint.directed_against == "Admin",
+            Complaint.status == "Forwarded"
+        )
+    ).all()
+
+    if len(complaints) != len(ids):
+        flash(
+            "Some selected complaints are invalid, already grouped or closed.",
+            "danger"
+        )
+        return redirect(url_for("hod_dashboard"))
+
+    if len({c.directed_against for c in complaints}) > 1:
+        flash(
+            "All selected complaints must have the same Directed Against value.",
+            "danger"
+        )
+        return redirect(url_for("hod_dashboard"))
+
+    group_id = min(c.id for c in complaints)
+
+    for c in complaints:
+        c.hod_group_id = group_id
+
+    db.session.commit()
+    flash("Complaints grouped successfully.", "success")
+
+    return redirect(url_for("hod_dashboard"))
+
+
+def close_hod_group(group_id, new_status, action, text):
+    """Group ki tamam active complaints ko Solved / Rejected karta hai."""
+
+    complaints = Complaint.query.filter(
+        Complaint.hod_group_id == group_id
+    ).all()
+
+    if not complaints:
+        flash("This group was already closed or does not exist.", "warning")
+        return
+
+    if not text:
+        flash("Feedback is required.", "danger")
+        return
+
+    try:
+        done = 0
+
+        for c in complaints:
+            old_status = c.status
+
+            # Atomic update: double submit par history dobara nahi banegi
+            updated = Complaint.query.filter(
+                Complaint.id == c.id,
+                Complaint.status.in_(HOD_ACTIVE),
+                Complaint.hod_group_id == group_id
+            ).update({
+                "status": new_status,
+                "hod_group_id": None
+            }, synchronize_session=False)
+
+            if updated:
+                add_complaint_history(
+                    complaint=c,
+                    user_id=session["user_id"],
+                    action=action,
+                    old_status=old_status,
+                    new_status=new_status,
+                    description=text
+                )
+                done += 1
+
+        db.session.commit()
+
+        if done:
+            flash(f"{done} complaints {new_status.lower()} successfully.", "success")
+
+    except Exception:
+        db.session.rollback()
+        app.logger.exception("Failed to close HOD group.")
+        flash("The group could not be updated. Please try again.", "danger")
+
+
+@app.route("/hod/group/<int:group_id>/solve", methods=["POST"])
+@role_required("hod")
+def hod_solve_group(group_id):
+    text = request.form.get("group_solution", "").strip()
+    close_hod_group(group_id, "Solved", "Complaint Solved", text)
+    return redirect(url_for("hod_dashboard"))
+
+
+@app.route("/hod/group/<int:group_id>/reject", methods=["POST"])
+@role_required("hod")
+def hod_reject_group(group_id):
+    text = request.form.get("group_reason", "").strip()
+    close_hod_group(group_id, "Rejected", "Complaint Rejected", text)
+    return redirect(url_for("hod_dashboard"))
+
+
+@app.route("/hod/group/<int:group_id>/undo", methods=["POST"])
+@role_required("hod")
+def hod_undo_group(group_id):
+
+    complaints = Complaint.query.filter(
+        Complaint.hod_group_id == group_id
+    ).all()
+
+    if not complaints:
+        flash("Group not found.", "warning")
+        return redirect(url_for("hod_dashboard"))
+
+    for c in complaints:
+        c.hod_group_id = None
+
+    db.session.commit()
+    flash("Group undone. Complaints are separate again.", "success")
+
+    return redirect(url_for("hod_dashboard"))
 
 # ============================================================
 # LOGOUT

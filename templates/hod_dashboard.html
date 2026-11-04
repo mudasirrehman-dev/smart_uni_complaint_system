@@ -243,6 +243,15 @@ Complaint System {% endblock %} {% block extra_css %}
             >
           </a>
 
+          <a href="{{ url_for('hod_dashboard', view='grouped') }}"
+             class="sidebar-link {{ 'active' if view == 'grouped' }}">
+            <span class="d-flex align-items-center">
+              <span class="sidebar-icon bg-primary-subtle text-primary"><i class="bi bi-collection"></i></span>
+              Grouped
+            </span>
+            <span class="badge text-bg-primary rounded-pill">{{ counts.grouped }}</span>
+          </a>
+
           <a
             href="{{ url_for('hod_dashboard', view='forwarded') }}"
             class="sidebar-link {{ 'active' if view == 'forwarded' }}"
@@ -310,10 +319,113 @@ Complaint System {% endblock %} {% block extra_css %}
 
     <!-- ================= MAIN CONTENT ================= -->
     <div class="admin-content flex-grow-1 d-flex flex-column">
+      {% if hod_groups %}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom py-3">
+          <h5 class="fw-bold mb-1">
+            <i class="bi bi-collection me-2"></i>Grouped Complaints
+          </h5>
+          <p class="text-muted small mb-0">
+            Solve or reject similar complaints together.
+          </p>
+        </div>
+
+        <div class="card-body">
+          {% for group_id, items in hod_groups.items() %}
+          <div class="card border shadow-sm mb-3">
+
+            <div class="card-header p-3"
+                 style="background-color: {{ ['#D6E8FF', '#F8D7E8', '#FFE0B2', '#E2D5F8', '#BFEFF2', '#FFF3B0', '#FFD6D6', '#D9E7D0', '#D7D9FF'][(group_id|int) % 9] }} !important;">
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+
+                <div>
+                  <h6 class="fw-bold mb-1">Group #{{ loop.index }}</h6>
+                  <small class="text-muted">
+                    {{ items|length }} complaints &middot; {{ items[0].directed_against }}
+                  </small>
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center gap-2">
+
+                  <form method="POST"
+                        action="{{ url_for('hod_undo_group', group_id=group_id) }}"
+                        onsubmit="return confirm('Undo this group? All complaints will be separated.');"
+                        class="m-0">
+                    <button type="submit" class="btn btn-outline-secondary">
+                      <i class="bi bi-arrow-counterclockwise me-1"></i>Undo Group
+                    </button>
+                  </form>
+
+                  <button type="button" class="btn btn-outline-danger"
+                          data-bs-toggle="modal"
+                          data-bs-target="#rejectGroupModal{{ group_id }}">
+                    <i class="bi bi-x-lg me-1"></i>Reject Group
+                  </button>
+
+                  <button type="button" class="btn btn-success"
+                          data-bs-toggle="modal"
+                          data-bs-target="#solveGroupModal{{ group_id }}">
+                    <i class="bi bi-check-circle me-1"></i>Solve Group
+                  </button>
+
+                </div>
+              </div>
+            </div>
+
+            <div class="table-responsive p-3">
+              <table class="table table-sm align-middle mb-0 w-100">
+                <thead class="table-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Urgency</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for c in items %}
+                  <tr>
+                    <td><strong>#{{ c.id }}</strong></td>
+                    <td>{{ c.category }}</td>
+                    <td style="max-width: 300px;">
+                      <button type="button"
+                              class="btn btn-link p-0 text-start text-decoration-none"
+                              data-bs-toggle="modal"
+                              data-bs-target="#viewComplaintModal{{ c.id }}">
+                        {{ c.description[:60] }}{% if c.description|length > 60 %}...{% endif %}
+                      </button>
+                    </td>
+                    <td>
+                      {% if c.urgency_level == "Emergency" %}
+                        <span class="badge text-bg-danger">Emergency</span>
+                      {% else %}
+                        <span class="badge text-bg-secondary">{{ c.urgency_level }}</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if c.status == "Forwarded" %}
+                        <span class="badge text-bg-info">Forwarded</span>
+                      {% else %}
+                        <span class="badge text-bg-warning">{{ c.status }}</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
       <!-- ============================= -->
       <!-- SENSITIVE COMPLAINTS -->
       <!-- ============================= -->
 
+      {% if complaints or not hod_groups %}
       <div class="card border-0 shadow-sm">
         <!-- CARD HEADER -->
 
@@ -344,207 +456,234 @@ Complaint System {% endblock %} {% block extra_css %}
 
         <div class="card-body p-0">
           {% if complaints %}
+            <form method="POST">
 
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <!-- TABLE HEADER -->
+              <div class="border-top p-3 bg-light" id="groupSelectedSection" style="display: none;">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                  <small class="text-muted mb-2 mb-md-0">
+                    Select at least 2 complaints with the same
+                    <strong>Directed Against</strong> value to create a group.
+                  </small>
+                  <button type="submit"
+                          formaction="{{ url_for('hod_group_complaints') }}"
+                          class="btn btn-primary">
+                    <i class="bi bi-collection me-1"></i>Group Selected Complaints
+                  </button>
+                </div>
+              </div>
 
-              <thead class="table-light">
-                <tr>
-                  <th class="ps-4">ID</th>
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <!-- TABLE HEADER -->
 
-                  <th>Student</th>
+                  <thead class="table-light">
+                    <tr>
+                      <th class="ps-4">Select</th>
 
-                  <th>Category</th>
+                      <th>ID</th>
 
-                  <th>Directed Against</th>
+                      <th>Student</th>
 
-                  <th>Description</th>
+                      <th>Category</th>
 
-                  <th>Urgency</th>
+                      <th>Directed Against</th>
 
-                  <th>Status</th>
+                      <th>Description</th>
 
-                  <th class="pe-4">Date Submitted</th>
+                      <th>Urgency</th>
 
-                  <th class="pe-4">Actions</th>
-                </tr>
-              </thead>
+                      <th>Status</th>
 
-              <!-- TABLE BODY -->
+                      <th class="pe-4">Date Submitted</th>
 
-              <tbody>
-                {% for complaint in complaints %}
+                      <th class="pe-4">Actions</th>
+                    </tr>
+                  </thead>
 
-                <tr
-                  {% if complaint.urgency_level == "Emergency"
-                        and complaint.status == "Pending" %}
-                    class="table-danger"
-                  {% endif %}
-                >
-                  <!-- ID -->
+                  <!-- TABLE BODY -->
 
-                  <td class="ps-4">
-                    <strong> #{{ complaint.id }} </strong>
-                  </td>
+                  <tbody>
+                    {% for complaint in complaints %}
 
-                  <!-- STUDENT -->
-
-                  <td>Student {{ complaint.student_id }}</td>
-
-                  <!-- CATEGORY -->
-
-                  <td>
-                    <span class="fw-semibold"> {{ complaint.category }} </span>
-                  </td>
-
-                  <!-- DIRECTED AGAINST -->
-
-                  <td>
-                    <span class="badge text-bg-dark">
-                      {{ complaint.directed_against }}
-                    </span>
-                  </td>
-
-                  <!-- ============================= -->
-                  <!-- DESCRIPTION -->
-                  <!-- ============================= -->
-
-                  <td style="max-width: 250px">
-                    <button
-                      type="button"
-                      class="btn btn-link p-0 text-start text-decoration-none"
-                      data-bs-toggle="modal"
-                      data-bs-target="#viewComplaintModal{{ complaint.id }}"
+                    <tr
+                      {% if complaint.urgency_level == "Emergency"
+                            and complaint.status == "Pending" %}
+                        class="table-danger"
+                      {% endif %}
                     >
-                      {% if complaint.description|length > 60 %} {{
-                      complaint.description[:60] }}... {% else %} {{
-                      complaint.description }} {% endif %}
-                    </button>
-                  </td>
+                      <td class="ps-4">
+                        {% if complaint.status in ["Pending", "Forwarded"] %}
+                        <input class="form-check-input"
+                                type="checkbox"
+                                name="complaint_ids"
+                                value="{{ complaint.id }}"
+                                onclick="toggleGroupBar()">
+                        {% endif %}
+                      </td>
+                      <!-- ID -->
 
-                  <!-- URGENCY -->
+                      <td>
+                        <strong> #{{ complaint.id }} </strong>
+                      </td>
 
-                  <td>
-                    {% if complaint.urgency_level == "Emergency" %}
+                      <!-- STUDENT -->
 
-                    <span class="badge text-bg-danger">
-                      <i class="bi bi-exclamation-triangle-fill"></i>
+                      <td>Student {{ complaint.student_id }}</td>
 
-                      Emergency
-                    </span>
+                      <!-- CATEGORY -->
 
-                    {% else %}
+                      <td>
+                        <span class="fw-semibold"> {{ complaint.category }} </span>
+                      </td>
 
-                    <span class="badge text-bg-secondary">
-                      {{ complaint.urgency_level }}
-                    </span>
+                      <!-- DIRECTED AGAINST -->
 
-                    {% endif %}
-                  </td>
+                      <td>
+                        <span class="badge text-bg-dark">
+                          {{ complaint.directed_against }}
+                        </span>
+                      </td>
 
-                  <!-- STATUS -->
+                      <!-- ============================= -->
+                      <!-- DESCRIPTION -->
+                      <!-- ============================= -->
 
-                  <td>
-                    {% if complaint.status == "Pending" %}
+                      <td style="max-width: 250px">
+                        <button
+                          type="button"
+                          class="btn btn-link p-0 text-start text-decoration-none"
+                          data-bs-toggle="modal"
+                          data-bs-target="#viewComplaintModal{{ complaint.id }}"
+                        >
+                          {% if complaint.description|length > 60 %} {{
+                          complaint.description[:60] }}... {% else %} {{
+                          complaint.description }} {% endif %}
+                        </button>
+                      </td>
 
-                    <span class="badge text-bg-warning">
-                      <i class="bi bi-clock"></i>
+                      <!-- URGENCY -->
 
-                      Pending
-                    </span>
+                      <td>
+                        {% if complaint.urgency_level == "Emergency" %}
 
-                    {% elif complaint.status == "Forwarded" %}
+                        <span class="badge text-bg-danger">
+                          <i class="bi bi-exclamation-triangle-fill"></i>
 
-                    <span class="badge text-bg-info">
-                      <i class="bi bi-send"></i>
+                          Emergency
+                        </span>
 
-                      Forwarded
-                    </span>
+                        {% else %}
 
-                    {% elif complaint.status == "Solved" %}
+                        <span class="badge text-bg-secondary">
+                          {{ complaint.urgency_level }}
+                        </span>
 
-                    <span class="badge text-bg-success">
-                      <i class="bi bi-check-circle"></i>
+                        {% endif %}
+                      </td>
 
-                      Solved
-                    </span>
+                      <!-- STATUS -->
 
-                    {% elif complaint.status == "Rejected" %}
+                      <td>
+                        {% if complaint.status == "Pending" %}
 
-                    <span class="badge text-bg-danger">
-                      <i class="bi bi-check-circle"></i>
+                        <span class="badge text-bg-warning">
+                          <i class="bi bi-clock"></i>
 
-                      Rejected
-                    </span>
+                          Pending
+                        </span>
 
-                    {% else %}
+                        {% elif complaint.status == "Forwarded" %}
 
-                    <span class="badge text-bg-secondary">
-                      {{ complaint.status }}
-                    </span>
+                        <span class="badge text-bg-info">
+                          <i class="bi bi-send"></i>
 
-                    {% endif %}
-                  </td>
+                          Forwarded
+                        </span>
 
-                  <!-- DATE -->
+                        {% elif complaint.status == "Solved" %}
 
-                  <td class="text-muted small pe-4">
-                    {{ complaint.date_submitted.strftime('%d %b %Y') }}
+                        <span class="badge text-bg-success">
+                          <i class="bi bi-check-circle"></i>
 
-                    <br />
+                          Solved
+                        </span>
 
-                    {{ complaint.date_submitted.strftime('%I:%M %p') }}
-                  </td>
+                        {% elif complaint.status == "Rejected" %}
 
-                  <!-- Actions -->
+                        <span class="badge text-bg-danger">
+                          <i class="bi bi-check-circle"></i>
 
-                  <!-- ACTIONS -->
+                          Rejected
+                        </span>
 
-                  <!-- ACTIONS -->
+                        {% else %}
 
-                  <td class="text-end pe-4">
-                    {% if complaint.status in ["Pending", "Forwarded"] %}
+                        <span class="badge text-bg-secondary">
+                          {{ complaint.status }}
+                        </span>
 
-                    <div class="d-flex gap-2">
-                      <!-- SOLVE -->
-                      <button
-                        type="button"
-                        class="btn btn-sm btn-success"
-                        data-bs-toggle="modal"
-                        data-bs-target="#hodSolveModal{{ complaint.id }}"
-                      >
-                        <i class="bi bi-check-lg"></i>
-                        Solve
-                      </button>
+                        {% endif %}
+                      </td>
 
-                      <!-- REJECT -->
-                      <button
-                        type="button"
-                        class="btn btn-sm btn-outline-danger"
-                        data-bs-toggle="modal"
-                        data-bs-target="#rejectModal{{ complaint.id }}"
-                      >
-                        <i class="bi bi-x-lg"></i>
-                        Reject
-                      </button>
-                    </div>
+                      <!-- DATE -->
 
-                    {% else %}
+                      <td class="text-muted small pe-4">
+                        {{ complaint.date_submitted.strftime('%d %b %Y') }}
 
-                    <span class="text-muted small">
-                      <i class="bi bi-check-circle"></i>
-                      No action required
-                    </span>
+                        <br />
 
-                    {% endif %}
-                  </td>
-                </tr>
+                        {{ complaint.date_submitted.strftime('%I:%M %p') }}
+                      </td>
 
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+                      <!-- Actions -->
+
+                      <!-- ACTIONS -->
+
+                      <!-- ACTIONS -->
+
+                      <td class="text-end pe-4">
+                        {% if complaint.status in ["Pending", "Forwarded"] %}
+
+                        <div class="d-flex gap-2">
+                          <!-- SOLVE -->
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-success"
+                            data-bs-toggle="modal"
+                            data-bs-target="#hodSolveModal{{ complaint.id }}"
+                          >
+                            <i class="bi bi-check-lg"></i>
+                            Solve
+                          </button>
+
+                          <!-- REJECT -->
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-danger"
+                            data-bs-toggle="modal"
+                            data-bs-target="#rejectModal{{ complaint.id }}"
+                          >
+                            <i class="bi bi-x-lg"></i>
+                            Reject
+                          </button>
+                        </div>
+
+                        {% else %}
+
+                        <span class="text-muted small">
+                          <i class="bi bi-check-circle"></i>
+                          No action required
+                        </span>
+
+                        {% endif %}
+                      </td>
+                    </tr>
+
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+           </form>
 
           {% else %}
 
@@ -563,6 +702,7 @@ Complaint System {% endblock %} {% block extra_css %}
           {% endif %}
         </div>
       </div>
+        {% endif %}
     </div>
     <!-- END admin-content -->
   </div>
@@ -574,7 +714,7 @@ Complaint System {% endblock %} {% block extra_css %}
 <!-- VIEW COMPLAINT MODALS -->
 <!-- ========================================================= -->
 
-{% for complaint in complaints %}
+{% for complaint in all_visible %}
 
 <div
   class="modal fade"
@@ -1635,7 +1775,85 @@ Complaint System {% endblock %} {% block extra_css %}
   </div>
 </div>
 
-{% endif %} {% endfor %} {% endblock %} 
+{% endif %} {% endfor %} 
+
+{% for group_id, items in hod_groups.items() %}
+
+<!-- SOLVE GROUP -->
+<div class="modal fade" id="solveGroupModal{{ group_id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title fw-bold">
+          <i class="bi bi-check-circle text-success me-2"></i>Solve Group #{{ loop.index }}
+        </h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body bg-light">
+        <p class="text-muted">
+          This solution will be applied to all {{ items|length }} complaints:
+          {% for c in items %}<strong>#{{ c.id }}</strong>{% if not loop.last %}, {% endif %}{% endfor %}
+        </p>
+        <form method="POST"
+              action="{{ url_for('hod_solve_group', group_id=group_id) }}"
+              onsubmit="return prepareHodGroup('{{ group_id }}', 'solve')">
+          <div class="card border">
+            <div id="groupSolveEditor{{ group_id }}" class="rich-text-editor"
+                 contenteditable="true" spellcheck="true"
+                 data-placeholder="Type common solution / feedback here..."></div>
+          </div>
+          <textarea id="groupSolveHidden{{ group_id }}" name="group_solution" hidden></textarea>
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-check-lg me-1"></i>Confirm &amp; Solve All
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REJECT GROUP -->
+<div class="modal fade" id="rejectGroupModal{{ group_id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title fw-bold">
+          <i class="bi bi-x-circle text-danger me-2"></i>Reject Group #{{ loop.index }}
+        </h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body bg-light">
+        <p class="text-muted">
+          This reason will be applied to all {{ items|length }} complaints:
+          {% for c in items %}<strong>#{{ c.id }}</strong>{% if not loop.last %}, {% endif %}{% endfor %}
+        </p>
+        <form method="POST"
+              action="{{ url_for('hod_reject_group', group_id=group_id) }}"
+              onsubmit="return prepareHodGroup('{{ group_id }}', 'reject')">
+          <div class="card border">
+            <div id="groupRejectEditor{{ group_id }}" class="rich-text-editor"
+                 contenteditable="true" spellcheck="true"
+                 data-placeholder="Type rejection reason / feedback here..."></div>
+          </div>
+          <textarea id="groupRejectHidden{{ group_id }}" name="group_reason" hidden></textarea>
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-danger">
+              <i class="bi bi-x-lg me-1"></i>Reject All
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endfor %}
+
+{% endblock %} 
 
 {% block extra_js %}
 <script>
@@ -1698,5 +1916,41 @@ Complaint System {% endblock %} {% block extra_css %}
       document.body.appendChild(modal);
     });
   });
+
+    function toggleGroupBar() {
+    const count = document.querySelectorAll(
+      'input[name=complaint_ids]:checked'
+    ).length;
+    const bar = document.getElementById("groupSelectedSection");
+    if (bar) bar.style.display = count > 0 ? "block" : "none";
+  }
+
+  const submittedHodGroups = {};
+
+  function prepareHodGroup(groupId, kind) {
+    const key = kind + groupId;
+    if (submittedHodGroups[key]) return false;
+
+    const prefix = kind === "solve" ? "groupSolve" : "groupReject";
+    const editor = document.getElementById(prefix + "Editor" + groupId);
+    const hidden = document.getElementById(prefix + "Hidden" + groupId);
+
+    if (!editor || !hidden) { alert("Editor not found."); return false; }
+
+    const text = editor.innerText.replace(/\u00a0/g, " ").trim();
+    if (!text) {
+      alert("Please enter feedback before submitting.");
+      editor.focus();
+      return false;
+    }
+
+    hidden.value = text;
+    submittedHodGroups[key] = true;
+
+    const btn = editor.closest("form").querySelector('button[type="submit"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = "Saving..."; }
+
+    return true;
+  }
 </script>
 {% endblock %}
