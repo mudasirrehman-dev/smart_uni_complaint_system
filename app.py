@@ -1160,6 +1160,59 @@ def solve_group(group_id):
 
     return redirect(url_for("admin_dashboard"))
 
+@app.route("/group/<int:group_id>/reject", methods=["POST"])
+@role_required("admin")
+def reject_group(group_id):
+
+    complaints = Complaint.query.filter_by(group_id=group_id).all()
+
+    if not complaints:
+        flash("This group was already closed or does not exist.", "warning")
+        return redirect(url_for("admin_dashboard"))
+
+    reason = request.form.get("group_reason", "").strip()
+
+    if not reason:
+        flash("Rejection reason / feedback is required.", "danger")
+        return redirect(url_for("admin_dashboard"))
+
+    try:
+        rejected_count = 0
+
+        for complaint in complaints:
+
+            # Atomic update: double submit par history dobara nahi banegi
+            updated = Complaint.query.filter_by(
+                id=complaint.id,
+                status="Pending"
+            ).update({
+                "status": "Rejected",
+                "group_id": None
+            })
+
+            if updated:
+                add_complaint_history(
+                    complaint=complaint,
+                    user_id=session["user_id"],
+                    action="Complaint Rejected",
+                    old_status="Pending",
+                    new_status="Rejected",
+                    description=reason
+                )
+                rejected_count += 1
+
+        db.session.commit()
+
+        if rejected_count:
+            flash(f"{rejected_count} complaints rejected.", "success")
+
+    except Exception:
+        db.session.rollback()
+        app.logger.exception("Failed to reject complaint group.")
+        flash("The group could not be rejected. Please try again.", "danger")
+
+    return redirect(url_for("admin_dashboard"))
+
 # ============================================================
 # FORWARD GROUPED COMPLAINTS TO HOD
 # ============================================================

@@ -2046,6 +2046,15 @@ Complaint System {% endblock %} {% block extra_css %}
               Forward to HOD
             </button>
           </form>
+          <button
+            type="button"
+            class="btn btn-outline-danger"
+            data-bs-toggle="modal"
+            data-bs-target="#rejectGroupModal{{ group_id }}"
+          >
+            <i class="bi bi-x-lg me-1"></i>
+            Reject Group
+          </button>
 
           <button
             type="button"
@@ -2395,6 +2404,136 @@ Complaint System {% endblock %} {% block extra_css %}
     </div>          <!-- modal-content -->
   </div>            <!-- modal-dialog -->
 </div>              <!-- modal -->
+
+<div
+  class="modal fade"
+  id="rejectGroupModal{{ group_id }}"
+  tabindex="-1"
+  aria-labelledby="rejectGroupModalLabel{{ group_id }}"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h4 class="modal-title fw-bold" id="rejectGroupModalLabel{{ group_id }}">
+          <i class="bi bi-x-circle text-danger me-2"></i>
+          Reject Complaint Group #{{ loop.index }}
+        </h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body bg-light">
+        <div class="container-fluid">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+
+              <!-- GROUP INFORMATION -->
+              <h5 class="fw-bold mb-3">
+                <i class="bi bi-collection me-2"></i>
+                Group Information
+              </h5>
+
+              <div class="table-responsive mb-4">
+                <table class="table table-bordered align-middle">
+                  <tbody>
+                    <tr>
+                      <th class="bg-light" style="width: 220px;">Group ID</th>
+                      <td>#{{ group_id }}</td>
+                    </tr>
+                    <tr>
+                      <th class="bg-light">Total Complaints</th>
+                      <td>{{ complaints_in_group|length }}</td>
+                    </tr>
+                    <tr>
+                      <th class="bg-light">Directed Against</th>
+                      <td>
+                        <span class="badge text-bg-dark">{{ complaints_in_group[0].directed_against }}</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- COMMON REJECTION FORM (upar) -->
+              <form
+                method="POST"
+                action="{{ url_for('reject_group', group_id=group_id) }}"
+                onsubmit="return prepareGroupRejectEditor('{{ group_id }}')"
+              >
+                <h5 class="fw-bold mb-3">
+                  <i class="bi bi-pencil-square me-2"></i>
+                  Common Rejection Reason / Feedback
+                </h5>
+
+                <p class="text-muted">
+                  This reason will be applied to all complaints in this group.
+                </p>
+
+                <div class="card border">
+                  <div
+                    id="groupRejectEditor{{ group_id }}"
+                    class="rich-text-editor"
+                    contenteditable="true"
+                    spellcheck="true"
+                    data-placeholder="Type common rejection reason / feedback here..."
+                  ></div>
+                </div>
+
+                <textarea
+                  id="groupRejectHidden{{ group_id }}"
+                  name="group_reason"
+                  hidden
+                ></textarea>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancel
+                  </button>
+                  <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-x-lg me-1"></i>
+                    Confirm &amp; Reject All
+                  </button>
+                </div>
+              </form>
+
+              <hr class="my-4 border-3 opacity-50" />
+
+              <!-- COMPLAINTS LIST -->
+              <h5 class="fw-bold mb-3">
+                <i class="bi bi-file-earmark-text me-2"></i>
+                Complaints in this Group
+              </h5>
+
+              {% for complaint in complaints_in_group %}
+              <div class="card border mb-3">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                  <h6 class="fw-bold mb-0">Complaint #{{ complaint.id }}</h6>
+                  {% if complaint.urgency_level == "Emergency" %}
+                    <span class="badge text-bg-danger">Emergency</span>
+                  {% else %}
+                    <span class="badge text-bg-secondary">{{ complaint.urgency_level }}</span>
+                  {% endif %}
+                </div>
+                <div class="card-body">
+                  <div class="text-muted small mb-2">
+                    {% if complaint.student %}{{ complaint.student.username }}{% else %}Student {{ complaint.student_id }}{% endif %}
+                    &middot; {{ complaint.category }}
+                  </div>
+                  <p class="text-break mb-0"
+                     style="white-space: pre-wrap;">{{ complaint.description or 'No description provided.' }}</p>
+                </div>
+              </div>
+              {% endfor %}
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 {% endif %}
 {% endfor %}
@@ -2786,6 +2925,38 @@ function prepareGroupEditor(groupId) {
   if (submitBtn) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = "Solving...";
+  }
+
+  return true;
+}
+
+function prepareGroupRejectEditor(groupId) {
+  const key = "reject" + groupId;
+  if (submittedGroups[key]) return false;
+
+  const editor = document.getElementById("groupRejectEditor" + groupId);
+  const hidden = document.getElementById("groupRejectHidden" + groupId);
+
+  if (!editor || !hidden) {
+    alert("Rejection editor not found.");
+    return false;
+  }
+
+  const plainText = editor.innerText.replace(/\u00a0/g, " ").trim();
+
+  if (!plainText) {
+    alert("Please enter a rejection reason / feedback.");
+    editor.focus();
+    return false;
+  }
+
+  hidden.value = plainText;
+  submittedGroups[key] = true;
+
+  const btn = editor.closest("form").querySelector('button[type="submit"]');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = "Rejecting...";
   }
 
   return true;
