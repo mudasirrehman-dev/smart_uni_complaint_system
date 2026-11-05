@@ -14,7 +14,8 @@ from models import (
     Complaint,
     ComplaintComment,
     ComplaintHistory,
-    Notification
+    Notification,
+    pakistan_time
 )
 
 # Password verification
@@ -48,6 +49,11 @@ app.secret_key = "dev-secret-key"
 
 # Connect SQLAlchemy database with Flask application
 db.init_app(app)
+
+def get_month_start():
+    """Current month ki pehli tareekh (Pakistan time)."""
+    now = pakistan_time()
+    return datetime(now.year, now.month, 1)
 
 # ============================================================
 # COMPLAINT HISTORY HELPER
@@ -166,6 +172,14 @@ def login():
     # Show the login page for GET requests
     return render_template("login.html")
 
+STUDENT_VIEWS = {
+    "all":       "All Complaints",
+    "pending":   "Pending Complaints",
+    "emergency": "Emergency Complaints",
+    "forwarded": "Forwarded Complaints",
+    "rejected":  "Rejected Complaints",
+    "solved":    "Resolved Complaints",
+}
 
 # ============================================================
 # STUDENT DASHBOARD
@@ -190,20 +204,24 @@ def student_dashboard():
     # MONTHLY COMPLAINT DISPLAY
     # --------------------------------------------------------
 
-    # Total complaints currently fetched for the student
-    complaints_used = len(complaints)
+    month_start = get_month_start()
 
-    # Remaining complaints from the limit of 5
-    complaints_remaining = 5 - complaints_used
+    # Sirf is mahine ki complaints quota mein ginti hain
+    monthly_complaints = [
+        c for c in complaints
+        if c.date_submitted and c.date_submitted >= month_start
+    ]
+
+    complaints_used = len(monthly_complaints)
+    complaints_remaining = max(0, 5 - complaints_used)
 
     # --------------------------------------------------------
     # EMERGENCY COMPLAINT COUNTER
     # --------------------------------------------------------
 
-    # Count Emergency complaints submitted by this student
     emergency_count = sum(
         1
-        for complaint in complaints
+        for complaint in monthly_complaints
         if complaint.urgency_level == "Emergency"
     )
 
@@ -262,6 +280,38 @@ def student_dashboard():
         for row in history_rows:
             complaint_feedback[row.complaint_id] = row.description
 
+            # --------------------------------------------------------
+    # SIDEBAR VIEW + COUNTS
+    # --------------------------------------------------------
+    view = request.args.get("view", "all")
+    if view not in STUDENT_VIEWS:
+        view = "all"
+
+    counts = {
+        "all":       len(complaints),
+        "pending":   sum(1 for c in complaints if c.status == "Pending"),
+        "emergency": sum(
+            1 for c in complaints
+            if c.urgency_level == "Emergency"
+            and c.status in ("Pending", "Forwarded")
+        ),
+        "forwarded": sum(1 for c in complaints if c.status == "Forwarded"),
+        "rejected":  sum(1 for c in complaints if c.status == "Rejected"),
+        "solved":    sum(1 for c in complaints if c.status == "Solved"),
+    }
+
+    if view == "all":
+        visible_complaints = complaints
+    elif view == "emergency":
+        visible_complaints = [
+            c for c in complaints
+            if c.urgency_level == "Emergency"
+            and c.status in ("Pending", "Forwarded")
+        ]
+    else:
+        wanted = view.capitalize() if view != "solved" else "Solved"
+        visible_complaints = [c for c in complaints if c.status == wanted]
+
     # Send all required data to the student dashboard
     return render_template(
         "student_dashboard.html",
@@ -274,7 +324,12 @@ def student_dashboard():
         pending_count=pending_count,
         forwarded_count=forwarded_count,
         solved_count=solved_count,
-        complaint_feedback=complaint_feedback
+        complaint_feedback=complaint_feedback,
+        counts=counts,
+        view=view,
+        view_title=STUDENT_VIEWS[view],
+        visible_complaints=visible_complaints,
+        
     )
 
 
@@ -299,11 +354,8 @@ def submit_complaint():
     now = datetime.now()
 
     # Create the first date of the current month
-    month_start = datetime(
-        now.year,
-        now.month,
-        1
-    )
+    month_start = get_month_start()
+
 
     # ========================================================
     # POST - SUBMIT COMPLAINT
