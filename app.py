@@ -28,7 +28,7 @@ from functools import wraps
 from datetime import datetime
 
 # Used for custom complaint sorting and filtering
-from sqlalchemy import case, or_
+from sqlalchemy import case, or_, func
 
 
 # ============================================================
@@ -81,6 +81,58 @@ def add_complaint_history(
     )
 
     db.session.add(history)
+
+def auto_group_complaint(complaint):
+    """
+    Same category + same Directed Against (+ same custom target for
+    "Other") wali Pending complaints ko khud group karta hai.
+    True return karta hai agar complaint group mein gayi.
+    """
+
+    if (
+        complaint.status != "Pending"
+        or complaint.group_id is not None
+        or complaint.directed_against == "Admin"
+    ):
+        return False
+
+    query = Complaint.query.filter(
+        Complaint.id != complaint.id,
+        Complaint.status == "Pending",
+        Complaint.category == complaint.category,
+        Complaint.directed_against == complaint.directed_against
+    )
+
+    if complaint.directed_against == "Other":
+        target = (complaint.custom_target or "").strip().lower()
+        query = query.filter(
+            func.lower(func.trim(Complaint.custom_target)) == target
+        )
+
+    matches = query.all()
+
+    if not matches:
+        return False
+
+    # 1. Maujooda Pending group mil jaye to usi mein shamil karein
+    existing = [m for m in matches if m.group_id is not None]
+
+    if existing:
+        complaint.group_id = existing[0].group_id
+        return True
+
+    # 2. Naya group: kam az kam 2 alag students hon
+    members = matches + [complaint]
+
+    if len({m.student_id for m in members}) < 2:
+        return False
+
+    group_id = min(m.id for m in members)
+
+    for member in members:
+        member.group_id = group_id
+
+    return True
 
 # ============================================================
 # HOME ROUTE
@@ -484,6 +536,8 @@ def submit_complaint():
             new_status="Pending",
             description="Complaint submitted by student."
         )
+        # Automatic grouping
+        auto_group_complaint(complaint)
 
         # Save history record
         db.session.commit()
@@ -1336,6 +1390,30 @@ def undo_group(group_id):
     # Return to Admin Dashboard
     return redirect(url_for("admin_dashboard"))
 
+@app.route("/admin/auto-group", methods=["POST"])
+@role_required("admin")
+def auto_group_all():
+
+    pending = Complaint.query.filter(
+        Complaint.status == "Pending",
+        Complaint.group_id.is_(None),
+        Complaint.directed_against != "Admin"
+    ).order_by(Complaint.id).all()
+
+    grouped = 0
+
+    for complaint in pending:
+        if auto_group_complaint(complaint):
+            grouped += 1
+
+    db.session.commit()
+
+    if grouped:
+        flash(f"{grouped} complaints were grouped automatically.", "success")
+    else:
+        flash("No matching complaints found to group.", "info")
+
+    return redirect(url_for("admin_dashboard", view="grouped"))
 
 HOD_VIEWS = {
     "pending":   "Pending Complaints",
