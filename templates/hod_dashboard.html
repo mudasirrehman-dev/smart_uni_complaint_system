@@ -888,7 +888,40 @@ Complaint System {% endblock %} {% block extra_css %}
               <div class="card bg-light border">
                 <div class="card-body">{{ complaint.description }}</div>
               </div>
-            </div>
+                {% if complaint.status in ["Solved", "Rejected"] %}
+                <hr class="my-4 border-3 opacity-50" />
+
+                <h6 class="fw-bold mb-2">
+                  {% if complaint.status == "Solved" %}
+                    <i class="bi bi-check-circle text-success me-2"></i>Solution / Feedback
+                  {% else %}
+                    <i class="bi bi-x-circle text-danger me-2"></i>Rejection Reason / Feedback
+                  {% endif %}
+                </h6>
+
+                {% set entries = complaint_feedback.get(complaint.id, []) %}
+                {% if entries %}
+                  {% for f in entries %}
+                  <div class="card border mb-2">
+                    <div class="card-header bg-white d-flex justify-content-between">
+                      <strong>{{ f.by }}
+                        {{ "Solution" if f.action == "Complaint Solved" else "Rejection Reason" }}
+                      </strong>
+                      <small class="text-muted">
+                        {{ f.time.strftime('%d %b %Y at %I:%M %p') }}
+                      </small>
+                    </div>
+                    <div class="card-body bg-light">
+                      <p class="mb-0"
+                        style="white-space: pre-wrap; word-break: break-word;">{{ f.text }}</p>
+                    </div>
+                  </div>
+                  {% endfor %}
+                {% else %}
+                  <span class="text-muted">No feedback available.</span>
+                {% endif %}
+                {% endif %}
+                </div>
           </div>
         </div>
       </div>

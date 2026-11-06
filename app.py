@@ -28,7 +28,7 @@ from functools import wraps
 from datetime import datetime
 
 # Used for custom complaint sorting and filtering
-from sqlalchemy import case, or_, func
+from sqlalchemy import case, or_, func, select
 
 
 # ============================================================
@@ -1454,16 +1454,14 @@ def hod_dashboard():
     # 2. Admin ki forward ki hui complaints
     # 3. Woh complaints jo is HOD ne khud solve / reject ki hon
     # --------------------------------------------------------
-    handled_ids = db.session.query(
-        ComplaintHistory.complaint_id
-    ).filter(
-        ComplaintHistory.user_id == hod_id,
-        ComplaintHistory.action.in_([
-            "Complaint Solved",
-            "Complaint Rejected"
-        ])
+    handled_ids = select(ComplaintHistory.complaint_id).where(
+    ComplaintHistory.user_id == hod_id,
+    ComplaintHistory.action.in_([
+        "Complaint Solved",
+        "Complaint Rejected"
+    ])
     )
-
+    
     base = Complaint.query.filter(
         or_(
             Complaint.directed_against == "Admin",
@@ -1534,26 +1532,42 @@ def hod_dashboard():
         for c in base.filter(Complaint.hod_group_id.isnot(None)).all():
             hod_groups.setdefault(c.hod_group_id, []).append(c)
 
+        # --------------------------------------------------------
+    # ALL VISIBLE (single + grouped complaints)
     # --------------------------------------------------------
-    # FEEDBACK (latest Solved / Rejected), ek hi query mein
+    all_visible = complaints + [
+        c for items in hod_groups.values() for c in items
+    ]
+
+    # --------------------------------------------------------
+    # FEEDBACK (Admin aur HOD dono ka, role ke saath)
     # --------------------------------------------------------
     complaint_feedback = {}
-    ids = [c.id for c in complaints]
+    ids = [c.id for c in all_visible]
 
     if ids:
-        rows = ComplaintHistory.query.filter(
-            ComplaintHistory.complaint_id.in_(ids),
-            ComplaintHistory.action.in_([
-                "Complaint Solved",
-                "Complaint Rejected"
-            ])
-        ).order_by(ComplaintHistory.created_at.asc()).all()
+        rows = (
+            db.session.query(ComplaintHistory, User.role)
+            .join(User, User.id == ComplaintHistory.user_id)
+            .filter(
+                ComplaintHistory.complaint_id.in_(ids),
+                ComplaintHistory.action.in_([
+                    "Complaint Solved",
+                    "Complaint Rejected"
+                ])
+            )
+            .order_by(ComplaintHistory.created_at.asc())
+            .all()
+        )
 
-        for row in rows:
-            if row.description:
-                complaint_feedback[row.complaint_id] = row.description
-
-    all_visible = complaints + [c for items in hod_groups.values() for c in items]
+        for history, role in rows:
+            if history.description:
+                complaint_feedback.setdefault(history.complaint_id, []).append({
+                    "by": "HOD" if role == "hod" else "Admin",
+                    "action": history.action,
+                    "text": history.description,
+                    "time": history.created_at,
+                })
 
     return render_template(
         "hod_dashboard.html",
@@ -1566,6 +1580,7 @@ def hod_dashboard():
         hod_groups=hod_groups,
         all_visible=all_visible
     )
+    
 
 # ============================================================
 # HOD SOLVE COMPLAINT
