@@ -539,6 +539,8 @@ def submit_complaint():
         # Automatic grouping
         auto_group_complaint(complaint)
 
+        auto_group_hod_complaint(complaint)
+
         # Save history record
         db.session.commit()
 
@@ -1089,6 +1091,8 @@ def forward_to_hod(complaint_id):
         description="Complaint forwarded to HOD by Admin."
     )
 
+    auto_group_hod_complaint(complaint)
+
     # ========================================================
     # SAVE CHANGES
     # ========================================================
@@ -1344,6 +1348,10 @@ def forward_group_to_hod(group_id):
 
         # Remove the complaint from the group
         complaint.group_id = None
+
+    # Sab ka status Forwarded ho chuka hai, ab HOD ke liye dobara group karein
+    for complaint in complaints:
+        auto_group_hod_complaint(complaint)
 
     # Save all changes
     db.session.commit()
@@ -1789,6 +1797,67 @@ def hod_group_complaints():
 
     return redirect(url_for("hod_dashboard"))
 
+def auto_group_hod_complaint(complaint):
+    """
+    HOD ke liye automatic grouping: same category + same Directed Against
+    (+ same custom target for "Other"). hod_group_id use karta hai.
+    """
+
+    visible = or_(
+        Complaint.directed_against == "Admin",
+        Complaint.status == "Forwarded"
+    )
+
+    # Yeh complaint khud HOD ko nazar aati ho aur group mein na ho
+    if (
+        complaint.status not in HOD_ACTIVE
+        or complaint.hod_group_id is not None
+        or not (
+            complaint.directed_against == "Admin"
+            or complaint.status == "Forwarded"
+        )
+    ):
+        return False
+
+    query = Complaint.query.filter(
+        Complaint.id != complaint.id,
+        Complaint.status.in_(HOD_ACTIVE),
+        Complaint.category == complaint.category,
+        Complaint.directed_against == complaint.directed_against,
+        visible
+    )
+
+    if complaint.directed_against == "Other":
+        target = (complaint.custom_target or "").strip().lower()
+        query = query.filter(
+            func.lower(func.trim(Complaint.custom_target)) == target
+        )
+
+    matches = query.all()
+
+    if not matches:
+        return False
+
+    # 1. Maujooda HOD group mil jaye to usi mein shamil karein
+    existing = [m for m in matches if m.hod_group_id is not None]
+
+    if existing:
+        complaint.hod_group_id = existing[0].hod_group_id
+        return True
+
+    # 2. Naya group: kam az kam 2 alag students
+    members = matches + [complaint]
+
+    if len({m.student_id for m in members}) < 2:
+        return False
+
+    group_id = min(m.id for m in members)
+
+    for member in members:
+        member.hod_group_id = group_id
+
+    return True
+
 
 def close_hod_group(group_id, new_status, action, text):
     """Group ki tamam active complaints ko Solved / Rejected karta hai."""
@@ -1878,6 +1947,34 @@ def hod_undo_group(group_id):
     flash("Group undone. Complaints are separate again.", "success")
 
     return redirect(url_for("hod_dashboard"))
+
+@app.route("/hod/auto-group", methods=["POST"])
+@role_required("hod")
+def hod_auto_group_all():
+
+    candidates = Complaint.query.filter(
+        Complaint.status.in_(HOD_ACTIVE),
+        Complaint.hod_group_id.is_(None),
+        or_(
+            Complaint.directed_against == "Admin",
+            Complaint.status == "Forwarded"
+        )
+    ).order_by(Complaint.id).all()
+
+    grouped = 0
+
+    for complaint in candidates:
+        if auto_group_hod_complaint(complaint):
+            grouped += 1
+
+    db.session.commit()
+
+    if grouped:
+        flash(f"{grouped} complaints were grouped automatically.", "success")
+    else:
+        flash("No matching complaints found to group.", "info")
+
+    return redirect(url_for("hod_dashboard", view="grouped"))
 
 # ============================================================
 # LOGOUT
